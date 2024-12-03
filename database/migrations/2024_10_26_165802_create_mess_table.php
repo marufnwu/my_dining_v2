@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('messes', function (Blueprint $table) {
             $table->id();
             $table->string('name', 100);
-            $table->integer('super_user_id');
+            $table->integer('super_user_id')->default(0);
             $table->integer('status');
             $table->integer('ad_free')->default(0);
             $table->integer('all_user_add_meal')->default(0);

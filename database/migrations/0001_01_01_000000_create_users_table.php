@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Gender;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -18,8 +19,9 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('country', 6)->nullable();
+            $table->string("country_code", 3)->nullable();
             $table->string('phone', 15)->nullable();
-            $table->string('gender', 20);
+            $table->enum('gender', Gender::values());
             $table->string('city', 100)->nullable();
             $table->string('email')->nullable();
             $table->string('password');
