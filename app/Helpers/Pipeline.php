@@ -22,7 +22,7 @@ class Pipeline
     /**
      * Static method to initialize the pipeline with a success response.
      */
-    public static function success($data = [], string $message = 'Success', int $status = 200): self
+    public static function success($data = null, string $message = 'Success', int $status = 200): self
     {
         return new self($data, $message, $status, true);
     }

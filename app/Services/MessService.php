@@ -10,12 +10,10 @@ use Illuminate\Support\Facades\Lang;
 
 class MessService
 {
-    function create($messName, $name, $userName, $cc, $phone, $password, $country, $city, $gender) : Pipeline {
+    function create($messName, $name, $userName, $email, $cc, $phone, $password, $country, $city, $gender) : Pipeline {
 
         $userService = new UserService();
-        if($userService->isUserNameExits($userName)){
-            return Pipeline::error(message:Lang::get("auth.user_name_exits"));
-        }
+
 
 
         $mess = Mess::create([
@@ -25,7 +23,7 @@ class MessService
 
 
         if($mess){
-            
+            $userPipeline = $userService->createSuperUser($name, $userName, $cc, $phone, $mess->id, $password, $email, $country, $city, $gender);
         }
     }
 }

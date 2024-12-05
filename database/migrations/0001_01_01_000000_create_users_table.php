@@ -23,7 +23,6 @@ return new class extends Migration
             $table->string('phone', 15)->nullable();
             $table->enum('gender', Gender::values());
             $table->string('city', 100)->nullable();
-            $table->string('email')->nullable();
             $table->string('password');
             $table->rememberToken();
             $table->integer('acc_type');
