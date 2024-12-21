@@ -4,14 +4,34 @@ namespace App\Helpers;
 
 use Illuminate\Http\JsonResponse;
 
+/**
+* @template T
+*/
+
 class Pipeline
 {
+    /** @var T|null */
     protected $data;
+
+    /** @var string */
     protected $message;
+
+    /** @var int */
     protected $status;
+
+    /** @var bool */
     protected $success;
 
-    public function __construct($data = [], string $message = 'Success', int $status = 200, bool $success = true)
+    /**
+     * Pipeline constructor.
+     *
+     * @param T|null $data
+     * @param string $message
+     * @param int $status
+     * @param bool $success
+     */
+
+    public function __construct($data = null, string $message = 'Success', int $status = 200, bool $success = true)
     {
         $this->data = $data;
         $this->message = $message;
@@ -90,7 +110,4 @@ class Pipeline
     {
         return $this->toApiResponse();
     }
-
-
-
 }

@@ -1,6 +1,8 @@
 <?php
 
+use App\Enums\AccountStatus;
 use App\Enums\Gender;
+use App\Models\Country;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -18,16 +20,13 @@ return new class extends Migration
             $table->string('user_name', 20)->unique();
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('country', 6)->nullable();
-            $table->string("country_code", 3)->nullable();
+            $table->foreignIdFor(Country::class)->nullable();
             $table->string('phone', 15)->nullable();
             $table->enum('gender', Gender::values());
             $table->string('city', 100)->nullable();
             $table->string('password');
             $table->rememberToken();
-            $table->integer('acc_type');
-            $table->integer('mess_id');
-            $table->boolean('active')->default(true);
+            $table->integer('status')->default(AccountStatus::ACTIVE->value);
             $table->timestamp('join_date')->nullable();
             $table->timestamp('leave_date')->nullable();
             $table->text('photo_url')->nullable();

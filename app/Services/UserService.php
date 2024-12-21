@@ -1,9 +1,10 @@
 <?php
-namespace app\Service;
+namespace App\Services;
 
 use App\Helpers\Pipeline;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Lang;
 
 class UserService{
@@ -13,29 +14,48 @@ class UserService{
         return $count >= 1 ;
     }
 
-    function createSuperUser($name, $userName, $cc, $phone, $messId, $password, $email, $country, $city, $gender) : Pipeline {
+    function isEmailExits(string $email){
+        $count = User::where("email", $email)->count();
+        return $count >= 1 ;
+    }
+
+    function createUser($name, $userName, $country, $phone,  $password, $email,  $city, $gender) : Pipeline {
 
         if($this->isUserNameExits($userName)){
             return Pipeline::error(message:Lang::get("auth.user_name_exits"));
         }
 
+        if($this->isEmailExits($email)){
+            return Pipeline::error(message:Lang::get("auth.email_exits"));
+        }
+
         $user = User::create(
             [
-                "mess_id"=>$messId,
                 "name"=>$name,
                 "user_name"=>$userName,
                 "email"=>$email,
-                "country_code"=>$cc,
                 "phone"=>$phone,
                 "country"=>$country,
                 "city"=>$city,
                 "gender"=>$gender,
-                "password"=>$password,
+                "password"=>Hash::make($password),
                 "join_date"=>Carbon::now()
             ]
         );
 
         return Pipeline::success($user);
+    }
+
+    function login($userNameOrEmail, $password){
+        $user = User::where("user_name", $userNameOrEmail)->orWhere("email", $userNameOrEmail)->first();
+
+        if (!$user || !Hash::check($password, $user->password)) {
+            return Pipeline::error("Username or email not matched with password");
+        }
+    }
+
+    function addEmailOtp(User $user){
+        
     }
 
 }
