@@ -35,6 +35,12 @@ class User extends Authenticatable
         'last_active',
     ];
 
+
+    function isEmailVerified(): bool
+    {
+        return $this->email_verified_at !== null;
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *
