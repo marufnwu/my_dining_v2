@@ -2,13 +2,11 @@
 
 namespace App\Http\Middleware;
 
-use App\Enums\SettingsKey;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use App\Exceptions\EmailNotVerifiedException;
 
-class EmailVerified
+class MessJoinChecker
 {
     /**
      * Handle an incoming request.
@@ -17,12 +15,11 @@ class EmailVerified
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if(get_setting(SettingsKey::ENABLE_EMAIL_VERIFICATION->name, false)){
-            if (!$request->user()->isEmailVerified) {
-                throw new EmailNotVerifiedException();
-            }
+        $user = $request->user();
+        if ($user->activeMess) {
+            return redirect()->route('mess.dashboard', $user->activeMess);
         }
-
+        dd($user->activeMess);
         return $next($request);
     }
 }

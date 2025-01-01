@@ -3,14 +3,19 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use App\Enums\MessUserStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -34,6 +39,51 @@ class User extends Authenticatable
         'version',
         'last_active',
     ];
+
+    protected $appends = [
+        'is_email_verified',
+    ];
+
+     /**
+     * Get the mess that the user is currently associated with.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOneThrough
+     */
+    public function activeMess(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            Mess::class,     // The final model (Mess)
+            MessUser::class, // The intermediate model (MessUser)
+            'user_id',       // Foreign key on MessUser
+            'id',            // Foreign key on Mess
+            'id',            // Local key on User
+            'mess_id'        // Local key on MessUser
+        )
+        ->where("mess_users.status", MessUserStatus::Active->value)
+        ->whereNull("left_at")
+        ->latest()
+        ->withDefault(null);
+    }
+
+    /**
+     * Get the messInfo associated with the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function messInfo(): HasOne
+    {
+        return $this->hasOne(MessUser::class, 'user_id', 'id')
+        ->with("mess")
+        ->whereNull("left_at")
+        ->latest()
+        ->withDefault(null);
+    }
+
+
+
+    function getIsEmailVerifiedAttribute() {
+        return $this->isEmailVerified();
+    }
 
 
     function isEmailVerified(): bool
@@ -61,6 +111,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            "is_email_verified"=>'boolean'
         ];
     }
 }

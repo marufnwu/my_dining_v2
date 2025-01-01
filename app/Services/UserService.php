@@ -52,10 +52,27 @@ class UserService{
         if (!$user || !Hash::check($password, $user->password)) {
             return Pipeline::error("Username or email not matched with password");
         }
+
+        $token = $user->createToken('Personal Access Token')->plainTextToken;
+
+        return Pipeline::success([
+            'user' => $user,
+            'token' => $token
+        ]);
+    }
+
+    function checkLogin() : Pipeline {
+        $user = auth()->user();
+        if(!$user){
+            return Pipeline::error("User not found");
+        }
+
+        return Pipeline::success($user);
+
     }
 
     function addEmailOtp(User $user){
-        
+
     }
 
 }

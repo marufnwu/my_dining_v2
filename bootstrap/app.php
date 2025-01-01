@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\ErrorCode;
+use App\Exceptions\EmailNotVerifiedException;
 use App\Helpers\ApiResponse;
 use App\Helpers\Pipeline;
 use App\Http\Middleware\CheckMaintenanceMode;
@@ -11,9 +13,9 @@ use Illuminate\Foundation\Configuration\Middleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__.'/../routes/web.php',
-        api: __DIR__.'/../routes/api.php',
-        commands: __DIR__.'/../routes/console.php',
+        web: __DIR__ . '/../routes/web.php',
+        api: __DIR__ . '/../routes/api.php',
+        commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
@@ -26,15 +28,34 @@ return Application::configure(basePath: dirname(__DIR__))
             ForceJson::class
         ]);
 
-
+        $middleware->alias([
+            "EmailVerified" => \App\Http\Middleware\EmailVerified::class,
+            "MessJoinChecker" => \App\Http\Middleware\MessJoinChecker::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-          // custom response sanctum
-          $exceptions->render(function (AuthenticationException $e,  $request) {
-            if ($request->is('api/*')) {
-                return Pipeline::error(message:"Unauthenticated", status:402)->toApiResponse();
+        // custom response sanctum
+        $exceptions->render(function (Exception $e,  $request) {
+            $pipeline = null;
+
+            if($e instanceof AuthenticationException){
+                $pipeline = Pipeline::error(message:"Login Required", status:401, errorCode: ErrorCode::AUTHENTICATION_REQUIRED->value);
             }
+
+            if($e instanceof EmailNotVerifiedException){
+                $pipeline = Pipeline::error($e->getMessage(), errorCode:$e->getCode());
+            }
+
+
+            if ($request->is('api/*')) {
+                return $pipeline->toApiResponse();
+            }
+
             // Handle other exceptions or default response here
             return $e->render($request);
         });
+
+
+
+
     })->create();

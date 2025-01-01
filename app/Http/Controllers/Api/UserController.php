@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CreateUserAccountRequest;
+use App\Http\Requests\UserLoginRequest;
 use App\Models\Country;
 use App\Services\UserService;
 
@@ -29,6 +30,19 @@ class UserController extends Controller
             $data["gender"]
         );
 
+        return $pipeline->toApiResponse();
+    }
+
+    function login(UserLoginRequest $request) {
+        $data = $request->validated();
+
+        $pipeline = $this->userService->login($data["email"], $data["password"]);
+
+        return $pipeline->toApiResponse();
+    }
+
+    function checkLogin()  {
+        $pipeline = $this->userService->checkLogin();
         return $pipeline->toApiResponse();
     }
 }

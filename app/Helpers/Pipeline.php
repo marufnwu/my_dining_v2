@@ -22,6 +22,9 @@ class Pipeline
     /** @var bool */
     protected $success;
 
+    /** @var int|null */
+    protected $errorCode;
+
     /**
      * Pipeline constructor.
      *
@@ -29,14 +32,16 @@ class Pipeline
      * @param string $message
      * @param int $status
      * @param bool $success
+     * @param int|null $errorCode
      */
 
-    public function __construct($data = null, string $message = 'Success', int $status = 200, bool $success = true)
+    public function __construct($data = null, string $message = 'Success', int $status = 200, bool $success = true, ?int $errorCode = null)
     {
         $this->data = $data;
         $this->message = $message;
         $this->status = $status;
         $this->success = $success;
+        $this->errorCode = $errorCode;
     }
 
     /**
@@ -50,9 +55,9 @@ class Pipeline
     /**
      * Static method to initialize the pipeline with an error response.
      */
-    public static function error(string $message = 'An error occurred', int $status = 400, $data = []): self
+    public static function error(string $message = 'An error occurred', int $status = 200, $data = [], $errorCode=null): self
     {
-        return new self($data, $message, $status, false);
+        return new self($data, $message, $status, false, $errorCode);
     }
 
     /**
@@ -100,6 +105,7 @@ class Pipeline
             'message' => $this->message,
             'data' => $this->success ? $this->data : null,
             'errors' => !$this->success ? $this->data : null,
+            "error_code" => $this->errorCode ?? null
         ], $this->status);
     }
 
