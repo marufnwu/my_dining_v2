@@ -17,17 +17,17 @@ abstract class BaseFormRequest extends FormRequest
      */
     protected function failedValidation(Validator $validator)
     {
-        if (request()->acceptsJson()) {
-            // Gather the validation errors
-            $errors = $validator->errors();
+        // if (request()->acceptsJson()) {
+        //     // Gather the validation errors
+        //     $errors = $validator->errors();
 
-            // Return a structured error response using the Pipeline helper
-            throw new ValidationException(
-                $validator,
-                Pipeline::validationError($errors->all(), message: 'Validation failed', status: 422)->toApiResponse()
-            );
-        }
-        
+        //     // Return a structured error response using the Pipeline helper
+        //     throw new ValidationException(
+        //         $validator,
+        //         Pipeline::validationError($errors->all(), message: 'Validation failed', status: 422)->toApiResponse()
+        //     );
+        // }
+
         parent::failedValidation($validator);
 
     }

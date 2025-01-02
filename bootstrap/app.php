@@ -10,6 +10,7 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Validation\ValidationException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -44,6 +45,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
             if($e instanceof EmailNotVerifiedException){
                 $pipeline = Pipeline::error($e->getMessage(), errorCode:$e->getCode());
+            }
+
+            if ($e instanceof ValidationException) {
+                $pipeline = Pipeline::validationError(array_values($e->errors()), message: 'Validation failed', status:200);
             }
 
             if ($request->is('api/*')) {
