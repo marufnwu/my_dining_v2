@@ -21,7 +21,7 @@ class UserController extends Controller
 
         $pipeline = $this->userService->createUser(
             $data["name"],
-            $data['user_name'],
+            // $data['user_name'],
             $country->id,
             $data["phone"],
             $data["password"],

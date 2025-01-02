@@ -19,11 +19,11 @@ class UserService{
         return $count >= 1 ;
     }
 
-    function createUser($name, $userName, $country, $phone,  $password, $email,  $city, $gender) : Pipeline {
+    function createUser($name, /*$userName,*/ $country, $phone,  $password, $email,  $city, $gender) : Pipeline {
 
-        if($this->isUserNameExits($userName)){
-            return Pipeline::error(message:Lang::get("auth.user_name_exits"));
-        }
+        // if($this->isUserNameExits($userName)){
+        //     return Pipeline::error(message:Lang::get("auth.user_name_exits"));
+        // }
 
         if($this->isEmailExits($email)){
             return Pipeline::error(message:Lang::get("auth.email_exits"));
@@ -32,7 +32,7 @@ class UserService{
         $user = User::create(
             [
                 "name"=>$name,
-                "user_name"=>$userName,
+                // "user_name"=>$userName,
                 "email"=>$email,
                 "phone"=>$phone,
                 "country"=>$country,

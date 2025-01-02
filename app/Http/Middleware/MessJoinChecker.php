@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Exceptions\NoMessException;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,10 +17,9 @@ class MessJoinChecker
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
-        if ($user->activeMess) {
-            return redirect()->route('mess.dashboard', $user->activeMess);
+        if ($user?->activeMess) {
+             throw new NoMessException();
         }
-        dd($user->activeMess);
         return $next($request);
     }
 }

@@ -46,13 +46,11 @@ return Application::configure(basePath: dirname(__DIR__))
                 $pipeline = Pipeline::error($e->getMessage(), errorCode:$e->getCode());
             }
 
-
             if ($request->is('api/*')) {
-                return $pipeline->toApiResponse();
+                if($pipeline){
+                    return $pipeline->toApiResponse();
+                }
             }
-
-            // Handle other exceptions or default response here
-            return $e->render($request);
         });
 
 
