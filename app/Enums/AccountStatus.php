@@ -4,10 +4,16 @@ namespace App\Enums;
 
 use App\Traits\EnumToArray;
 
-enum AccountStatus : int
+enum AccountStatus : string
 {
     use EnumToArray;
-    case ACTIVE = 1;
-    case DEACTIVATED = 0;
+    case ACTIVE = "active";
+    case DEACTIVATED = "deactivated";
+    case DELETED = "deleted";
+    case BLOCKED = "blocked";
+    case PENDING = "pending";
+    case REJECTED = "rejected";
+    case SUSPENDED = "suspended";
+    
 
 }

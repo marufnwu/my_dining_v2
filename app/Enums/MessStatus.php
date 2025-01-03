@@ -2,8 +2,10 @@
 
 namespace App\Enums;
 
-enum MessStatus : int
+enum MessStatus : string
 {
-    case ACTIVE = 1;
-    case DEACTIVATED = 0;
+    case ACTIVE = "active";
+    case DEACTIVATED = "deactivated";
+    case DELETED = "deleted";
+
 }

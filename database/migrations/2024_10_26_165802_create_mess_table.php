@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\MessStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -14,11 +15,10 @@ return new class extends Migration
         Schema::create('messes', function (Blueprint $table) {
             $table->id();
             $table->string('name', 100);
-            $table->integer('super_user_id')->default(0);
-            $table->integer('status');
-            $table->integer('ad_free')->default(0);
-            $table->integer('all_user_add_meal')->default(0);
-            $table->integer('fund')->default(0);
+            $table->string('status', 20)->default(MessStatus::ACTIVE->value);
+            $table->boolean('ad_free')->default(false);
+            $table->boolean('all_user_add_meal')->default(false);
+            $table->boolean('fund_add_enabled')->default(true);
             $table->timestamps();
         });
     }

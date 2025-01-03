@@ -1,8 +1,9 @@
 <?php
 
+use App\Console\Commands\FreshMigrateAndSeed;
 use App\Enums\ErrorCode;
 use App\Exceptions\EmailNotVerifiedException;
-use App\Helpers\ApiResponse;
+use App\Exceptions\NoMessException;
 use App\Helpers\Pipeline;
 use App\Http\Middleware\CheckMaintenanceMode;
 use App\Http\Middleware\ForceJson;
@@ -34,6 +35,9 @@ return Application::configure(basePath: dirname(__DIR__))
             "MessJoinChecker" => \App\Http\Middleware\MessJoinChecker::class,
         ]);
     })
+    ->withCommands([
+        FreshMigrateAndSeed::class
+    ])
     ->withExceptions(function (Exceptions $exceptions) {
         // custom response sanctum
         $exceptions->render(function (Exception $e,  $request) {
@@ -49,6 +53,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
             if ($e instanceof ValidationException) {
                 $pipeline = Pipeline::validationError(array_values($e->errors()), message: 'Validation failed', status:200);
+            }
+
+            if ($e instanceof NoMessException) {
+                $pipeline = Pipeline::error(message: $e->getMessage(), status:200, errorCode: ErrorCode::NO_MESS_ACCESS->value);
             }
 
             if ($request->is('api/*')) {

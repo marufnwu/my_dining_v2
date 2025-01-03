@@ -4,10 +4,15 @@ namespace App\Services;
 use App\Helpers\Pipeline;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Lang;
 
 class UserService{
+
+    public static function currentUser() : ?User {
+        return Auth::user() ?? null;
+    }
 
     function isUserNameExits(string $userName)  {
         $count = User::where("user_name", $userName)->count();

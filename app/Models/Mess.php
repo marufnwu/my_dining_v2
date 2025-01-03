@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Enums\MessStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Mess extends Model
 {
@@ -16,11 +18,10 @@ class Mess extends Model
      */
     protected $fillable = [
         'name',
-        'super_user_id',
         'status',
         'ad_free',
         'all_user_add_meal',
-        'fund',
+        'fund_add_enabled',
     ];
 
     /**
@@ -29,10 +30,29 @@ class Mess extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'super_user_id' => 'integer',
-        'status' => 'integer',
-        'ad_free' => 'integer',
-        'all_user_add_meal' => 'integer',
-        'fund' => 'integer',
+        'status' => MessStatus::class,
+        'ad_free' => "boolean",
+        'all_user_add_meal' => 'boolean',
+        'fund_add_enabled' => 'boolean',
     ];
+
+     /**
+     * Get the users associated with the mess.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function messUsers(): HasMany
+    {
+        return $this->hasMany(MessUser::class);
+    }
+
+    /**
+     * Get all of the roles for the Mess
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function roles(): HasMany
+    {
+        return $this->hasMany(MessRole::class);
+    }
 }

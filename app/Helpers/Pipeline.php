@@ -68,12 +68,17 @@ class Pipeline
         return new self($errors, $message, $status, false);
     }
 
+
+    public function isSuccess() : bool {
+        return $this->success;
+    }
+
     /**
      * Add or modify data in the pipeline.
      */
     public function withData($data): self
     {
-        $this->data = array_merge($this->data, $data);
+        $this->data = array_merge($this->data ?? [], $data);
         return $this;
     }
 

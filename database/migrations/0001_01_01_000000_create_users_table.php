@@ -17,7 +17,7 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('user_name', 20)->unique();
+            $table->string('user_name', 20)->unique()->nullable();
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->foreignIdFor(Country::class)->nullable();
@@ -26,7 +26,7 @@ return new class extends Migration
             $table->string('city', 100)->nullable();
             $table->string('password');
             $table->rememberToken();
-            $table->integer('status')->default(AccountStatus::ACTIVE->value);
+            $table->string('status', 20)->default(AccountStatus::ACTIVE->value);
             $table->timestamp('join_date')->nullable();
             $table->timestamp('leave_date')->nullable();
             $table->text('photo_url')->nullable();

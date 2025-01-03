@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\MessController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -22,13 +24,24 @@ Route::as("api.")->group(function () {
 
     //==========Must authenticated================
 
-    Route::group(["middleware" => ["auth:sanctum", "EmailVerified", "MessJoinChecker"]], function () {
+    Route::group(["middleware" => ["auth:sanctum", "EmailVerified"]], function () {
+
+        //must join mess
+
+        Route::middleware("MessJoinChecker")->group(function () {
+
+        });
+
+        //must not join mess
 
         //============User Auth Section=======================
-
         Route::prefix("auth")->group(function () {
             Route::get("check-login", [UserController::class, "checkLogin"]);
         });
-    });
 
+        //mess
+         Route::prefix("mess")->controller(MessController::class)->group(function () {
+            Route::post("create", "createMess");
+        });
+    });
 });
