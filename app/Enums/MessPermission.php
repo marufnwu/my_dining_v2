@@ -16,4 +16,8 @@ enum MessPermission : string
     case MESS_REPORT = "mess-report";
     case MESS_PERMISSION = "mess-permission";
     case EXPENSE_MANAGEMENT = "expense-management";
+    case MESS_NOTICE = "mess-notice";
+    case CHNAGE_MANAGER = "change-manager";
+    case START_NEW_MONTH = "start-new-month";
+    case MANAGE_DEPOSIT = "manage-deposit";
 }
