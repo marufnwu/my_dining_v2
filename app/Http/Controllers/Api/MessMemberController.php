@@ -5,19 +5,18 @@ namespace App\Http\Controllers\Api;
 use App\DTOs\UserDto;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CreateUserAccountRequest;
-use App\Http\Requests\UserLoginRequest;
 use App\Models\Country;
-use App\Services\UserService;
+use App\Services\MessService;
 
-class UserController extends Controller
+class MessMemberController extends Controller
 {
-    
     public function __construct(
-        protected UserService $userService
+        protected MessService $service
     ) {}
 
-    public function createAccount(CreateUserAccountRequest $request)
-    {
+    function createUserAddMess(CreateUserAccountRequest $request) {
+
+
         $data = $request->validated();
 
         $country = Country::where("id", $data['country_id'])->first();
@@ -32,23 +31,8 @@ class UserController extends Controller
             gender: $data['gender'],
         );
 
-        $pipeline = $this->userService->createUser($userDto);
+        $pipeline = $this->service->createAndAddUser($userDto);
 
-        return $pipeline->toApiResponse();
-    }
-
-    function login(UserLoginRequest $request)
-    {
-        $data = $request->validated();
-
-        $pipeline = $this->userService->login($data["email"], $data["password"]);
-
-        return $pipeline->toApiResponse();
-    }
-
-    function checkLogin()
-    {
-        $pipeline = $this->userService->checkLogin();
         return $pipeline->toApiResponse();
     }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\MessController;
+use App\Http\Controllers\Api\MessMemberController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -28,8 +29,10 @@ Route::as("api.")->group(function () {
 
         //must join mess
 
-        Route::middleware("MessJoinChecker")->group(function () {
-
+        Route::prefix("mess")->middleware("MessJoinChecker")->group(function () {
+            Route::prefix("member")->controller(MessMemberController::class)->group(function () {
+                Route::post("create-and-add", "createUserAddMess");
+            });
         });
 
         //must not join mess
@@ -40,7 +43,7 @@ Route::as("api.")->group(function () {
         });
 
         //mess
-         Route::prefix("mess")->controller(MessController::class)->group(function () {
+        Route::prefix("mess")->controller(MessController::class)->group(function () {
             Route::post("create", "createMess");
         });
     });

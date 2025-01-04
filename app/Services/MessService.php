@@ -2,15 +2,19 @@
 
 namespace App\Services;
 
+use App\DTOs\UserDto;
 use App\Enums\AccountStatus;
+use App\Enums\ErrorCode;
 use App\Enums\MessStatus;
 use App\Enums\MessUserRole;
 use App\Enums\MessUserStatus;
 use App\Helpers\Pipeline;
 use App\Models\Mess;
+use App\Models\MessRole;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Request;
 
 class MessService
 {
@@ -23,8 +27,12 @@ class MessService
             "status"=>MessStatus::ACTIVE->value,
         ]);
 
+
+        $prmsnService = new MessPermissionService($mess);
+        $roles = $prmsnService->addMessDefaultRoleAndPermission();
+        $mess->load("adminRole");
         if($mess) {
-            $pipeline = $messUser = $this->addUser($mess, UserService::currentUser(), MessUserRole::Admin);
+            $pipeline = $messUser = $this->addUser($mess, UserService::currentUser(), $mess->adminRole);
             if($messUser->isSuccess()) {
                 DB::commit();
                 return Pipeline::success(data:$mess);
@@ -36,7 +44,7 @@ class MessService
         return $pipeline;
     }
 
-    function addUser(Mess $mess, User $user, MessUserRole $role) : Pipeline {
+    function addUser(Mess $mess, User $user, MessRole $role) : Pipeline {
 
         if($mess->status != MessStatus::ACTIVE) {
             return Pipeline::error(message: "Mess is not active");
@@ -48,12 +56,12 @@ class MessService
         }
 
         if($user->activeMess){
-            return Pipeline::error(message: "User is already in a mess");
+            return Pipeline::error(message: "User is already in a mess", errorCode:ErrorCode::USER_ALREADY_IN_MESS->value);
         }
 
         $messUser = $mess->messUsers()->create([
             "user_id"=>$user->id,
-            "role"=>$role->value,
+            "mess_role_id"=>$role->id,
             "joined_at"=>Carbon::now(),
             "status"=>MessUserStatus::Active->value,
         ]);
@@ -64,8 +72,18 @@ class MessService
 
     }
 
-    function createAndAddUser(){
+    function createAndAddUser(UserDto $userDto) : Pipeline {
         $userService = new UserService();
-       //$user = $userService->createUser("name", "country", "phone", "password", "email", "city", ");
+        $pipeline = $userService->createUser($userDto);
+
+        if(!$pipeline->isSuccess()) {
+           return $pipeline;
+        }
+
+        $user = $pipeline->data;
+
+        $mess = UserService::currentUser()?->mess;
+        dd($mess);
+
     }
 }

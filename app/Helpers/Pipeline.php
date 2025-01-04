@@ -11,7 +11,7 @@ use Illuminate\Http\JsonResponse;
 class Pipeline
 {
     /** @var T|null */
-    protected $data;
+    public $data;
 
     /** @var string */
     protected $message;

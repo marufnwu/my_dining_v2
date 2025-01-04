@@ -8,7 +8,10 @@ enum MessPermission : string
 {
     use EnumToArray;
 
-    case ALL = "all";
+    case ADMIN = "admin";
+    case MANAGER = "manager";
+    case MEMBER = "member";
+    case GUEST = "guest";
     case USER_MANAGEMENT = "user-management";
     case MEAL_MANAGEMENT = "meal-management";
     case FUND_MANAGEMENT = "fund-management";

@@ -3,6 +3,7 @@
 use App\Enums\MessUserRole;
 use App\Enums\MessUserStatus;
 use App\Models\Mess;
+use App\Models\MessRole;
 use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -19,7 +20,7 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Mess::class);
             $table->foreignIdFor(User::class);
-            $table->string('role')->default(MessUserRole::Member->value);
+            $table->foreignIdFor(MessRole::class)->nullable()->default(null);
             $table->timestamp('joined_at')->nullable();
             $table->timestamp('left_at')->nullable();
             $table->string('status')->default(MessUserStatus::Active->value);

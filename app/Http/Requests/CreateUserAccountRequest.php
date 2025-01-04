@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Enums\Gender;
 use App\Helpers\Pipeline;
 use App\Rules\ValidPhoneNumber;
+use App\Services\UserService;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\ValidationException;

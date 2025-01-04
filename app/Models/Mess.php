@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use App\Enums\MessStatus;
+use App\Enums\MessUserRole;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Mess extends Model
 {
@@ -55,4 +57,15 @@ class Mess extends Model
     {
         return $this->hasMany(MessRole::class);
     }
+
+    public function adminRole() : HasOne
+    {
+        return $this->hasOne(MessRole::class)->where('role', MessUserRole::Admin->value);
+    }
+
+    public function managerRole() : HasOne
+    {
+        return $this->hasOne(MessRole::class)->where('role', MessUserRole::Manager->value);
+    }
+
 }

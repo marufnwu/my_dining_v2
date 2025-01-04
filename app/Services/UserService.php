@@ -1,6 +1,7 @@
 <?php
 namespace App\Services;
 
+use App\DTOs\UserDto;
 use App\Helpers\Pipeline;
 use App\Models\User;
 use Carbon\Carbon;
@@ -24,26 +25,26 @@ class UserService{
         return $count >= 1 ;
     }
 
-    function createUser($name, /*$userName,*/ $country, $phone,  $password, $email,  $city, $gender) : Pipeline {
+    function createUser(UserDto $userDto) : Pipeline {
+
 
         // if($this->isUserNameExits($userName)){
         //     return Pipeline::error(message:Lang::get("auth.user_name_exits"));
         // }
 
-        if($this->isEmailExits($email)){
+        if($this->isEmailExits($userDto->email)){
             return Pipeline::error(message:Lang::get("auth.email_exits"));
         }
 
         $user = User::create(
             [
-                "name"=>$name,
-                // "user_name"=>$userName,
-                "email"=>$email,
-                "phone"=>$phone,
-                "country"=>$country,
-                "city"=>$city,
-                "gender"=>$gender,
-                "password"=>Hash::make($password),
+                "name"=>$userDto->name,
+                "email"=>$userDto->email,
+                "phone"=>$userDto->phone,
+                "country"=>$userDto->country,
+                "city"=>$userDto->city,
+                "gender"=>$userDto->gender,
+                "password"=>Hash::make($userDto->password),
                 "join_date"=>Carbon::now()
             ]
         );

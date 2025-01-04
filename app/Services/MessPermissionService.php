@@ -8,37 +8,33 @@ use App\Models\Mess;
 
 class MessPermissionService
 {
+    private Mess $mess;
 
-    private const ROLE = [
+    public function __construct(Mess $mess) {
+        $this->mess = $mess;
+    }
 
-        MessUserRole::Admin->value => [
-            MessPermission::ALL->value
-        ],
-        
-        MessUserRole::Manager->value => [
-            MessPermission::START_NEW_MONTH->value,
-            MessPermission::MEAL_MANAGEMENT->value,
-            MessPermission::MEAL_MANAGEMENT->value,
-            MessPermission::FUND_MANAGEMENT->value,
-            MessPermission::MESS_SETTING->value,
-            MessPermission::MESS_REPORT->value,
-            MessPermission::EXPENSE_MANAGEMENT->value,
-            MessPermission::MESS_NOTICE->value,
-            MessPermission::CHNAGE_MANAGER->value,
-            MessPermission::MANAGE_DEPOSIT->value,
+    function addMessDefaultRoleAndPermission(){
 
-        ],
-        MessUserRole::Admin->value => [
-            MessPermission::ALL->value
-        ],
-    ];
+        if (!$this->mess->adminRole) {
+            $this->mess->roles()->create([
+                'role' => MessUserRole::Admin->value,
+                "is_default" => true
+            ])->permissions()->create([
+                'permission' => MessPermission::ADMIN->value
+            ]);
+        }
 
+        if (!$this->mess->managerRole) {
+            $this->mess->roles()->create([
+                'role' => MessUserRole::Manager->value,
+                "is_default" => true
+            ])->permissions()->create([
+                'permission' => MessPermission::MANAGER->value
+            ]);
+        }
 
+        return $this->mess->roles;
 
-    function addMessDefaultRoleAndPermission(Mess $mess){
-        $mess->roles()->create([
-            'role' => MessUserRole::Admin->value,
-            'permissions' => self::DDEFAYLT_ADMIN_PERMISSION
-        ]);
     }
 }
