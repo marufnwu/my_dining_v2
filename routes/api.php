@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\MessUserRole;
 use App\Http\Controllers\Api\MessController;
 use App\Http\Controllers\Api\MessMemberController;
 use App\Http\Controllers\Api\UserController;
@@ -30,9 +31,11 @@ Route::as("api.")->group(function () {
         //must join mess
 
         Route::prefix("mess")->middleware("MessJoinChecker")->group(function () {
-            Route::prefix("member")->controller(MessMemberController::class)->group(function () {
+
+            Route::prefix("member")->middleware("MessPermission:" . MessUserRole::Manager->value)->controller(MessMemberController::class)->group(function () {
                 Route::post("create-and-add", "createUserAddMess");
             });
+
         });
 
         //must not join mess

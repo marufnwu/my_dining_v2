@@ -14,10 +14,13 @@ use App\Models\MessRole;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Request;
 
 class MessService
 {
+    public static function currentMess() : ?Mess {
+        return UserService::currentUser()->activeMess ?? null;
+    }
+
     function create($messName) : Pipeline {
 
         DB::beginTransaction();
@@ -73,17 +76,28 @@ class MessService
     }
 
     function createAndAddUser(UserDto $userDto) : Pipeline {
+        DB::beginTransaction();
         $userService = new UserService();
         $pipeline = $userService->createUser($userDto);
 
         if(!$pipeline->isSuccess()) {
+            DB::rollBack();
            return $pipeline;
         }
 
         $user = $pipeline->data;
 
-        $mess = UserService::currentUser()?->mess;
-        dd($mess);
 
+        $mess = MessService::currentMess();
+        $pipeline = $this->addUser($mess, $user, $mess->memberRole);
+
+        if ($pipeline->isSuccess()) {
+            DB::commit();
+            $pipeline->withData($user);
+        } else {
+            DB::rollBack();
+        }
+
+        return $pipeline;
     }
 }

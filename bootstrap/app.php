@@ -4,6 +4,7 @@ use App\Console\Commands\FreshMigrateAndSeed;
 use App\Enums\ErrorCode;
 use App\Exceptions\EmailNotVerifiedException;
 use App\Exceptions\NoMessException;
+use App\Exceptions\PermissionDeniedException;
 use App\Helpers\Pipeline;
 use App\Http\Middleware\CheckMaintenanceMode;
 use App\Http\Middleware\ForceJson;
@@ -33,6 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             "EmailVerified" => \App\Http\Middleware\EmailVerified::class,
             "MessJoinChecker" => \App\Http\Middleware\MessJoinChecker::class,
+            "MessPermission"=>\App\Http\Middleware\MessPermission::class
         ]);
     })
     ->withCommands([
@@ -57,6 +59,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
             if ($e instanceof NoMessException) {
                 $pipeline = Pipeline::error(message: $e->getMessage(), status:200, errorCode: ErrorCode::NO_MESS_ACCESS->value);
+            }
+            if ($e instanceof PermissionDeniedException) {
+                $pipeline = Pipeline::error(message: $e->getMessage(), status:403, errorCode: ErrorCode::NO_MESS_ACCESS->value);
             }
 
             if ($request->is('api/*')) {

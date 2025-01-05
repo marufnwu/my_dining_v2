@@ -44,6 +44,28 @@ class User extends Authenticatable
         'is_email_verified',
     ];
 
+
+    /**
+     * Get the mess that the user is currently associated with.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOneThrough
+     */
+    public function role(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            MessRole::class,     // The final model (Mess)
+            MessUser::class, // The intermediate model (MessUser)
+            'user_id',       // Foreign key on MessUser
+            'id',            // Foreign key on Mess
+            'id',            // Local key on User
+            'mess_id'        // Local key on MessUser
+        )
+        ->whereNull("left_at")
+        ->latest()
+        ->withDefault(null);
+    }
+
+
      /**
      * Get the mess that the user is currently associated with.
      *

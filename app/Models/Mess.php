@@ -68,4 +68,9 @@ class Mess extends Model
         return $this->hasOne(MessRole::class)->where('role', MessUserRole::Manager->value);
     }
 
+    public function memberRole() : HasOne
+    {
+        return $this->hasOne(MessRole::class)->where('role', MessUserRole::Member->value);
+    }
+
 }

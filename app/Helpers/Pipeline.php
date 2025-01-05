@@ -78,7 +78,7 @@ class Pipeline
      */
     public function withData($data): self
     {
-        $this->data = array_merge($this->data ?? [], $data);
+        $this->data = $data;
         return $this;
     }
 

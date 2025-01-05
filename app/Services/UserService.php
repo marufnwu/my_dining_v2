@@ -2,6 +2,7 @@
 namespace App\Services;
 
 use App\DTOs\UserDto;
+use App\Enums\MessUserStatus;
 use App\Helpers\Pipeline;
 use App\Models\User;
 use Carbon\Carbon;
@@ -45,7 +46,8 @@ class UserService{
                 "city"=>$userDto->city,
                 "gender"=>$userDto->gender,
                 "password"=>Hash::make($userDto->password),
-                "join_date"=>Carbon::now()
+                "join_date"=>Carbon::now(),
+                "status"=>MessUserStatus::Active->value,
             ]
         );
 

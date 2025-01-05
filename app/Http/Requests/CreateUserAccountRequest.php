@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Enums\Gender;
 use App\Helpers\Pipeline;
 use App\Rules\ValidPhoneNumber;
+use App\Services\MessService;
 use App\Services\UserService;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
@@ -20,6 +21,7 @@ class CreateUserAccountRequest extends BaseFormRequest
      */
     public function rules(): array
     {
+
         return [
             'name' => 'required|string|max:255',
             // 'user_name' => 'required|string|max:255|unique:users,user_name',

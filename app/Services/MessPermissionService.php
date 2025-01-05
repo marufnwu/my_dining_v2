@@ -34,6 +34,15 @@ class MessPermissionService
             ]);
         }
 
+        if (!$this->mess->memberRole) {
+            $this->mess->roles()->create([
+                'role' => MessUserRole::Member->value,
+                "is_default" => true
+            ])->permissions()->create([
+                'permission' => MessPermission::MEMBER->value
+            ]);
+        }
+
         return $this->mess->roles;
 
     }
