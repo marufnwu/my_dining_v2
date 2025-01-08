@@ -12,11 +12,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('plan_prices', function (Blueprint $table) {
+        Schema::create('plan_packages', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(Plan::class);
+            $table->boolean("is_trial")->default(false);
+            $table->boolean("is_free")->default(false);
             $table->integer('duration')->comment('Duration in days');
-            $table->decimal('price', 10, 2);
+            $table->decimal('price', 10, 2)->default(0);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
@@ -27,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('plan_prices');
+        Schema::dropIfExists('plan_packages');
     }
 };
