@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Enums\MessPermission;
-use App\Enums\MessUserRole;
+use App\Constants\MessPermission;
+use App\Constants\MessUserRole;
 use App\Models\Mess;
 
 class MessPermissionService
@@ -16,31 +16,10 @@ class MessPermissionService
 
     function addMessDefaultRoleAndPermission(){
 
-        if (!$this->mess->adminRole) {
-            $this->mess->roles()->create([
-                'role' => MessUserRole::Admin->value,
-                "is_default" => true
-            ])->permissions()->create([
-                'permission' => MessPermission::ADMIN->value
-            ]);
-        }
+        $roles = config("mess.default_roles");
 
-        if (!$this->mess->managerRole) {
-            $this->mess->roles()->create([
-                'role' => MessUserRole::Manager->value,
-                "is_default" => true
-            ])->permissions()->create([
-                'permission' => MessPermission::MANAGER->value
-            ]);
-        }
-
-        if (!$this->mess->memberRole) {
-            $this->mess->roles()->create([
-                'role' => MessUserRole::Member->value,
-                "is_default" => true
-            ])->permissions()->create([
-                'permission' => MessPermission::MEMBER->value
-            ]);
+        foreach ($roles as $key => $role) {
+            
         }
 
         return $this->mess->roles;
