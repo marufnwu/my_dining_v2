@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
+use App\Constants\MessUserRole;
 use App\Enums\MessStatus;
-use App\Enums\MessUserRole;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -60,17 +60,17 @@ class Mess extends Model
 
     public function adminRole() : HasOne
     {
-        return $this->hasOne(MessRole::class)->where('role', MessUserRole::Admin->value);
+        return $this->hasOne(MessRole::class)->where('role', MessUserRole::ADMIN);
     }
 
     public function managerRole() : HasOne
     {
-        return $this->hasOne(MessRole::class)->where('role', MessUserRole::Manager->value);
+        return $this->hasOne(MessRole::class)->where('role', MessUserRole::MANAGER);
     }
 
     public function memberRole() : HasOne
     {
-        return $this->hasOne(MessRole::class)->where('role', MessUserRole::Member->value);
+        return $this->hasOne(MessRole::class)->where('role', MessUserRole::MEMBER);
     }
 
 }

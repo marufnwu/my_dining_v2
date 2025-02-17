@@ -84,7 +84,7 @@ class User extends Authenticatable
         ->where("mess_users.status", MessUserStatus::Active->value)
         ->whereNull("left_at")
         ->latest()
-        ->withDefault(null);
+        ->withDefault();
     }
 
     /**
@@ -98,7 +98,7 @@ class User extends Authenticatable
         ->with("mess")
         ->whereNull("left_at")
         ->latest()
-        ->withDefault(null);
+        ->withDefault();
     }
 
 

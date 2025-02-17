@@ -2,35 +2,45 @@
 
 namespace Database\Seeders;
 
-use App\Enums\Feature;
-use App\Enums\SubPlan;
+use App\Constants\Feature;
+use App\Constants\SubPlan;
 use App\Models\Plan;
 use App\Models\PlanFeature;
 use App\Models\PlanPackage;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class PlanSeeder extends Seeder
 {
+    private const DURATION_1_MONTH = 3;
+    private const DURATION_6_MONTHS = 180;
+    private const DURATION_12_MONTHS = 365;
+
     private $data = [
         'plans' => [
             [
                 'name' => 'Basic',
-                'keyword' => SubPlan::BASIC->value,
+                'keyword' => SubPlan::BASIC,
                 'is_free' => true,
                 'is_active' => true,
+                'features' => [
+                    Feature::MEMBER_LIMIT => ['is_countable' => true, 'usage_limit' => 10],
+                    Feature::MESS_REPORT_GENERATE => ['is_countable' => true, 'usage_limit' => 5],
+                    Feature::MEAL_ADD_NOTIFICATION => ['is_countable' => false],
+                ],
                 'packages' => [
                     [
-                        'duration' => 3, // 1 month
+                        'duration' => self::DURATION_1_MONTH,
                         'price' => 0,
                         'is_trial' => true,
                     ],
                     [
-                        'duration' => 180, // 6 months
+                        'duration' => self::DURATION_6_MONTHS,
                         'price' => 49.99,
                         'is_trial' => false,
                     ],
                     [
-                        'duration' => 365, // 12 months
+                        'duration' => self::DURATION_12_MONTHS,
                         'price' => 99.99,
                         'is_trial' => false,
                     ],
@@ -38,22 +48,29 @@ class PlanSeeder extends Seeder
             ],
             [
                 'name' => 'Premium',
-                'keyword' => SubPlan::PREMIUM->value,
+                'keyword' => SubPlan::PREMIUM,
                 'is_free' => false,
                 'is_active' => true,
+                'features' => [
+                    Feature::MEMBER_LIMIT => ['is_countable' => true, 'usage_limit' => 20],
+                    Feature::MESS_REPORT_GENERATE => ['is_countable' => true, 'usage_limit' => 10],
+                    Feature::MEAL_ADD_NOTIFICATION => ['is_countable' => true, 'usage_limit' => 5],
+                    Feature::BALANCE_ADD_NOTIFICATION => ['is_countable' => false],
+                    Feature::PURCHASE_NOTIFICATION => ['is_countable' => false],
+                ],
                 'packages' => [
                     [
-                        'duration' => 3, // 1 month
+                        'duration' => self::DURATION_1_MONTH,
                         'price' => 9.99,
                         'is_trial' => true,
                     ],
                     [
-                        'duration' => 180, // 6 months
+                        'duration' => self::DURATION_6_MONTHS,
                         'price' => 49.99,
                         'is_trial' => false,
                     ],
                     [
-                        'duration' => 365, // 12 months
+                        'duration' => self::DURATION_12_MONTHS,
                         'price' => 99.99,
                         'is_trial' => false,
                     ],
@@ -61,89 +78,96 @@ class PlanSeeder extends Seeder
             ],
             [
                 'name' => 'Enterprise',
-                'keyword' => SubPlan::ENTERPRISE->value,
+                'keyword' => SubPlan::ENTERPRISE,
                 'is_free' => false,
                 'is_active' => true,
+                'features' => [
+                    Feature::MEMBER_LIMIT => ['is_countable' => true, 'usage_limit' => 50],
+                    Feature::MESS_REPORT_GENERATE => ['is_countable' => true, 'usage_limit' => 20],
+                    Feature::MEAL_ADD_NOTIFICATION => ['is_countable' => true, 'usage_limit' => 10],
+                    Feature::BALANCE_ADD_NOTIFICATION => ['is_countable' => true, 'usage_limit' => 5],
+                    Feature::PURCHASE_NOTIFICATION => ['is_countable' => true, 'usage_limit' => 5],
+                    Feature::FUND_ADD => ['is_countable' => false],
+                    Feature::ROLE_MANAGEMENT => ['is_countable' => false],
+                    Feature::PURCHASE_REQUEST => ['is_countable' => false],
+                ],
                 'packages' => [
                     [
-                        'duration' => 3, // 1 month
+                        'duration' => self::DURATION_1_MONTH,
                         'price' => 19.99,
                         'is_trial' => true,
                     ],
                     [
-                        'duration' => 180, // 6 months
+                        'duration' => self::DURATION_6_MONTHS,
                         'price' => 99.99,
                         'is_trial' => false,
                     ],
                     [
-                        'duration' => 365, // 12 months
+                        'duration' => self::DURATION_12_MONTHS,
                         'price' => 199.99,
                         'is_trial' => false,
                     ],
                 ],
             ],
         ],
-        'features' => [
-            Feature::MEMBER_LIMIT->value => [
-                "is_countable" => true,
-            ],
-            Feature::MESS_REPORT_GENERATE->value => [
-                "is_countable" => true,
-            ],
-            Feature::MEAL_ADD_NOTIFICATION->value => [
-                "is_countable" => true,
-            ],
-            Feature::BALANCE_ADD_NOTIFICATION->value => [
-                "is_countable" => true,
-            ],
-            Feature::PURCHASE_NOTIFICATION->value => [
-                "is_countable" => false,
-            ],
-        ],
     ];
 
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         Plan::truncate();
         PlanPackage::truncate();
         PlanFeature::truncate();
 
-        $plans = $this->data['plans'];
-        $featureData = $this->data['features'];
+        DB::beginTransaction();
 
+        try {
+            // Seed plans
+            $plans = $this->data['plans'];
 
-        foreach ($plans as $planData) {
-            $plan = Plan::create([
-                'name' => $planData['name'],
-                'keyword' => $planData['keyword'],
-                'is_free' => $planData['is_free'],
-                'is_active' => $planData['is_active'],
-            ]);
-
-            foreach ($featureData as $feature => $data) {
-                    $isCountable = $data['is_countable'];
-                    $usageLimit = 100;
-
-                    $plan->features()->create([
-                        'name' => $feature,
-                        'is_countable' => $isCountable,
-                        'usage_limit' => $isCountable ? $usageLimit : null,
-                    ]);
-
-            }
-
-            foreach ($planData['packages'] as $package) {
-                $plan->packages()->create([
-                    'is_trial' => $package['is_trial'],
+            foreach ($plans as $planData) {
+                $plan = Plan::create([
+                    'name' => $planData['name'],
+                    'keyword' => $planData['keyword'],
                     'is_free' => $planData['is_free'],
-                    'duration' => $package['duration'],
-                    'price' => $package['price'],
                     'is_active' => $planData['is_active'],
                 ]);
+
+                // Seed features for the plan
+                $this->createFeatures($plan, $planData['features']);
+
+                // Seed packages for the plan
+                $this->createPackages($plan, $planData['packages'], $planData['is_free'], $planData['is_active']);
             }
+
+            // Commit the transaction
+            DB::commit();
+        } catch (\Exception $e) {
+            // Rollback the transaction on error
+            DB::rollBack();
+            throw $e; // Re-throw the exception to stop the seeder
+        }
+    }
+    private function createFeatures(Plan $plan, array $features): void
+    {
+        foreach ($features as $featureName => $featureConfig) {
+            $plan->features()->create([
+                'name' => $featureName,
+                'is_countable' => $featureConfig['is_countable'],
+                'usage_limit' => $featureConfig['is_countable'] ? $featureConfig['usage_limit'] : null,
+            ]);
+        }
+    }
+
+    private function createPackages(Plan $plan, array $packages, bool $isFree, bool $isActive): void
+    {
+        foreach ($packages as $package) {
+            $plan->packages()->create([
+                'is_trial' => $package['is_trial'],
+                'is_free' => $isFree,
+                'duration' => $package['duration'],
+                'price' => $package['price'],
+                'is_active' => $isActive,
+            ]);
         }
     }
 }

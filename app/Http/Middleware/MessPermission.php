@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Enums\MessUserRole;
+use App\Constants\MessUserRole;
 use App\Exceptions\PermissionDeniedException;
 use App\Services\UserService;
 use Closure;
@@ -18,6 +18,7 @@ class MessPermission
      */
     public function handle(Request $request, Closure $next, ...$permissions): Response
     {
+        // dd($permissions);
         // Retrieve the current user
         $user = UserService::currentUser();
 
@@ -40,7 +41,7 @@ class MessPermission
     {
         $userPermissions = $user->role->permissions->pluck('permission')->toArray();
 
-        if(in_array(MessUserRole::Admin->value, $userPermissions)) {
+        if(in_array(MessUserRole::ADMIN, $userPermissions)) {
             return true;
         }
 
