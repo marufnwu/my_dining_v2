@@ -58,6 +58,7 @@ class MessService
             return Pipeline::error(message: "User account is not active");
         }
 
+
         if($user->activeMess){
             return Pipeline::error(message: "User is already in a mess", errorCode:ErrorCode::USER_ALREADY_IN_MESS->value);
         }

@@ -16,5 +16,8 @@ return [
                 MessPermission::NOTICE_MANAGEMENT,
             ],
         ],
+        [
+            'role' => MessUserRole::ADMIN,
+        ],
     ],
 ];

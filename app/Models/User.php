@@ -53,20 +53,20 @@ class User extends Authenticatable
     public function role(): HasOneThrough
     {
         return $this->hasOneThrough(
-            MessRole::class,     // The final model (Mess)
-            MessUser::class, // The intermediate model (MessUser)
-            'user_id',       // Foreign key on MessUser
-            'id',            // Foreign key on Mess
-            'id',            // Local key on User
-            'mess_id'        // Local key on MessUser
+            MessRole::class,     // The final model (MessRole)
+            MessUser::class,      // The intermediate model (MessUser)
+            'user_id',            // Foreign key on MessUser (points to User)
+            'id',                 // Foreign key on MessRole (points to MessUser)
+            'id',                 // Local key on User
+            'mess_role_id'        // Local key on MessUser (points to MessRole)
         )
-        ->whereNull("left_at")
-        ->latest()
-        ->withDefault(null);
+            ->whereNull("left_at")    // Filter users who haven't left
+            ->latest()                // Get the latest entry
+            ->withDefault(null);      // Return null if no relationship exists
     }
 
 
-     /**
+    /**
      * Get the mess that the user is currently associated with.
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasOneThrough
@@ -81,10 +81,10 @@ class User extends Authenticatable
             'id',            // Local key on User
             'mess_id'        // Local key on MessUser
         )
-        ->where("mess_users.status", MessUserStatus::Active->value)
-        ->whereNull("left_at")
-        ->latest()
-        ->withDefault();
+            ->where("mess_users.status", MessUserStatus::Active->value)
+            ->whereNull("left_at")
+            ->latest()
+            ->withDefault(null);
     }
 
     /**
@@ -95,15 +95,16 @@ class User extends Authenticatable
     public function messInfo(): HasOne
     {
         return $this->hasOne(MessUser::class, 'user_id', 'id')
-        ->with("mess")
-        ->whereNull("left_at")
-        ->latest()
-        ->withDefault();
+            ->with("mess")
+            ->whereNull("left_at")
+            ->latest()
+            ->withDefault();
     }
 
 
 
-    function getIsEmailVerifiedAttribute() {
+    function getIsEmailVerifiedAttribute()
+    {
         return $this->isEmailVerified();
     }
 
@@ -133,7 +134,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            "is_email_verified"=>'boolean'
+            "is_email_verified" => 'boolean'
         ];
     }
 }
