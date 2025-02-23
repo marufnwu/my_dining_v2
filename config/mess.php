@@ -9,16 +9,15 @@ return [
             'role' => MessUserRole::MANAGER,
             'permissions' => [
                 MessPermission::MEAL_MANAGEMENT,
-                MessPermission::REPORT_GENERATION,
+                MessPermission::REPORT_MANAGEMENT,
                 MessPermission::USER_MANAGEMENT,
-                'manage_mess',
+                MessPermission::PURCHASE_MANAGEMENT,
+                MessPermission::DEPOSIT_MANAGEMENT,
+                MessPermission::NOTICE_MANAGEMENT,
             ],
         ],
         [
             'role' => MessUserRole::ADMIN,
-            'permissions' => [
-                'view_mess',
-            ],
         ],
     ],
 ];

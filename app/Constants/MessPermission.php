@@ -7,7 +7,6 @@ class MessPermission
     // Existing permissions
     const USER_MANAGEMENT = 'user_management';
     const MEAL_MANAGEMENT = 'meal_management';
-    const REPORT_GENERATION = 'report_generation';
     const PURCHASE_MANAGEMENT = 'purchase_management';
     const DEPOSIT_MANAGEMENT = 'deposit-management';
     const REPORT_MANAGEMENT = 'report-management';

@@ -39,6 +39,7 @@ class MessPermission
      */
     private function hasPermissions($user, array $permissions): bool
     {
+        dd($user->role);
         $userPermissions = $user->role->permissions->pluck('permission')->toArray();
 
         if(in_array(MessUserRole::ADMIN, $userPermissions)) {
