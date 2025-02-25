@@ -25,6 +25,7 @@ class MessPermissionService
                 [
                     'role' => $role['role'],
                     'is_default' => true,
+                    "is_admin"=>$role['is_admin'] ?? false
                 ]
             );
 

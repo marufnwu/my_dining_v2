@@ -22,7 +22,7 @@ class Meal extends Model
         'breakfast',
         'lunch',
         'dinner',
-        'manager_id',
+        'action_user_id',
     ];
 
     /**
@@ -38,6 +38,6 @@ class Meal extends Model
         'month_id' => 'integer',
         'user_id' => 'integer',
         'mess_id' => 'integer',
-        'manager_id' => 'integer',
+        'action_user_id' => 'integer',
     ];
 }

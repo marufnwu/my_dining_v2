@@ -20,7 +20,7 @@ return new class extends Migration
             $table->float('breakfast');
             $table->float('lunch');
             $table->float('dinner');
-            $table->integer('manager_id');
+            $table->integer('action_user_id');
             $table->timestamps();
         });
     }

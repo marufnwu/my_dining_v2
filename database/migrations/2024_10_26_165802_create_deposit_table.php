@@ -18,7 +18,7 @@ return new class extends Migration
             $table->float('amount');
             $table->timestamp('date');
             $table->integer('type')->default(0);
-            $table->integer('manager_id');
+            $table->integer('action_user_id');
             $table->integer('mess_id')->nullable()->default(0);
             $table->timestamps();
 

@@ -16,7 +16,8 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Mess::class);
             $table->string('role', 50);
-            $table->boolean('is_default')->default(true);
+            $table->boolean('is_default')->default(false);
+            $table->boolean('is_admin')->default(false);
             $table->timestamps();
         });
     }

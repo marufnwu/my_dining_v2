@@ -20,7 +20,7 @@ class Purchase extends Model
         'mess_id',
         'price',
         'product',
-        'manager_id',
+        'action_user_id',
     ];
 
     /**
@@ -33,6 +33,6 @@ class Purchase extends Model
         'price' => 'integer',
         'user_id' => 'integer',
         'mess_id' => 'integer',
-        'manager_id' => 'integer',
+        'action_user_id' => 'integer',
     ];
 }

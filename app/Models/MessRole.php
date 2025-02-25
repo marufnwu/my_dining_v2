@@ -11,6 +11,7 @@ class MessRole extends Model
         'mess_id', // Foreign key for Mess
         'role',    // Role name
         'is_default', // Default status
+        "is_admin"
     ];
 
     /**
@@ -22,4 +23,9 @@ class MessRole extends Model
     {
         return $this->hasMany(MessRolePermission::class,);
     }
+
+    protected $casts = [
+        "is_admin"=>"bool",
+        "is_default"=>"bool",
+    ];
 }

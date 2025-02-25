@@ -18,6 +18,7 @@ return [
         ],
         [
             'role' => MessUserRole::ADMIN,
+            "is_admin"=>true,
         ],
     ],
 ];

@@ -20,7 +20,7 @@ class Deposit extends Model
         'amount',
         'date',
         'type',
-        'manager_id',
+        'action_user_id',
         'mess_id',
     ];
 
@@ -33,7 +33,7 @@ class Deposit extends Model
         'amount' => 'float',
         'date' => 'datetime',
         'type' => 'integer',
-        'manager_id' => 'integer',
+        'action_user_id' => 'integer',
         'mess_id' => 'integer',
     ];
 }

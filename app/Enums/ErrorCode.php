@@ -11,4 +11,5 @@ enum ErrorCode : int
     case AUTHENTICATION_REQUIRED = 1002;
     case NO_MESS_ACCESS = 1003;
     case USER_ALREADY_IN_MESS = 1004;
+    case ALREADY_JOINED_MESS = 1005;
 }

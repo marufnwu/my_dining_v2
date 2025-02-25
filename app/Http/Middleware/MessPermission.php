@@ -39,12 +39,12 @@ class MessPermission
      */
     private function hasPermissions($user, array $permissions): bool
     {
-        dd($user->role);
-        $userPermissions = $user->role->permissions->pluck('permission')->toArray();
 
-        if(in_array(MessUserRole::ADMIN, $userPermissions)) {
+        if($user->role?->is_admin){
             return true;
         }
+
+        $userPermissions = $user->role?->permissions->pluck('permission')->toArray() ?? [];
 
         foreach ($permissions as $permission) {
             if (!in_array($permission, $userPermissions)) {
@@ -52,6 +52,6 @@ class MessPermission
             }
         }
 
-        return true;
+        return false;
     }
 }

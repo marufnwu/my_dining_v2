@@ -2,6 +2,7 @@
 
 use App\Console\Commands\FreshMigrateAndSeed;
 use App\Enums\ErrorCode;
+use App\Exceptions\CustomException;
 use App\Exceptions\EmailNotVerifiedException;
 use App\Exceptions\NoMessException;
 use App\Exceptions\PermissionDeniedException;
@@ -34,7 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             "EmailVerified" => \App\Http\Middleware\EmailVerified::class,
             "MessJoinChecker" => \App\Http\Middleware\MessJoinChecker::class,
-            "MessPermission"=>\App\Http\Middleware\MessPermission::class
+            "MessPermission" => \App\Http\Middleware\MessPermission::class
         ]);
     })
     ->withCommands([
@@ -45,33 +46,24 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (Exception $e,  $request) {
             $pipeline = null;
 
-            if($e instanceof AuthenticationException){
-                $pipeline = Pipeline::error(message:"Login Required", status:401, errorCode: ErrorCode::AUTHENTICATION_REQUIRED->value);
-            }
-
-            if($e instanceof EmailNotVerifiedException){
-                $pipeline = Pipeline::error($e->getMessage(), errorCode:$e->getCode());
-            }
-
-            if ($e instanceof ValidationException) {
-                $pipeline = Pipeline::validationError(array_values($e->errors()), message: 'Validation failed', status:200);
-            }
-
-            if ($e instanceof NoMessException) {
-                $pipeline = Pipeline::error(message: $e->getMessage(), status:200, errorCode: ErrorCode::NO_MESS_ACCESS->value);
-            }
-            if ($e instanceof PermissionDeniedException) {
-                $pipeline = Pipeline::error(message: $e->getMessage(), status:403, errorCode: ErrorCode::NO_MESS_ACCESS->value);
+            if ($e instanceof AuthenticationException) {
+                $pipeline = Pipeline::error(message: "Login Required", status: 401, errorCode: ErrorCode::AUTHENTICATION_REQUIRED->value);
+            } elseif ($e instanceof EmailNotVerifiedException) {
+                $pipeline = Pipeline::error($e->getMessage(), errorCode: $e->getCode());
+             } elseif ($e instanceof ValidationException) {
+                $pipeline = Pipeline::validationError(array_values($e->errors()), message: 'Validation failed', status: 200);
+            } elseif ($e instanceof NoMessException) {
+                $pipeline = Pipeline::error(message: $e->getMessage(), status: 200, errorCode: ErrorCode::NO_MESS_ACCESS->value);
+            } elseif ($e instanceof PermissionDeniedException) {
+                $pipeline = Pipeline::error(message: $e->getMessage(), status: 403, errorCode: ErrorCode::NO_MESS_ACCESS->value);
+            } elseif ($e instanceof CustomException) {
+                $pipeline = Pipeline::error(message: $e->getMessage(), status: 403, errorCode: $e->getCode());
             }
 
             if ($request->is('api/*')) {
-                if($pipeline){
+                if ($pipeline) {
                     return $pipeline->toApiResponse();
                 }
             }
         });
-
-
-
-
     })->create();

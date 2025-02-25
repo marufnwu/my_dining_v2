@@ -18,7 +18,7 @@ return new class extends Migration
             $table->bigInteger('mess_id');
             $table->float('amount');
             $table->string('comment');
-            $table->bigInteger('manager_id');
+            $table->bigInteger('action_user_id');
             $table->timestamps();  // Adds created_at and updated_at fields
         });
     }
