@@ -27,10 +27,11 @@ class CreateUserAccountRequest extends BaseFormRequest
             // 'user_name' => 'required|string|max:255|unique:users,user_name',
             'email' => 'required|email|max:255|unique:users,email',
             'country_id' => 'required|exists:countries,id,status,1',
-            'phone' => ['required', 'string', "max:10", new ValidPhoneNumber(request()->input('country_id'))], // Adjust length as per your requirements
+            'phone' => ['required', 'string', "max:10", new ValidPhoneNumber(request()->input('country_id'))],
             'city' => 'required|string|max:30',
-            'gender' => ['required', 'in:' . implode(',', Gender::values())], // Referencing enum values
-            'password' => 'required|string|min:8|confirmed', // Ensure a minimum length and confirmation
+            'gender' => ['required', 'in:' . implode(',', Gender::values())],
+            'password' => 'required|string|min:8|confirmed',
+            "role"=>""
         ];
     }
 

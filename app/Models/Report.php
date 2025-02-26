@@ -31,8 +31,8 @@ class Report extends Model
      */
     protected $casts = [
         'creation_date' => 'datetime',
-        'user_id' => 'integer',
-        'mess_id' => 'integer',
+
+
         'month' => 'integer',
         'year' => 'integer',
     ];

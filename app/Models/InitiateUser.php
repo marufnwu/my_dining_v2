@@ -16,7 +16,7 @@ class InitiateUser extends Model
      */
     protected $fillable = [
         'month_id',
-        'user_id',
+        'mess_user_id',
         'mess_id',
         'year',
         'month',
@@ -33,7 +33,7 @@ class InitiateUser extends Model
         'month' => 'integer',
         'active' => 'boolean',
         'month_id' => 'integer',
-        'user_id' => 'integer',
-        'mess_id' => 'integer',
+
+
     ];
 }

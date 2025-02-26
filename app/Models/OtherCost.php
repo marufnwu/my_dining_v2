@@ -18,7 +18,7 @@ class OtherCost extends Model
         'date',
         'price',
         'product',
-        'user_id',
+        'mess_user_id',
         'mess_id',
 
     ];
@@ -31,8 +31,8 @@ class OtherCost extends Model
     protected $casts = [
         'date' => 'date',
         'price' => 'float',
-        'user_id' => 'integer',
-        'mess_id' => 'integer',
+
+
 
     ];
 }

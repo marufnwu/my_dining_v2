@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('initiate_users', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('month_id');
-            $table->bigInteger('user_id');
+            $table->bigInteger('mess_user_id');
             $table->bigInteger('mess_id');
             $table->year('year');
             $table->integer('month');

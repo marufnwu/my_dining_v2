@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\MessUserStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -15,6 +17,21 @@ class MessUser extends Model
         'left_at',
         'status',
     ];
+
+    /**
+     * Get the user that owns the MessUser
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    function scopeByStatus(Builder $q, MessUserStatus $status) {
+        return $q->where("status", $status->value);
+    }
+
 
     /**
      * Get the mess that owns the MessUser

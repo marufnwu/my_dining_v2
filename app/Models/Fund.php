@@ -32,7 +32,7 @@ class Fund extends Model
         'amount' => 'float',
         'date' => 'datetime',
         'month_id' => 'integer',
-        'mess_id' => 'integer',
+
 
     ];
 }

@@ -16,7 +16,7 @@ class Purchase extends Model
      */
     protected $fillable = [
         'date',
-        'user_id',
+        'mess_user_id',
         'mess_id',
         'price',
         'product',
@@ -31,8 +31,8 @@ class Purchase extends Model
     protected $casts = [
         'date' => 'date',
         'price' => 'integer',
-        'user_id' => 'integer',
-        'mess_id' => 'integer',
+
+
 
     ];
 }

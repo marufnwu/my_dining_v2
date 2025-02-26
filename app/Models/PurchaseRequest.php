@@ -16,7 +16,7 @@ class PurchaseRequest extends Model
      */
     protected $fillable = [
         'date',
-        'user_id',
+        'mess_user_id',
         'mess_id',
         'type',
         'purchase_type',
@@ -37,8 +37,8 @@ class PurchaseRequest extends Model
         'date' => 'date',
         'price' => 'float',
         'deposit_request' => 'boolean',
-        'user_id' => 'integer',
-        'mess_id' => 'integer',
+
+
         'purchase_type' => 'integer',
         'status' => 'integer',
     ];

@@ -16,11 +16,10 @@ class Deposit extends Model
      */
     protected $fillable = [
         'month_id',
-        'user_id',
+        'mess_user_id',
         'amount',
         'date',
         'type',
-
         'mess_id',
     ];
 
@@ -34,6 +33,5 @@ class Deposit extends Model
         'date' => 'datetime',
         'type' => 'integer',
 
-        'mess_id' => 'integer',
     ];
 }

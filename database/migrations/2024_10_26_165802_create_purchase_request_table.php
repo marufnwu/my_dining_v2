@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('purchase_requests', function (Blueprint $table) {
             $table->id();
             $table->date('date');
-            $table->integer('user_id');
+            $table->integer('mess_user_id');
             $table->integer('mess_id');
             $table->string('type', 10);
             $table->integer('purchase_type')->default(1);

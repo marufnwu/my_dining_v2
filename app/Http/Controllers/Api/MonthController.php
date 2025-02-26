@@ -40,4 +40,8 @@ class MonthController extends Controller
 
         return $pipeline->toApiResponse();
     }
+
+    public function list(){
+        return $this->monthService->list()->toApiResponse();
+    }
 }

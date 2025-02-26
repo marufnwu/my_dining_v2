@@ -16,7 +16,7 @@ return new class extends Migration
             $table->date('date');
             $table->float('price');
             $table->string('product');
-            $table->integer('user_id');
+            $table->integer('mess_user_id');
             $table->integer('mess_id')->default(0);
 
             $table->timestamps();

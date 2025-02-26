@@ -7,14 +7,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CreateUserAccountRequest;
 use App\Models\Country;
 use App\Services\MessService;
+use App\Services\MessUserService;
 
 class MessMemberController extends Controller
 {
     public function __construct(
-        protected MessService $service
+        protected MessUserService $service
     ) {}
 
-    function createUserAddMess(CreateUserAccountRequest $request) {
+   public  function createUserAddMess(CreateUserAccountRequest $request) {
 
 
         $data = $request->validated();
@@ -34,5 +35,9 @@ class MessMemberController extends Controller
         $pipeline = $this->service->createAndAddUser($userDto);
 
         return $pipeline->toApiResponse();
+    }
+
+    public function list() {
+        return $this->service->messMembers()->toApiResponse();
     }
 }

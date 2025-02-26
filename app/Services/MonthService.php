@@ -11,6 +11,12 @@ use Carbon\Carbon;
 class MonthService
 {
     // Add your service methods here
+
+    public static function getSelectedMonth($monthId) : ?Month
+    {
+        return MessService::currentMess()?->months()->where("id", $monthId)->first() ?? null;
+    }
+
     public function createMonth(CreateMonthDTO $dto): Pipeline
     {
         $data = [
@@ -29,7 +35,6 @@ class MonthService
             $data['end_at'] = Carbon::create($year, $month, 1)->endOfMonth();
         } elseif ($data['type'] === MonthType::MANUAL->value) {
             $data['start_at'] = Carbon::parse($data['start_at'])->startOfMonth();
-            $data['end_at'] = Carbon::parse($data['start_at'])->endOfMonth();
         }
 
         unset($data['month'], $data['year']);
@@ -41,5 +46,10 @@ class MonthService
         $month =  Month::create($data);
 
         return Pipeline::success(data: $month);
+    }
+
+    function list() : Pipeline {
+        $months = MessService::currentMess()->months()->orderByDesc("id")->get();
+        return Pipeline::success($months);
     }
 }

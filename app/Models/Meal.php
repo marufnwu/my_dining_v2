@@ -16,13 +16,12 @@ class Meal extends Model
      */
     protected $fillable = [
         'month_id',
-        'user_id',
+        'mess_user_id',
         'mess_id',
         'date',
         'breakfast',
         'lunch',
         'dinner',
-
     ];
 
     /**
@@ -36,8 +35,8 @@ class Meal extends Model
         'lunch' => 'float',
         'dinner' => 'float',
         'month_id' => 'integer',
-        'user_id' => 'integer',
-        'mess_id' => 'integer',
+
+
 
     ];
 }

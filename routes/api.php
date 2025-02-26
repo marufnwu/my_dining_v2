@@ -2,10 +2,12 @@
 
 use App\Constants\MessPermission;
 use App\Constants\MessUserRole;
+use App\Http\Controllers\Api\MealController;
 use App\Http\Controllers\Api\MessController;
 use App\Http\Controllers\Api\MessMemberController;
 use App\Http\Controllers\Api\MonthController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Middleware\CheckActiveMonth;
 use App\Http\Middleware\MustNotMessJoinChecker;
 use Illuminate\Support\Facades\Route;
 
@@ -29,18 +31,30 @@ Route::as('api.')->group(function () {
     Route::middleware(['auth:sanctum', 'EmailVerified'])->group(function () {
 
         // Routes that require the user to be part of a mess
-        Route::prefix("mess")->middleware('MessJoinChecker')->group(function () {
+        Route::middleware('MessJoinChecker')->group(function () {
 
             // Mess member management routes
             Route::prefix('member')
-                ->middleware('MessPermission:' . MessUserRole::MANAGER . ',' . MessPermission::USER_MANAGEMENT)
+
                 ->controller(MessMemberController::class)
                 ->group(function () {
-                    Route::post('create-and-add', 'createUserAddMess')->name('mess.member.create-and-add');
+                    Route::get("list", "list");
+                    Route::post('create-and-add', 'createUserAddMess')->middleware('MessPermission:' . MessPermission::USER_ADD . ',' . MessPermission::USER_MANAGEMENT)->name('mess.member.create-and-add');
                 });
 
             Route::prefix("month")->controller(MonthController::class)->group(function(){
-                Route::post("/create", "createMonth");
+                Route::post("create", "createMonth");
+                Route::get("list", "list");
+            });
+
+            Route::prefix("meal")->middleware(CheckActiveMonth::class)->controller(MealController::class)->group(function(){
+                Route::post("add", "add");
+                Route::put("{meal}/update", "update");
+                Route::delete("{meal}/delete", "delete");
+            });
+
+            Route::prefix("role")->group(function(){
+                //Route::get("list", "list");
             });
         });
 

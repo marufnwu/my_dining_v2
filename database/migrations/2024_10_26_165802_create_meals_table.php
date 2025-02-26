@@ -14,13 +14,12 @@ return new class extends Migration
         Schema::create('meals', function (Blueprint $table) {
             $table->id();
             $table->integer('month_id');
-            $table->integer('user_id');
+            $table->integer('mess_user_id');
             $table->integer('mess_id');
             $table->date('date');
             $table->float('breakfast');
             $table->float('lunch');
             $table->float('dinner');
-
             $table->timestamps();
         });
     }
