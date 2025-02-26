@@ -20,7 +20,7 @@ class Fund extends Model
         'mess_id',
         'amount',
         'comment',
-        'action_user_id',
+
     ];
 
     /**
@@ -33,6 +33,6 @@ class Fund extends Model
         'date' => 'datetime',
         'month_id' => 'integer',
         'mess_id' => 'integer',
-        'action_user_id' => 'integer',
+
     ];
 }

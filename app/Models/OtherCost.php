@@ -20,7 +20,7 @@ class OtherCost extends Model
         'product',
         'user_id',
         'mess_id',
-        'action_user_id',
+
     ];
 
     /**
@@ -33,6 +33,6 @@ class OtherCost extends Model
         'price' => 'float',
         'user_id' => 'integer',
         'mess_id' => 'integer',
-        'action_user_id' => 'integer',
+
     ];
 }

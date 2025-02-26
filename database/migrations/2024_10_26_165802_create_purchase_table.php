@@ -18,7 +18,7 @@ return new class extends Migration
             $table->integer('mess_id')->default(0);
             $table->integer('price');
             $table->text('product')->nullable();
-            $table->integer('action_user_id');
+
             $table->timestamps();
         });
     }
