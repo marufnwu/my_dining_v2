@@ -25,6 +25,9 @@ class MealController extends Controller
      */
     public function add(MealRequest $request)
     {
+
+        $
+
         // Create DTO from validated data
         $dto = MealDto::fromArray($request->validated());
 

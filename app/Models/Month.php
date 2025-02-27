@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\MonthType;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Month extends Model
 {
@@ -36,5 +37,15 @@ class Month extends Model
         }
 
         return true;
+    }
+
+    /**
+     * Get all of the initiatedUser for the Month
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function initiatedUser(): HasMany
+    {
+        return $this->hasMany(InitiateUser::class);
     }
 }

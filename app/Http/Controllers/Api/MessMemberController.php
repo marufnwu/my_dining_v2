@@ -6,8 +6,10 @@ use App\DTOs\UserDto;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CreateUserAccountRequest;
 use App\Models\Country;
+use App\Models\Month;
 use App\Services\MessService;
 use App\Services\MessUserService;
+use App\Utils\ContainerData;
 
 class MessMemberController extends Controller
 {
@@ -39,5 +41,10 @@ class MessMemberController extends Controller
 
     public function list() {
         return $this->service->messMembers()->toApiResponse();
+    }
+
+    function inititated() {
+        dd(ContainerData::getMessId());
+        return $this->service->initiated($month)->toApiResponse();
     }
 }

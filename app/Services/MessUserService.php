@@ -10,6 +10,7 @@ use App\Exceptions\MustNotMessJoinException;
 use App\Helpers\Pipeline;
 use App\Models\Mess;
 use App\Models\MessRole;
+use App\Models\Month;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -78,5 +79,9 @@ class MessUserService
     {
         $mess = MessService::currentMess();
         return Pipeline::success(data: $mess->messUsers()->byStatus(MessUserStatus::Active)->get());
+    }
+
+    public function initiated(Month $month) : Pipeline {
+        return Pipeline::success($month->initiatedUser?? collect());
     }
 }

@@ -16,10 +16,8 @@ return new class extends Migration
             $table->bigInteger('month_id');
             $table->bigInteger('mess_user_id');
             $table->bigInteger('mess_id');
-            $table->year('year');
-            $table->integer('month');
-            $table->boolean('active')->default(1);  // Storing act   ive as a boolean for clarity
-            $table->timestamps();  // Adds created_at and updated_at fields
+            $table->boolean('active')->default(true);
+            $table->timestamps();
         });
     }
 
