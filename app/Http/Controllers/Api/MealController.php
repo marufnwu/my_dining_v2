@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\MealRequest;
 use App\Models\Meal;
 use App\Services\MealService;
+use App\Services\MessService;
+use Illuminate\Support\Facades\Gate;
 
 class MealController extends Controller
 {
@@ -26,10 +28,11 @@ class MealController extends Controller
     public function add(MealRequest $request)
     {
 
-        $
-
+        $data = $request->validated();
+        $data['month_id'] = app()->getMonth()->id;
+        $data['mess_id'] = MessService::currentMess()->id;
         // Create DTO from validated data
-        $dto = MealDto::fromArray($request->validated());
+        $dto = MealDto::fromArray($data);
 
         // Call the service method
         $pipeline = $this->mealService->addMeal($dto);

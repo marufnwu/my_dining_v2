@@ -44,7 +44,7 @@ class MessMemberController extends Controller
     }
 
     function inititated() {
-        dd(ContainerData::getMessId());
+        dd(app()->getMonth());
         return $this->service->initiated($month)->toApiResponse();
     }
 }

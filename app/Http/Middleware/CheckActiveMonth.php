@@ -15,12 +15,13 @@ class CheckActiveMonth
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next,  $isCheckActiveMonth = false): Response
     {
-
+        $isCheckActiveMonth = filter_var($isCheckActiveMonth, FILTER_VALIDATE_BOOLEAN);
         if(!$request->hasHeader("Month-ID")){
             throw new CustomException(message: "Selected month is undefined!");
         }
+
 
         $monthId = $request->header("Month-ID");
 
@@ -30,9 +31,13 @@ class CheckActiveMonth
             throw new CustomException(message: "Selected month is not found");
         }
 
-        if(!$month->isActive){
-            throw new CustomException(message: "Selected month is not active");
+        if($isCheckActiveMonth){
+            if(!$month->isActive){
+                throw new CustomException(message: "Selected month is not active");
+            }
         }
+
+        app()->setMonth($month);
 
         return $next($request);
     }

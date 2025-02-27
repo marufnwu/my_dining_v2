@@ -9,13 +9,14 @@ use App\Exceptions\PermissionDeniedException;
 use App\Helpers\Pipeline;
 use App\Http\Middleware\CheckMaintenanceMode;
 use App\Http\Middleware\ForceJson;
+use Bootstrap\MyApplication;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Validation\ValidationException;
 
-return Application::configure(basePath: dirname(__DIR__))
+return MyApplication::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__ . '/../routes/web.php',
         api: __DIR__ . '/../routes/api.php',
@@ -35,7 +36,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             "EmailVerified" => \App\Http\Middleware\EmailVerified::class,
             "MessJoinChecker" => \App\Http\Middleware\MessJoinChecker::class,
-            "MessPermission" => \App\Http\Middleware\MessPermission::class
+            "MessPermission" => \App\Http\Middleware\MessPermission::class,
+            "MonthChecker" => \App\Http\Middleware\CheckActiveMonth::class,
         ]);
     })
     ->withCommands([

@@ -16,7 +16,19 @@ class MealService
      */
     public function addMeal(MealDto $dto): Pipeline
     {
-        $meal = Meal::create($dto->toArray());
+        $meal = Meal::updateOrCreate(
+            [
+                'month_id' => $dto->monthId,
+                'date' => $dto->date,
+                'mess_user_id' => $dto->messUserId,
+                'mess_id' => $dto->messId,
+            ],
+            [
+                'breakfast' => $dto->breakfast ?? 0,
+                'lunch' => $dto->lunch ?? 0,
+                'dinner' => $dto->dinner ?? 0,
+            ]
+        );
         return Pipeline::success(data: $meal);
     }
 

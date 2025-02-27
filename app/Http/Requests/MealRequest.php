@@ -27,7 +27,7 @@ class MealRequest extends FormRequest
             "mess_user_id" => [
                 "required",
                 "numeric",
-                Rule::exists( 'mess_users', 'id')->where(function ($query) {
+                Rule::exists('mess_users', 'id')->where(function ($query) {
                     $query->where('mess_id', MessService::currentMess()->id); // Assuming `mess_id` is available in the request or context
                 }),
             ],
@@ -37,7 +37,14 @@ class MealRequest extends FormRequest
             "dinner" => "nullable|numeric|min:0",
         ];
     }
-
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'breakfast' => $this->breakfast ?? 0,
+            'lunch' => $this->lunch ?? 0,
+            'dinner' => $this->dinner ?? 0,
+        ]);
+    }
     protected function withValidator($validator)
     {
         $validator->sometimes(['breakfast', 'lunch', 'dinner'], 'required_without_all:breakfast,lunch,dinner', function ($input) {

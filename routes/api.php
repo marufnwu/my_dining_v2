@@ -39,7 +39,7 @@ Route::as('api.')->group(function () {
                 ->group(function () {
                     Route::get("list", "list");
                     Route::post('create-and-add', 'createUserAddMess')->middleware('MessPermission:' . MessPermission::USER_ADD . ',' . MessPermission::USER_MANAGEMENT)->name('mess.member.create-and-add');
-                    Route::get("initiated", "inititated");
+                    Route::get("initiated", "inititated")->middleware("MonthChecker:true");
                 });
 
             Route::prefix("month")->controller(MonthController::class)->group(function () {
@@ -47,7 +47,7 @@ Route::as('api.')->group(function () {
                 Route::get("list", "list");
             });
 
-            Route::prefix("meal")->middleware(CheckActiveMonth::class)->controller(MealController::class)->group(function () {
+            Route::prefix("meal")->middleware("MonthChecker:false")->controller(MealController::class)->group(function () {
                 Route::post("add", "add");
                 Route::put("{meal}/update", "update");
                 Route::delete("{meal}/delete", "delete");
