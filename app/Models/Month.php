@@ -48,4 +48,34 @@ class Month extends Model
     {
         return $this->hasMany(InitiateUser::class);
     }
+
+    /**
+     * Get all of the meals for the Month
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function meals(): HasMany
+    {
+        return $this->hasMany(Meal::class);
+    }
+
+    /**
+     * Get all of the deposits for the Month
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function deposits(): HasMany
+    {
+        return $this->hasMany(Deposit::class);
+    }
+
+    /**
+     * Get all of the purchases for the Month
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function purchases(): HasMany
+    {
+        return $this->hasMany(Purchase::class);
+    }
 }
