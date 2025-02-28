@@ -14,6 +14,7 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Validation\ValidationException;
 
 return MyApplication::configure(basePath: dirname(__DIR__))
@@ -26,7 +27,8 @@ return MyApplication::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
 
         $middleware->append([
-            CheckMaintenanceMode::class
+            CheckMaintenanceMode::class,
+            SubstituteBindings::class,
         ]);
 
         $middleware->group("api", [
