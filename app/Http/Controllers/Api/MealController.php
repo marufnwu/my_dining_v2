@@ -68,7 +68,6 @@ class MealController extends Controller
      */
     public function delete(Meal $meal)
     {
-        dd($meal);
         // Call the service method
         $pipeline = $this->mealService->deleteMeal($meal);
 

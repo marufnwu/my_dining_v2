@@ -16,6 +16,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return MyApplication::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -28,11 +29,12 @@ return MyApplication::configure(basePath: dirname(__DIR__))
 
         $middleware->append([
             CheckMaintenanceMode::class,
-            SubstituteBindings::class,
         ]);
 
         $middleware->group("api", [
-            ForceJson::class
+            ForceJson::class,
+            Illuminate\Routing\Middleware\SubstituteBindings::class
+
         ]);
 
         $middleware->alias([
@@ -62,6 +64,8 @@ return MyApplication::configure(basePath: dirname(__DIR__))
                 $pipeline = Pipeline::error(message: $e->getMessage(), status: 403, errorCode: ErrorCode::NO_MESS_ACCESS->value);
             } elseif ($e instanceof CustomException) {
                 $pipeline = Pipeline::error(message: $e->getMessage(), status: 403, errorCode: $e->getCode());
+            } elseif ($e instanceof NotFoundHttpException) {
+                $pipeline = Pipeline::error(message: $e->getMessage(), status: 404);
             }
 
             if ($request->is('api/*')) {
