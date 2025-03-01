@@ -45,7 +45,14 @@ class MealPolicy
      */
     public function delete(User $user, Meal $meal): bool
     {
-        return false;
+        $currentMonth = app()->getMonth(); // Get the current active month
+
+        // Check if the meal belongs to the current month
+        if ($meal->month_id === $currentMonth->id) {
+            return true; // Prevent deletion if it belongs to the active month
+        }
+
+        return false; // Allow deletion otherwise
     }
 
     /**

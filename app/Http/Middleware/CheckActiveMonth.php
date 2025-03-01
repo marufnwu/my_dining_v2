@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Exceptions\CustomException;
+use App\Services\MessService;
 use App\Services\MonthService;
 use Closure;
 use Illuminate\Http\Request;
@@ -25,11 +26,13 @@ class CheckActiveMonth
 
         $monthId = $request->header("Month-ID");
 
-        $month = MonthService::getSelectedMonth($monthId);
+        $month = app()->getMess()->months()->where("id", $monthId)->first();
 
         if(!$month){
             throw new CustomException(message: "Selected month is not found");
         }
+
+
 
         if($isCheckActiveMonth){
             if(!$month->isActive){

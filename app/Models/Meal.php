@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Meal extends Model
 {
@@ -35,8 +36,15 @@ class Meal extends Model
         'lunch' => 'float',
         'dinner' => 'float',
         'month_id' => 'integer',
-
-
-
     ];
+
+    /**
+     * Get the month that owns the Meal
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function month(): BelongsTo
+    {
+        return $this->belongsTo(Month::class);
+    }
 }

@@ -6,6 +6,7 @@ use App\DTOs\MealDto;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\MealRequest;
 use App\Models\Meal;
+use App\Policies\MealPolicy;
 use App\Services\MealService;
 use App\Services\MessService;
 use Illuminate\Support\Facades\Gate;
@@ -68,6 +69,7 @@ class MealController extends Controller
      */
     public function delete(Meal $meal)
     {
+        Gate::authorize('delete', $meal);
         // Call the service method
         $pipeline = $this->mealService->deleteMeal($meal);
 

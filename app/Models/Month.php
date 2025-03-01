@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\MonthType;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Month extends Model
@@ -47,6 +48,16 @@ class Month extends Model
     public function initiatedUser(): HasMany
     {
         return $this->hasMany(InitiateUser::class);
+    }
+
+    /**
+     * Get the mess that owns the Month
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function mess(): BelongsTo
+    {
+        return $this->belongsTo(Mess::class);
     }
 
     /**

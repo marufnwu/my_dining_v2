@@ -17,9 +17,13 @@ class MessJoinChecker
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
-        if (!$user?->activeMess) {
+        $mess = $user?->activeMess;
+        if (!$mess) {
              throw new NoMessException();
         }
+
+        app()->setMess($mess);
+
         return $next($request);
     }
 }
