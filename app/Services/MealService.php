@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\DTOs\MealDto;
 use App\Helpers\Pipeline;
 use App\Models\Meal;
 
@@ -14,19 +13,19 @@ class MealService
      * @param MealDto $dto
      * @return Pipeline
      */
-    public function addMeal(MealDto $dto): Pipeline
+    public function addMeal(array $data): Pipeline
     {
         $meal = Meal::updateOrCreate(
             [
-                'month_id' => $dto->monthId,
-                'date' => $dto->date,
-                'mess_user_id' => $dto->messUserId,
-                'mess_id' => $dto->messId,
+                'month_id' => $data['month_id'],
+                'date' => $data['date'],
+                'mess_user_id' => $data['mess_user_id'],
+                'mess_id' => $data['mess_id'],
             ],
             [
-                'breakfast' => $dto->breakfast ?? 0,
-                'lunch' => $dto->lunch ?? 0,
-                'dinner' => $dto->dinner ?? 0,
+                'breakfast' => $data['breakfast'] ?? 0,
+                'lunch' => $data['lunch'] ?? 0,
+                'dinner' => $data['dinner'] ?? 0,
             ]
         );
         return Pipeline::success(data: $meal);
@@ -39,9 +38,9 @@ class MealService
      * @param MealDto $dto
      * @return Pipeline
      */
-    public function updateMeal(Meal $meal, MealDto $dto): Pipeline
+    public function updateMeal(Meal $meal, array $data): Pipeline
     {
-        $meal->update($dto->toArray());
+        $meal->update($data);
         return Pipeline::success(data: $meal->fresh());
     }
 
@@ -64,9 +63,7 @@ class MealService
      */
     public function listMeals(): Pipeline
     {
-        $meals = Meal::where('mess_id', MessService::currentMess()->id)
-            ->orderByDesc('id')
-            ->get();
+        $meals = app()->getMonth()->meals()->groupBy('date')->orderByDesc("date")->get();
         return Pipeline::success(data: $meals);
     }
 }

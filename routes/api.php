@@ -47,10 +47,11 @@ Route::as('api.')->group(function () {
                 Route::get("list", "list");
             });
 
-            Route::prefix("meal")->middleware("MonthChecker:false")->controller(MealController::class)->group(function () {
+            Route::prefix("meal")->middleware("MonthChecker:true")->controller(MealController::class)->group(function () {
                 Route::post("add", "add");
                 Route::put("{meal}/update", "update");
                 Route::delete("{meal}/delete", "delete");
+                Route::get("list", "list");
             });
 
 
