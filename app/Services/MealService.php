@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Helpers\Pipeline;
 use App\Models\Meal;
+use App\Models\Month;
 
 class MealService
 {
@@ -63,7 +64,48 @@ class MealService
      */
     public function listMeals(): Pipeline
     {
-        $meals = app()->getMonth()->meals()->groupBy('date')->orderByDesc("date")->get();
-        return Pipeline::success(data: $meals);
+        $month = Month::with([
+            'meals' => function ($query) {
+                $query->whereIn('mess_user_id', function ($subQuery) {
+                    $subQuery->select('mess_user_id')
+                        ->from('initiate_users')
+                        ->whereColumn('initiate_users.month_id', 'meals.month_id');
+                });
+            }
+        ])->find(app()->getMonth()->id);
+
+        // Group meals by date (ignoring timestamp) and sum meals per day
+        $mealsByDate = $month->meals->groupBy(function ($meal) {
+            return $meal->date->toDateString(); // Extract only YYYY-MM-DD
+        })->map(function ($meals) {
+            return [
+                'meals' => $meals->map(function ($meal) {
+                    return $meal;
+                }),
+                'total_meals' => [
+                    'total_breakfast' => $meals->sum('breakfast'),
+                    'total_lunch' => $meals->sum('lunch'),
+                    'total_dinner' => $meals->sum('dinner'),
+                ]
+            ];
+        });
+
+        // Calculate overall totals
+        $totalBreakfast = $month->meals->sum('breakfast');
+        $totalLunch = $month->meals->sum('lunch');
+        $totalDinner = $month->meals->sum('dinner');
+
+        $data = [
+            'meals_by_date' => $mealsByDate,
+            'overall_totals' => [
+                'total_breakfast' => $totalBreakfast,
+                'total_lunch' => $totalLunch,
+                'total_dinner' => $totalDinner,
+                'total_meals' => $totalBreakfast + $totalLunch + $totalDinner
+            ]
+        ];
+
+        // $meals = app()->getMonth()->meals()->groupBy('date')->orderByDesc("date")->get();
+        return Pipeline::success(data: $data);
     }
 }
