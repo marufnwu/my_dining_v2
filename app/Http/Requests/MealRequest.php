@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\UserInitiatedInCurrentMonth;
 use App\Services\MessService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -27,9 +28,8 @@ class MealRequest extends FormRequest
             "mess_user_id" => [
                 "required",
                 "numeric",
-                Rule::exists('mess_users', 'id')->where(function ($query) {
-                    $query->where('mess_id', MessService::currentMess()->id); // Assuming `mess_id` is available in the request or context
-                }),
+                Rule::exists('mess_users', 'id')->where('mess_id', app()->getMess()->id),
+                new UserInitiatedInCurrentMonth(),
             ],
             "date" => "required|date",
             "breakfast" => "nullable|numeric|min:0",

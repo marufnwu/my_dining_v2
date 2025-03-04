@@ -26,6 +26,9 @@ class MealController extends Controller
     {
 
         $data = $request->validated();
+
+        
+
         $data['month_id'] = app()->getMonth()->id;
         $data['mess_id'] = app()->getMess()->id;
 

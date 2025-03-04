@@ -39,7 +39,10 @@ Route::as('api.')->group(function () {
                 ->group(function () {
                     Route::get("list", "list");
                     Route::post('create-and-add', 'createUserAddMess')->middleware('MessPermission:' . MessPermission::USER_ADD . ',' . MessPermission::USER_MANAGEMENT)->name('mess.member.create-and-add');
-                    Route::get("initiated", "inititated")->middleware("MonthChecker:true");
+                    Route::post("inititate/add/{messUser}", "initiateUser")->middleware("MonthChecker:true");
+                    Route::post("inititate/add/all", "initiateAll")->middleware("MonthChecker:true");
+                    Route::get("inititate/list", "inititated")->middleware("MonthChecker:true");
+                    Route::get("inititate/list/{month}/", "inititated");
                 });
 
             Route::prefix("month")->controller(MonthController::class)->group(function () {

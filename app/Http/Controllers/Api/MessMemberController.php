@@ -3,10 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\DTOs\UserDto;
+use App\Helpers\ApiResponse;
+use App\Helpers\Pipeline;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CreateUserAccountRequest;
 use App\Models\Country;
+use App\Models\MessUser;
 use App\Models\Month;
+use App\Models\User;
 use App\Services\MessService;
 use App\Services\MessUserService;
 use App\Utils\ContainerData;
@@ -44,7 +48,10 @@ class MessMemberController extends Controller
     }
 
     function inititated() {
-        dd(app()->getMonth());
-        return $this->service->initiated($month)->toApiResponse();
+        return $this->service->initiated(app()->getMonth())->toApiResponse();
+    }
+
+    function initiateUser(MessUser $messUser)  {
+        return $this->service->initiateUser($messUser)->toApiResponse();
     }
 }

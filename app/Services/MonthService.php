@@ -17,6 +17,11 @@ class MonthService
         return MessService::currentMess()?->months()->where("id", $monthId)->first() ?? null;
     }
 
+    public static function isUserInitiatedInCurrentMonth($userId) : bool
+    {
+        return app()->getMonth()->initiatedUser()->where("mess_user_id", $userId)->exists() ?? false;
+    }
+
     public function createMonth(CreateMonthDTO $dto): Pipeline
     {
         $data = [

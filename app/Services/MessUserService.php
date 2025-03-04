@@ -10,6 +10,7 @@ use App\Exceptions\MustNotMessJoinException;
 use App\Helpers\Pipeline;
 use App\Models\Mess;
 use App\Models\MessRole;
+use App\Models\MessUser;
 use App\Models\Month;
 use App\Models\User;
 use Carbon\Carbon;
@@ -17,6 +18,17 @@ use Illuminate\Support\Facades\DB;
 
 class MessUserService
 {
+
+
+    static function isUserInSameMess(MessUser $messUser, ?Mess $mess = null) : bool {
+        $mess = $mess ?? app()->getMess();
+        return  $mess?->id == $messUser->user->activeMess->id;
+    }
+    static function isUserInitiated(MessUser $messUser, ?Month $month = null) : bool {
+        $month = $month ?? app()->getMonth();
+        return  $month->initiatedUser()->where("mess_user_id", $messUser->id)->exists();
+    }
+
     // Add your service methods here
 
     function addUser(Mess $mess, User $user, ?MessRole $role = null): Pipeline
@@ -84,4 +96,22 @@ class MessUserService
     public function initiated(Month $month) : Pipeline {
         return Pipeline::success($month->initiatedUser?? collect());
     }
+
+    public function initiateUser(MessUser $user) : Pipeline {
+        if (!MessUserService::isUserInSameMess($user)) {
+            return Pipeline::error(message: "User is not in the same mess");
+        }
+
+        $month = app()->getMonth();
+
+        if (MessUserService::isUserInitiated($user, $month)) {
+            return Pipeline::error(message: "User is already initiated");
+        }
+
+        $month->initiatedUser()->create(['mess_user_id' => $user->id, "month_id" => $month->id, "mess_id"=>app()->getMess()->id]);
+
+        return Pipeline::success();
+    }
+
+
 }
