@@ -18,6 +18,7 @@ class Purchase extends Model
         'date',
         'mess_user_id',
         'mess_id',
+        "month_id",
         'price',
         'product',
 

@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->date('date');
             $table->integer('mess_user_id');
+            $table->integer('month_id');
             $table->integer('mess_id')->default(0);
             $table->integer('price');
             $table->text('product')->nullable();

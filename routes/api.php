@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\MealController;
 use App\Http\Controllers\Api\MessController;
 use App\Http\Controllers\Api\MessMemberController;
 use App\Http\Controllers\Api\MonthController;
+use App\Http\Controllers\Api\PurchaseController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Middleware\CheckActiveMonth;
 use App\Http\Middleware\MustNotMessJoinChecker;
@@ -54,6 +55,12 @@ Route::as('api.')->group(function () {
                 Route::post("add", "add");
                 Route::put("{meal}/update", "update");
                 Route::delete("{meal}/delete", "delete");
+                Route::get("list", "list");
+            });
+            Route::prefix("purchase")->middleware("MonthChecker:true")->controller(PurchaseController::class)->group(function () {
+                Route::post("add", "add");
+                Route::put("{purchase}/update", "update");
+                Route::delete("{purchase}/delete", "delete");
                 Route::get("list", "list");
             });
 
