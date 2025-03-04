@@ -66,7 +66,7 @@ class MealController extends Controller
     public function list()
     {
         // Call the service method
-        $pipeline = $this->mealService->listMeals();
+        $pipeline = $this->mealService->listMeals(app()->getMonth());
 
         // Return API response
         return $pipeline->toApiResponse();

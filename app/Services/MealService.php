@@ -62,7 +62,7 @@ class MealService
      *
      * @return Pipeline
      */
-    public function listMeals(): Pipeline
+    public function listMeals(Month $month): Pipeline
     {
         $month = Month::with([
             'meals' => function ($query) {
@@ -72,7 +72,7 @@ class MealService
                         ->whereColumn('initiate_users.month_id', 'meals.month_id');
                 });
             }
-        ])->find(app()->getMonth()->id);
+        ])->find($month->id);
 
         // Group meals by date (ignoring timestamp) and sum meals per day
         $mealsByDate = $month->meals->groupBy(function ($meal) {
