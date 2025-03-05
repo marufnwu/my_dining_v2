@@ -3,20 +3,20 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Deposit;
+use App\Models\OtherCost;
 use App\Rules\MessUserExistsInCurrentMess;
 use App\Rules\UserInitiatedInCurrentMonth;
-use App\Services\DepositService;
+use App\Services\OtherCostService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
-class DepositController extends Controller
+class OtherCostController extends Controller
 {
-    private DepositService $depositService;
+    private OtherCostService $otherCostService;
 
-    public function __construct(DepositService $depositService)
+    public function __construct(OtherCostService $otherCostService)
     {
-        $this->depositService = $depositService;
+        $this->otherCostService = $otherCostService;
     }
 
     public function add(Request $request)
@@ -30,42 +30,44 @@ class DepositController extends Controller
                 new UserInitiatedInCurrentMonth(),
             ],
             "date" => "required|date",
-            "amount" => "required|numeric|min:0",
+            "price" => "required|numeric|min:0",
+            "product" => "required|string|max:255",
         ]);
 
         // Add additional data
         $validatedData['month_id'] = app()->getMonth()->id;
         $validatedData['mess_id'] = app()->getMess()->id;
 
-        // Call the service to add the deposit
-        $pipeline = $this->depositService->addDeposit($validatedData);
+        // Call the service to add the other cost
+        $pipeline = $this->otherCostService->addOtherCost($validatedData);
 
         // Return the API response
         return $pipeline->toApiResponse();
     }
 
-    public function update(Request $request, Deposit $deposit)
+    public function update(Request $request, OtherCost $otherCost)
     {
         $data = $request->validate([
             "date" => "sometimes|date",
-            "amount" => "sometimes|numeric|min:0",
+            "price" => "sometimes|numeric|min:0",
+            "product" => "sometimes|string",
         ]);
 
-        $pipeline = $this->depositService->updateDeposit($deposit, $data);
+        $pipeline = $this->otherCostService->updateOtherCost($otherCost, $data);
 
         return $pipeline->toApiResponse();
     }
 
-    public function delete(Deposit $deposit)
+    public function delete(OtherCost $otherCost)
     {
-        $pipeline = $this->depositService->deleteDeposit($deposit);
+        $pipeline = $this->otherCostService->deleteOtherCost($otherCost);
 
         return $pipeline->toApiResponse();
     }
 
     public function list()
     {
-        $pipeline = $this->depositService->listDeposits(app()->getMonth());
+        $pipeline = $this->otherCostService->listOtherCosts(app()->getMonth());
 
         return $pipeline->toApiResponse();
     }

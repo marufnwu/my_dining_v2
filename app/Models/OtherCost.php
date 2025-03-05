@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OtherCost extends Model
 {
@@ -20,7 +21,7 @@ class OtherCost extends Model
         'product',
         'mess_user_id',
         'mess_id',
-
+        "month_id",
     ];
 
     /**
@@ -35,4 +36,9 @@ class OtherCost extends Model
 
 
     ];
+
+    public function month(): BelongsTo
+    {
+        return $this->belongsTo(Month::class);
+    }
 }

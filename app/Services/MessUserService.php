@@ -20,11 +20,13 @@ class MessUserService
 {
 
 
-    static function isUserInSameMess(MessUser $messUser, ?Mess $mess = null) : bool {
+    static function isUserInSameMess(MessUser $messUser, ?Mess $mess = null): bool
+    {
         $mess = $mess ?? app()->getMess();
         return  $mess?->id == $messUser->user->activeMess->id;
     }
-    static function isUserInitiated(MessUser $messUser, ?Month $month = null) : bool {
+    static function isUserInitiated(MessUser $messUser, ?Month $month = null): bool
+    {
         $month = $month ?? app()->getMonth();
         return  $month->initiatedUser()->where("mess_user_id", $messUser->id)->exists();
     }
@@ -93,11 +95,29 @@ class MessUserService
         return Pipeline::success(data: $mess->messUsers()->byStatus(MessUserStatus::Active)->get());
     }
 
-    public function initiated(Month $month) : Pipeline {
-        return Pipeline::success($month->initiatedUser?? collect());
+    public function initiated(Month $month): Pipeline
+    {
+        return Pipeline::success($month->initiatedUser ?? collect());
     }
 
-    public function initiateUser(MessUser $user) : Pipeline {
+    public function notInitiated(Month $month): Pipeline
+    {
+        $notInitiatedUsers = $month->mess->messUsers()
+            ->whereNotIn('id', function ($query) use ($month) {
+                $query->select('mess_user_id')
+                    ->from('initiate_users')
+                    ->where('month_id', $month->id);
+            })
+            ->with('user')
+            ->get();
+
+        dd($notInitiatedUsers);
+
+        return Pipeline::success($month->initiatedUser ?? collect());
+    }
+
+    public function initiateUser(MessUser $user): Pipeline
+    {
         if (!MessUserService::isUserInSameMess($user)) {
             return Pipeline::error(message: "User is not in the same mess");
         }
@@ -108,10 +128,25 @@ class MessUserService
             return Pipeline::error(message: "User is already initiated");
         }
 
-        $month->initiatedUser()->create(['mess_user_id' => $user->id, "month_id" => $month->id, "mess_id"=>app()->getMess()->id]);
+        $month->initiatedUser()->create(['mess_user_id' => $user->id, "month_id" => $month->id, "mess_id" => app()->getMess()->id]);
 
         return Pipeline::success();
     }
 
+    public function initiateAll(MessUser $user): Pipeline
+    {
+        if (!MessUserService::isUserInSameMess($user)) {
+            return Pipeline::error(message: "User is not in the same mess");
+        }
 
+        $month = app()->getMonth();
+
+        if (MessUserService::isUserInitiated($user, $month)) {
+            return Pipeline::error(message: "User is already initiated");
+        }
+
+        $month->initiatedUser()->create(['mess_user_id' => $user->id, "month_id" => $month->id, "mess_id" => app()->getMess()->id]);
+
+        return Pipeline::success();
+    }
 }

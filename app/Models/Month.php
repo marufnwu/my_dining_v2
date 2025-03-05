@@ -49,6 +49,14 @@ class Month extends Model
     {
         return $this->hasMany(InitiateUser::class);
     }
+    
+    public function notInitiatedUser()
+    {
+        return $this->mess->messUsers()->whereDoesntHave('user', function ($query) {
+            $query->whereIn('id', $this->initiatedUser()->pluck('user_id'));
+        });
+    }
+
 
     /**
      * Get the mess that owns the Month
@@ -89,4 +97,6 @@ class Month extends Model
     {
         return $this->hasMany(Purchase::class);
     }
+
+
 }

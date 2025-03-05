@@ -21,7 +21,6 @@ class Purchase extends Model
         "month_id",
         'price',
         'product',
-
     ];
 
     /**
@@ -36,4 +35,9 @@ class Purchase extends Model
 
 
     ];
+
+    public function month(): BelongsTo
+    {
+        return $this->belongsTo(Month::class);
+    }
 }

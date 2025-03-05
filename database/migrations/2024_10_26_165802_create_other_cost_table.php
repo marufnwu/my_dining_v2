@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('product');
             $table->integer('mess_user_id');
             $table->integer('mess_id')->default(0);
-
+            $table->integer('month_id')->default(0);
             $table->timestamps();
         });
     }

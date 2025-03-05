@@ -50,8 +50,15 @@ class MessMemberController extends Controller
     function inititated() {
         return $this->service->initiated(app()->getMonth())->toApiResponse();
     }
+    function notInititated() {
+        return $this->service->notInitiated(app()->getMonth())->toApiResponse();
+    }
 
     function initiateUser(MessUser $messUser)  {
         return $this->service->initiateUser($messUser)->toApiResponse();
+    }
+
+    function initiateAll()  {
+        return $this->service->initiateAll($messUser)->toApiResponse();
     }
 }

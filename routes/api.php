@@ -2,10 +2,12 @@
 
 use App\Constants\MessPermission;
 use App\Constants\MessUserRole;
+use App\Http\Controllers\Api\DepositController;
 use App\Http\Controllers\Api\MealController;
 use App\Http\Controllers\Api\MessController;
 use App\Http\Controllers\Api\MessMemberController;
 use App\Http\Controllers\Api\MonthController;
+use App\Http\Controllers\Api\OtherCostController;
 use App\Http\Controllers\Api\PurchaseController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Middleware\CheckActiveMonth;
@@ -43,6 +45,7 @@ Route::as('api.')->group(function () {
                     Route::post("inititate/add/{messUser}", "initiateUser")->middleware("MonthChecker:true");
                     Route::post("inititate/add/all", "initiateAll")->middleware("MonthChecker:true");
                     Route::get("inititate/list", "inititated")->middleware("MonthChecker:true");
+                    Route::get("inititate/not", "notInititated")->middleware("MonthChecker:true");
                     Route::get("inititate/list/{month}/", "inititated");
                 });
 
@@ -57,12 +60,21 @@ Route::as('api.')->group(function () {
                 Route::delete("{meal}/delete", "delete");
                 Route::get("list", "list");
             });
-            Route::prefix("purchase")->middleware("MonthChecker:true")->controller(PurchaseController::class)->group(function () {
+
+            Route::prefix("deposit")->middleware("MonthChecker:true")->controller(DepositController::class)->group(function () {
                 Route::post("add", "add");
-                Route::put("{purchase}/update", "update");
-                Route::delete("{purchase}/delete", "delete");
+                Route::put("{deposit}/update", "update");
+                Route::delete("{deposit}/delete", "delete");
                 Route::get("list", "list");
             });
+
+            Route::prefix("other-cost")->middleware("MonthChecker:true")->controller(OtherCostController::class)->group(function () {
+                Route::post("add", "add");
+                Route::put("{otherCost}/update", "update");
+                Route::delete("{otherCost}/delete", "delete");
+                Route::get("list", "list");
+            });
+
 
 
 
