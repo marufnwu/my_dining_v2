@@ -49,15 +49,8 @@ class MessMemberController extends Controller
         return $this->service->messMembers()->toApiResponse();
     }
 
-    function inititatedUser($status)
-    {
-        $status = filter_var($status, FILTER_VALIDATE_BOOLEAN);
+    function inititatedUser(bool $status) {
         return $this->service->initiated(app()->getMonth(), $status)->toApiResponse();
-        
-    }
-    function notInititated()
-    {
-        return $this->service->notInitiated(app()->getMonth())->toApiResponse();
     }
 
     function initiateUser(MessUser $messUser)
