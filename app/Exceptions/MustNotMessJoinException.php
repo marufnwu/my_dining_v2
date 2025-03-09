@@ -8,7 +8,7 @@ use Exception;
 class MustNotMessJoinException extends CustomException
 {
     protected $message = 'You are already in a mess';
-    protected $code = ErrorCode::ALREADY_JOINED_MESS->value;
+    protected $code = ErrorCode::ALREADY_JOINED_MESS;
 
     public function __construct()
     {

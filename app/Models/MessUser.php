@@ -51,6 +51,6 @@ class MessUser extends Model
      */
     public function role(): BelongsTo
     {
-        return $this->belongsTo(MessRole::class);
+        return $this->belongsTo(MessRole::class, "mess_role_id");
     }
 }

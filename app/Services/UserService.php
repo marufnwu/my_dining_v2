@@ -77,6 +77,8 @@ class UserService{
             return Pipeline::error("User not found");
         }
 
+        $user->load("messUser.mess", "messUser.role.permissions");
+
         return Pipeline::success($user);
 
     }

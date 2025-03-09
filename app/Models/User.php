@@ -92,13 +92,13 @@ class User extends Authenticatable
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
-    public function messInfo(): HasOne
+    public function messUser(): HasOne
     {
         return $this->hasOne(MessUser::class, 'user_id', 'id')
-            ->with("mess")
+            // ->with("mess")
             ->whereNull("left_at")
             ->latest()
-            ->withDefault();
+            ->withDefault(null);
     }
 
 
