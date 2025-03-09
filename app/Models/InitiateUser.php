@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class InitiateUser extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Traits\HasModelName;
 
     /**
      * The attributes that are mass assignable.
@@ -30,8 +30,6 @@ class InitiateUser extends Model
     protected $casts = [
         'active' => 'boolean',
         'month_id' => 'integer',
-
-
     ];
 
     /**

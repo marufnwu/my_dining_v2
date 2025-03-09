@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Deposit extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Traits\HasModelName;
 
     /**
      * The attributes that are mass assignable.

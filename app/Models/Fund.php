@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Fund extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Traits\HasModelName;
 
     /**
      * The attributes that are mass assignable.

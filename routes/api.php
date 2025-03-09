@@ -3,6 +3,7 @@
 use App\Constants\MessPermission;
 use App\Constants\MessUserRole;
 use App\Http\Controllers\Api\DepositController;
+use App\Http\Controllers\Api\FundController;
 use App\Http\Controllers\Api\MealController;
 use App\Http\Controllers\Api\MessController;
 use App\Http\Controllers\Api\MessMemberController;
@@ -44,9 +45,8 @@ Route::as('api.')->group(function () {
                     Route::post('create-and-add', 'createUserAddMess')->middleware('MessPermission:' . MessPermission::USER_ADD . ',' . MessPermission::USER_MANAGEMENT)->name('mess.member.create-and-add');
                     Route::post("inititate/add/{messUser}", "initiateUser")->middleware("MonthChecker:true");
                     Route::post("inititate/add/all", "initiateAll")->middleware("MonthChecker:true");
-                    Route::get("inititate/list", "inititated")->middleware("MonthChecker:true");
+                    Route::get("inititated/{status}", "inititatedUser")->middleware("MonthChecker:true")->where('status', 'true|false');
                     Route::get("inititate/not", "notInititated")->middleware("MonthChecker:true");
-                    Route::get("inititate/list/{month}/", "inititated");
                 });
 
             Route::prefix("month")->controller(MonthController::class)->group(function () {
@@ -72,6 +72,13 @@ Route::as('api.')->group(function () {
                 Route::post("add", "add");
                 Route::put("{otherCost}/update", "update");
                 Route::delete("{otherCost}/delete", "delete");
+                Route::get("list", "list");
+            });
+
+            Route::prefix("fund")->middleware("MonthChecker:true")->controller(FundController::class)->group(function () {
+                Route::post("add", "add");
+                Route::put("{fund}/update", "update");
+                Route::delete("{fund}/delete", "delete");
                 Route::get("list", "list");
             });
 

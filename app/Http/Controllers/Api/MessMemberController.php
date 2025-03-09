@@ -21,7 +21,8 @@ class MessMemberController extends Controller
         protected MessUserService $service
     ) {}
 
-   public  function createUserAddMess(CreateUserAccountRequest $request) {
+    public  function createUserAddMess(CreateUserAccountRequest $request)
+    {
 
 
         $data = $request->validated();
@@ -43,22 +44,29 @@ class MessMemberController extends Controller
         return $pipeline->toApiResponse();
     }
 
-    public function list() {
+    public function list()
+    {
         return $this->service->messMembers()->toApiResponse();
     }
 
-    function inititated() {
-        return $this->service->initiated(app()->getMonth())->toApiResponse();
+    function inititatedUser($status)
+    {
+        $status = filter_var($status, FILTER_VALIDATE_BOOLEAN);
+        return $this->service->initiated(app()->getMonth(), $status)->toApiResponse();
+        
     }
-    function notInititated() {
+    function notInititated()
+    {
         return $this->service->notInitiated(app()->getMonth())->toApiResponse();
     }
 
-    function initiateUser(MessUser $messUser)  {
+    function initiateUser(MessUser $messUser)
+    {
         return $this->service->initiateUser($messUser)->toApiResponse();
     }
 
-    function initiateAll()  {
+    function initiateAll()
+    {
         return $this->service->initiateAll($messUser)->toApiResponse();
     }
 }

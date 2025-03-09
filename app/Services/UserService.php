@@ -65,12 +65,14 @@ class UserService{
 
         return Pipeline::success([
             'user' => $user,
-            'token' => $token
+            'token' => $token,
+            "user_id"=>$user->id,
         ]);
     }
 
     function checkLogin() : Pipeline {
         $user = auth()->user();
+
         if(!$user){
             return Pipeline::error("User not found");
         }

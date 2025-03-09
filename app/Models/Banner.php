@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\HasModelName;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Banner extends Model
 {
-    use HasFactory;
+    use HasFactory, HasModelName;
 
     /**
      * The attributes that are mass assignable.

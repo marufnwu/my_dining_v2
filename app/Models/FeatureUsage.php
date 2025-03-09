@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class FeatureUsage extends Model
 {
+    use \App\Traits\HasModelName;
     protected $fillable = ['subscription_id', 'plan_feature_id', 'used'];
 
     /**

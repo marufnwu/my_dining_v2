@@ -95,9 +95,14 @@ class MessUserService
         return Pipeline::success(data: $mess->messUsers()->byStatus(MessUserStatus::Active)->get());
     }
 
-    public function initiated(Month $month): Pipeline
+    public function initiated(Month $month,   $status): Pipeline
     {
-        return Pipeline::success($month->initiatedUser ?? collect());
+        if ($status) {
+            $initiatedUser = $month->initiatedUser()->with("messUser")->get()->pluck("messUser");;
+            return Pipeline::success($initiatedUser ?? collect());
+        }else{
+            return $this->notInitiated($month);
+        }
     }
 
     public function notInitiated(Month $month): Pipeline
@@ -111,9 +116,8 @@ class MessUserService
             ->with('user')
             ->get();
 
-        dd($notInitiatedUsers);
 
-        return Pipeline::success($month->initiatedUser ?? collect());
+        return Pipeline::success($notInitiatedUsers ?? collect());
     }
 
     public function initiateUser(MessUser $user): Pipeline
