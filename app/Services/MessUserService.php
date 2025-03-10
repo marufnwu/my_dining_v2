@@ -57,9 +57,8 @@ class MessUserService
             "status" => MessUserStatus::Active->value,
         ]);
 
-        return Pipeline::success([
-            "messUser" => $messUser,
-        ]);
+
+        return Pipeline::success($messUser);
     }
 
     function createAndAddUser(UserDto $userDto): Pipeline
@@ -79,9 +78,10 @@ class MessUserService
         $mess = MessService::currentMess();
         $pipeline = $this->addUser($mess, $user, $mess->memberRole);
 
+
         if ($pipeline->isSuccess()) {
             DB::commit();
-            $pipeline->withData($user);
+            $pipeline->withData($pipeline->data->load("user"));
         } else {
             DB::rollBack();
         }
@@ -97,7 +97,8 @@ class MessUserService
 
     public function initiated(Month $month, $status) : Pipeline {
 
-        return Pipeline::success($month->initiatedUser?? collect());
+        $messUser = $month->initiatedUser()->with("messUser.user")->get()->pluck("messUser");
+        return Pipeline::success($messUser?? collect());
     }
 
     public function initiateUser(MessUser $user): Pipeline
