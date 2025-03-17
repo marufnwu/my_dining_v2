@@ -95,10 +95,10 @@ class MessUserService
         return Pipeline::success(data: $mess->messUsers()->byStatus(MessUserStatus::Active)->get());
     }
 
-    public function initiated(Month $month, $status) : Pipeline {
-
-        $messUser = $month->initiatedUser()->with("messUser.user")->get()->pluck("messUser");
-        return Pipeline::success($messUser?? collect());
+    public function initiated(Month $month, $status): Pipeline
+    {
+        $messUser = $status ?  $month->initiatedUser()->with("messUser.user")->get()->pluck("messUser") : $month->notInitiatedUser;
+        return Pipeline::success($messUser ?? collect());
     }
 
     public function initiateUser(MessUser $user): Pipeline

@@ -23,15 +23,16 @@ class Month extends Model
         "is_active"
     ];
 
-    public function getIsActiveAttribute() : bool {
-        if($this->type == MonthType::MANUAL->value){
+    public function getIsActiveAttribute(): bool
+    {
+        if ($this->type == MonthType::MANUAL->value) {
             if ($this->end_at) {
                 return false;
             }
         }
 
 
-        if($this->type == MonthType::AUTOMATIC->value){
+        if ($this->type == MonthType::AUTOMATIC->value) {
             if ($this->end_at < Carbon::now()) {
                 return false;
             }
@@ -49,11 +50,11 @@ class Month extends Model
     {
         return $this->hasMany(InitiateUser::class);
     }
-    
+
     public function notInitiatedUser()
     {
-        return $this->mess->messUsers()->whereDoesntHave('user', function ($query) {
-            $query->whereIn('id', $this->initiatedUser()->pluck('user_id'));
+        return $this->mess->messUsers()->whereDoesntHave('initiatedUser', function ($query) {
+            $query->where('month_id', $this->id); // Filter by the current month
         });
     }
 
@@ -98,5 +99,13 @@ class Month extends Model
         return $this->hasMany(Purchase::class);
     }
 
-
+    /**
+     * Get all of the messUsers for the Month
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function messUsers(): HasMany
+    {
+        return $this->hasMany(MessUser::class, 'foreign_key', 'local_key');
+    }
 }

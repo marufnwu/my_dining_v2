@@ -19,6 +19,21 @@ class MessUser extends Model
         'status',
     ];
 
+    protected $appends = [
+        'is_user_left_mess'
+    ];
+
+    /**
+     * Determine if the user has left the mess.
+     *
+     * @return bool
+     */
+    public function getIsUserLeftMessAttribute(): bool
+    {
+        return !is_null($this->left_at);
+    }
+
+
     /**
      * Get the user that owns the MessUser
      *
@@ -29,7 +44,8 @@ class MessUser extends Model
         return $this->belongsTo(User::class);
     }
 
-    function scopeByStatus(Builder $q, MessUserStatus $status) {
+    function scopeByStatus(Builder $q, MessUserStatus $status)
+    {
         return $q->where("status", $status->value);
     }
 
@@ -52,5 +68,10 @@ class MessUser extends Model
     public function role(): BelongsTo
     {
         return $this->belongsTo(MessRole::class, "mess_role_id");
+    }
+
+    public function initiatedUser()
+    {
+        return $this->hasMany(InitiateUser::class, 'mess_user_id');
     }
 }
