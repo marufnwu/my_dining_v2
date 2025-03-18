@@ -66,7 +66,7 @@ class MealService
     {
         $month = Month::with([
             'meals' => function ($query) {
-                $query->whereIn('mess_user_id', function ($subQuery) {
+                $query->with("messUser.user")->whereIn('mess_user_id', function ($subQuery) {
                     $subQuery->select('mess_user_id')
                         ->from('initiate_users')
                         ->whereColumn('initiate_users.month_id', 'meals.month_id');
@@ -109,7 +109,8 @@ class MealService
         return Pipeline::success(data: $data);
     }
 
-    function getUserMealByDate(Month $month, $messUserId, $date) :Pipeline {
+    function getUserMealByDate(Month $month, $messUserId, $date): Pipeline
+    {
         $meal = $month->meals()->where("date", $date)->where("mess_user_id", $messUserId)->first();
         return Pipeline::success($meal);
     }

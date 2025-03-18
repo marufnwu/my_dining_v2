@@ -75,6 +75,13 @@ Route::as('api.')->group(function () {
                 Route::get("list", "list");
             });
 
+            Route::prefix("purchase")->middleware("MonthChecker:true")->controller(OtherCostController::class)->group(function () {
+                Route::post("add", "add");
+                Route::put("{otherCost}/update", "update");
+                Route::delete("{otherCost}/delete", "delete");
+                Route::get("list", "list");
+            });
+
             Route::prefix("fund")->middleware("MonthChecker:true")->controller(FundController::class)->group(function () {
                 Route::post("add", "add");
                 Route::put("{fund}/update", "update");

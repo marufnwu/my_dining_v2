@@ -49,4 +49,14 @@ class Meal extends Model
     {
         return $this->belongsTo(Month::class);
     }
+
+    /**
+     * Get the messUser that owns the Meal
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function messUser(): BelongsTo
+    {
+        return $this->belongsTo(MessUser::class);
+    }
 }
