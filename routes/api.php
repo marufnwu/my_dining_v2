@@ -58,6 +58,7 @@ Route::as('api.')->group(function () {
                 Route::put("{meal}/update", "update");
                 Route::delete("{meal}/delete", "delete");
                 Route::get("list", "list");
+                Route::get("/user/{messUser}/by-date", action: "getUserMealByDate");
             });
 
             Route::prefix("deposit")->middleware("MonthChecker:true")->controller(DepositController::class)->group(function () {

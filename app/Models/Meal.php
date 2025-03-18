@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Meal extends Model
 {
+    use \App\Traits\HasModelName;
+
     use HasFactory;
 
     /**

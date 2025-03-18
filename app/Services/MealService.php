@@ -108,4 +108,9 @@ class MealService
         // $meals = app()->getMonth()->meals()->groupBy('date')->orderByDesc("date")->get();
         return Pipeline::success(data: $data);
     }
+
+    function getUserMealByDate(Month $month, $messUserId, $date) :Pipeline {
+        $meal = $month->meals()->where("date", $date)->where("mess_user_id", $messUserId)->first();
+        return Pipeline::success($meal);
+    }
 }

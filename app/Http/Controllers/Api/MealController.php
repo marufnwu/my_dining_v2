@@ -6,6 +6,7 @@ use App\DTOs\MealDto;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\MealRequest;
 use App\Models\Meal;
+use App\Models\MessUser;
 use App\Services\MealService;
 use App\Services\MessService;
 use Illuminate\Support\Facades\Gate;
@@ -27,7 +28,7 @@ class MealController extends Controller
 
         $data = $request->validated();
 
-        
+
 
         $data['month_id'] = app()->getMonth()->id;
         $data['mess_id'] = app()->getMess()->id;
@@ -73,5 +74,14 @@ class MealController extends Controller
 
         // Return API response
         return $pipeline->toApiResponse();
+    }
+
+    function getUserMealByDate(Request $request, MessUser $messUser)  {
+
+        $data = $request->validate([
+            "date"=>"required|date"
+        ]);
+
+        return $this->mealService->getUserMealByDate(app()->getMonth(), $messUser->id, $data['date'])->toApiResponse();
     }
 }
