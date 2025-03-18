@@ -77,18 +77,19 @@ class MealService
         // Group meals by date (ignoring timestamp) and sum meals per day
         $mealsByDate = $month->meals->groupBy(function ($meal) {
             return $meal->date->toDateString(); // Extract only YYYY-MM-DD
-        })->map(function ($meals) {
+        })->map(function ($meals, $date) {
             return [
-                'meals' => $meals->map(function ($meal) {
-                    return $meal;
-                }),
-                'total_meals' => [
-                    'total_breakfast' => $meals->sum('breakfast'),
-                    'total_lunch' => $meals->sum('lunch'),
-                    'total_dinner' => $meals->sum('dinner'),
-                ]
+            'date' => $date,
+            'meals' => $meals->map(function ($meal) {
+                return $meal;
+            }),
+            'total_meals' => [
+                'total_breakfast' => $meals->sum('breakfast'),
+                'total_lunch' => $meals->sum('lunch'),
+                'total_dinner' => $meals->sum('dinner'),
+            ]
             ];
-        });
+        })->values()->all();
 
         // Calculate overall totals
         $totalBreakfast = $month->meals->sum('breakfast');
