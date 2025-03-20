@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use App\DTOs\UserDto;
@@ -9,52 +10,59 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Lang;
+use Laravel\Sanctum\PersonalAccessToken;
 
-class UserService{
+class UserService
+{
 
-    public static function currentUser() : ?User {
+    public static function currentUser(): ?User
+    {
         return Auth::user() ?? null;
     }
 
-    function isUserNameExits(string $userName)  {
+    function isUserNameExits(string $userName)
+    {
         $count = User::where("user_name", $userName)->count();
-        return $count >= 1 ;
+        return $count >= 1;
     }
 
-    function isEmailExits(string $email){
+    function isEmailExits(string $email)
+    {
         $count = User::where("email", $email)->count();
-        return $count >= 1 ;
+        return $count >= 1;
     }
 
-    function createUser(UserDto $userDto) : Pipeline {
+    function createUser(UserDto $userDto): Pipeline
+    {
 
 
         // if($this->isUserNameExits($userName)){
         //     return Pipeline::error(message:Lang::get("auth.user_name_exits"));
         // }
 
-        if($this->isEmailExits($userDto->email)){
-            return Pipeline::error(message:Lang::get("auth.email_exits"));
+        if ($this->isEmailExits($userDto->email)) {
+            return Pipeline::error(message: Lang::get("auth.email_exits"));
         }
 
         $user = User::create(
             [
-                "name"=>$userDto->name,
-                "email"=>$userDto->email,
-                "phone"=>$userDto->phone,
-                "country"=>$userDto->country,
-                "city"=>$userDto->city,
-                "gender"=>$userDto->gender,
-                "password"=>Hash::make($userDto->password),
-                "join_date"=>Carbon::now(),
-                "status"=>MessUserStatus::Active->value,
+                "name" => $userDto->name,
+                "email" => $userDto->email,
+                "phone" => $userDto->phone,
+                "country" => $userDto->country,
+                "city" => $userDto->city,
+                "gender" => $userDto->gender,
+                "password" => Hash::make($userDto->password),
+                "join_date" => Carbon::now(),
+                "status" => MessUserStatus::Active->value,
             ]
         );
 
         return Pipeline::success($user);
     }
 
-    function login($userNameOrEmail, $password){
+    function login($userNameOrEmail, $password)
+    {
         $user = User::where("user_name", $userNameOrEmail)->orWhere("email", $userNameOrEmail)->first();
 
         if (!$user || !Hash::check($password, $user->password)) {
@@ -63,28 +71,44 @@ class UserService{
 
         $token = $user->createToken('Personal Access Token')->plainTextToken;
 
-        return Pipeline::success([
-            'user' => $user,
-            'token' => $token,
-            "user_id"=>$user->id,
-        ]);
+        return $this->checkLogin($token);
     }
 
-    function checkLogin() : Pipeline {
-        $user = auth()->user();
+    function checkLogin($token = null): Pipeline
+    {
+        if ($token) {
+            // Manually find the user using Sanctum's token
+            $accessToken = PersonalAccessToken::findToken($token);
 
-        if(!$user){
-            return Pipeline::error("User not found");
+            if (!$accessToken) {
+                return Pipeline::error("Invalid token");
+            }
+
+            $user = $accessToken->tokenable; // Get the user associated with the token
+
+            // Log in the user manually for this request
+            Auth::setUser($user);
+        } else {
+            // Use default Sanctum authentication (from request headers)
+            $user = auth()->user();
         }
 
-        $user->load("messUser.mess", "messUser.role.permissions");
+        if (!$user) {
+            return Pipeline::error("User not found");
+        }
+        $user->withoutRelations();
 
-        return Pipeline::success($user);
+        // Fetch the messUser relationship separately
+        $messUser = $user->messUser()->with(["user", "mess", "role.permissions"])->first();
 
+        $data = [
+            "user" => $user, // Only the user model
+            "mess_user" => $messUser, // Fetched separately
+            "token" => $token ?? request()->bearerToken() ?? null,
+        ];
+
+        return Pipeline::success($data);
     }
 
-    function addEmailOtp(User $user){
-
-    }
-
+    function addEmailOtp(User $user) {}
 }

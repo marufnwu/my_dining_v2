@@ -66,6 +66,7 @@ Route::as('api.')->group(function () {
                 Route::put("{deposit}/update", "update");
                 Route::delete("{deposit}/delete", "delete");
                 Route::get("list", "list");
+                Route::get("history/{messUser}", "history");
             });
 
             Route::prefix("other-cost")->middleware("MonthChecker:true")->controller(OtherCostController::class)->group(function () {

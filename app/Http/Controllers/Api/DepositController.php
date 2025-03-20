@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Deposit;
+use App\Models\MessUser;
 use App\Rules\MessUserExistsInCurrentMess;
 use App\Rules\UserInitiatedInCurrentMonth;
 use App\Services\DepositService;
@@ -66,6 +67,13 @@ class DepositController extends Controller
     public function list()
     {
         $pipeline = $this->depositService->listDeposits(app()->getMonth());
+
+        return $pipeline->toApiResponse();
+    }
+
+    public function history(MessUser $messUser)
+    {
+        $pipeline = $this->depositService->listDepositHistory(app()->getMonth(), $messUser);
 
         return $pipeline->toApiResponse();
     }

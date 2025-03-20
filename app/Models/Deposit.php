@@ -40,4 +40,14 @@ class Deposit extends Model
     {
         return $this->belongsTo(Month::class);
     }
+
+    /**
+     * Get the messUser that owns the Deposit
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function messUser(): BelongsTo
+    {
+        return $this->belongsTo(MessUser::class);
+    }
 }

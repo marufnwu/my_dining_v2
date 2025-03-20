@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Helpers\Pipeline;
 use App\Models\Deposit;
+use App\Models\MessUser;
 use App\Models\Month;
 
 class DepositService
@@ -53,12 +54,26 @@ class DepositService
      */
     public function listDeposits(Month $month): Pipeline
     {
-        $deposits = Deposit::where('month_id', $month->id)
-            ->orderBy('date', 'desc')
+        $deposits = Deposit::selectRaw('mess_user_id, MAX(date) as latest_date, SUM(amount) as total_amount')
+            ->with("messUser.user")
+            ->where('month_id', $month->id)
+            ->groupBy('mess_user_id')
+            ->orderBy('latest_date', 'desc')
             ->get();
 
-        $totalAmount = $deposits->sum('amount');
+        $totalAmount = $deposits->sum('total_amount');
 
+        $data = [
+            'deposits' => $deposits,
+            'total_amount' => $totalAmount,
+        ];
+
+        return Pipeline::success(data: $data);
+    }
+
+    function listDepositHistory(Month $month, MessUser $messUser) : Pipeline {
+        $deposits = $month->deposits()->where("mess_user_id", $messUser->id)->orderByDesc("created_at")->get();
+        $totalAmount = $deposits->sum("amount");
         $data = [
             'deposits' => $deposits,
             'total_amount' => $totalAmount,
