@@ -76,10 +76,10 @@ Route::as('api.')->group(function () {
                 Route::get("list", "list");
             });
 
-            Route::prefix("purchase")->middleware("MonthChecker:true")->controller(OtherCostController::class)->group(function () {
+            Route::prefix("purchase")->middleware("MonthChecker:true")->controller(PurchaseController::class)->group(function () {
                 Route::post("add", "add");
-                Route::put("{otherCost}/update", "update");
-                Route::delete("{otherCost}/delete", "delete");
+                Route::put("{purchase}/update", "update");
+                Route::delete("{purchase}/delete", "delete");
                 Route::get("list", "list");
             });
 

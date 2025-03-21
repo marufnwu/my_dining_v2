@@ -54,6 +54,7 @@ class PurchaseService
     public function listPurchases(Month $month): Pipeline
     {
         $purchases = Purchase::where('month_id', $month->id)
+        ->with("messUser.user")
             ->orderBy('date', 'desc')
             ->get();
 
