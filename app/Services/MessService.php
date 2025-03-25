@@ -32,6 +32,7 @@ class MessService
     function create($messName): Pipeline
     {
 
+
         DB::beginTransaction();
 
         $mess = Mess::create([

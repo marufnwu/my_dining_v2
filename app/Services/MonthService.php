@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\DTOs\CreateMonthDTO;
+use App\Enums\MessStatus;
 use App\Enums\MonthType;
 use App\Helpers\Pipeline;
 use App\Models\Month;
@@ -45,6 +46,10 @@ class MonthService
         unset($data['month'], $data['year']);
 
         $currentMess = MessService::currentMess();
+
+        if($currentMess->status == MessStatus::ACTIVE->value){
+            return Pipeline::error("You must have to close you current mess");
+        }
 
         $data['mess_id']= $currentMess->id;
         // Create the month

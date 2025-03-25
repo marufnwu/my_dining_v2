@@ -102,7 +102,7 @@ class UserService
         $messUser = $user->messUser()->with(["user", "mess", "role.permissions"])->first();
 
         $data = [
-            "user" => $user, // Only the user model
+            "user" => $user->load("country"), // Only the user model
             "mess_user" => $messUser, // Fetched separately
             "token" => $token ?? request()->bearerToken() ?? null,
         ];

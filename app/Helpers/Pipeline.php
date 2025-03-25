@@ -106,7 +106,7 @@ class Pipeline
     public function toApiResponse(): JsonResponse
     {
         return response()->json([
-            'success' => $this->success,
+            'error' => !$this->success,
             'message' => $this->message,
             'data' => $this->success ? $this->data : null,
             'errors' => !$this->success ? $this->data : null,

@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\MessUserStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -99,6 +100,16 @@ class User extends Authenticatable
             ->whereNull("left_at")
             ->latest()
             ->withDefault(null);
+    }
+
+    /**
+     * Get the country that owns the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class, );
     }
 
 
