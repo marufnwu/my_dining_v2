@@ -31,7 +31,7 @@ return MyApplication::configure(basePath: dirname(__DIR__))
             CheckMaintenanceMode::class,
         ]);
 
-        $middleware->group("api", [
+        $middleware->api( [
             ForceJson::class,
             Illuminate\Routing\Middleware\SubstituteBindings::class
 
@@ -50,6 +50,7 @@ return MyApplication::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions) {
         // custom response sanctum
         $exceptions->render(function (Exception $e,  $request) {
+
             $pipeline = null;
 
             if ($e instanceof AuthenticationException) {
@@ -66,11 +67,15 @@ return MyApplication::configure(basePath: dirname(__DIR__))
                 $pipeline = Pipeline::error(message: $e->getMessage(), status: 403, errorCode: $e->getCode());
             } elseif ($e instanceof NotFoundHttpException) {
                 $pipeline = Pipeline::error(message: $e->getMessage(), status: 404);
+            }else{
+                $pipeline = Pipeline::error(message: $e->getMessage());
             }
 
             if ($request->is('api/*')) {
                 if ($pipeline) {
                     return $pipeline->toApiResponse();
+                }else{
+
                 }
             }
         });

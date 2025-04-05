@@ -33,7 +33,7 @@ class PurchaseController extends Controller
                 new UserInitiatedInCurrentMonth(),
             ],
             "date" => "required|date",
-            "price" => "required|numeric|min:0",
+            "price" => "required|numeric|min:1",
             "product" => "required|string|max:255",
         ]);
 
@@ -52,7 +52,7 @@ class PurchaseController extends Controller
     {
         $data = $request->validate([
             "date"=>"sometimes|date",
-            "price" => "sometimes|integer|min:0",
+            "price" => "sometimes|numeric|min:1",
             "product" => "sometimes|string",
         ]);
 

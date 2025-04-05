@@ -13,6 +13,7 @@ class MonthService
 {
     // Add your service methods here
 
+
     public static function getSelectedMonth($monthId) : ?Month
     {
         return MessService::currentMess()?->months()->where("id", $monthId)->first() ?? null;

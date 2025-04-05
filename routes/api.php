@@ -43,9 +43,9 @@ Route::as('api.')->group(function () {
                 ->group(function () {
                     Route::get("list", "list");
                     Route::post('create-and-add', 'createUserAddMess')->middleware('MessPermission:' . MessPermission::USER_ADD . ',' . MessPermission::USER_MANAGEMENT)->name('mess.member.create-and-add');
-                    Route::post("inititate/add/{messUser}", "initiateUser")->middleware("MonthChecker:true");
-                    Route::post("inititate/add/all", "initiateAll")->middleware("MonthChecker:true");
-                    Route::get("initiated/{status}", "inititatedUser")->middleware("MonthChecker:true");
+                    Route::post("inititate/add/{messUser}", "initiateUser")->middleware("MonthChecker:false");
+                    Route::post("inititate/add/all", "initiateAll")->middleware("MonthChecker:false");
+                    Route::get("initiated/{status}", "inititatedUser")->middleware("MonthChecker:false");
                 });
 
             Route::prefix("month")->controller(MonthController::class)->group(function () {
@@ -53,7 +53,7 @@ Route::as('api.')->group(function () {
                 Route::get("list", "list");
             });
 
-            Route::prefix("meal")->middleware("MonthChecker:true")->controller(MealController::class)->group(function () {
+            Route::prefix("meal")->middleware("MonthChecker:false")->controller(MealController::class)->group(function () {
                 Route::post("add", "add");
                 Route::put("{meal}/update", "update");
                 Route::delete("{meal}/delete", "delete");
@@ -61,7 +61,7 @@ Route::as('api.')->group(function () {
                 Route::get("/user/{messUser}/by-date", action: "getUserMealByDate");
             });
 
-            Route::prefix("deposit")->middleware("MonthChecker:true")->controller(DepositController::class)->group(function () {
+            Route::prefix("deposit")->middleware("MonthChecker:false")->controller(DepositController::class)->group(function () {
                 Route::post("add", "add");
                 Route::put("{deposit}/update", "update");
                 Route::delete("{deposit}/delete", "delete");
@@ -69,21 +69,21 @@ Route::as('api.')->group(function () {
                 Route::get("history/{messUser}", "history");
             });
 
-            Route::prefix("other-cost")->middleware("MonthChecker:true")->controller(OtherCostController::class)->group(function () {
+            Route::prefix("other-cost")->middleware("MonthChecker:false")->controller(OtherCostController::class)->group(function () {
                 Route::post("add", "add");
                 Route::put("{otherCost}/update", "update");
                 Route::delete("{otherCost}/delete", "delete");
                 Route::get("list", "list");
             });
 
-            Route::prefix("purchase")->middleware("MonthChecker:true")->controller(PurchaseController::class)->group(function () {
+            Route::prefix("purchase")->middleware("MonthChecker:false")->controller(PurchaseController::class)->group(function () {
                 Route::post("add", "add");
                 Route::put("{purchase}/update", "update");
                 Route::delete("{purchase}/delete", "delete");
                 Route::get("list", "list");
             });
 
-            Route::prefix("fund")->middleware("MonthChecker:true")->controller(FundController::class)->group(function () {
+            Route::prefix("fund")->middleware("MonthChecker:false")->controller(FundController::class)->group(function () {
                 Route::post("add", "add");
                 Route::put("{fund}/update", "update");
                 Route::delete("{fund}/delete", "delete");
