@@ -54,13 +54,14 @@ class OtherCostService
     public function listOtherCosts(Month $month): Pipeline
     {
         $otherCosts = OtherCost::where('month_id', $month->id)
+        ->with("messUser.user")
             ->orderBy('date', 'desc')
             ->get();
 
         $totalPrice = $otherCosts->sum('price');
 
         $data = [
-            'other_costs' => $otherCosts,
+            'purchases' => $otherCosts,
             'total_price' => $totalPrice,
         ];
 

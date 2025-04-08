@@ -29,6 +29,10 @@ Route::as('api.')->group(function () {
             Route::post('sign-up', [UserController::class, 'createAccount'])->name('auth.signup');
             Route::post('login', [UserController::class, 'login'])->name('auth.login');
         });
+
+        Route::prefix('country')->controller(\App\Http\Controllers\Api\CountryController::class)->group(function () {
+            Route::get('list', 'countries')->name('country.list');
+        });
     });
 
     // Authenticated routes (requires valid Sanctum token and verified email)

@@ -25,7 +25,7 @@ class UserDto
             name: $data['name'],
             email: $data['email'],
             phone: $data['phone'],
-            country: $data['country'],
+            country: $data['country'] ?? null,
             city: $data['city'],
             gender: $data['gender'],
             password: $data['password'],

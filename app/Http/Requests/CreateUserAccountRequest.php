@@ -9,9 +9,10 @@ use App\Services\MessService;
 use App\Services\UserService;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
-class CreateUserAccountRequest extends BaseFormRequest
+class CreateUserAccountRequest extends FormRequest
 {
 
     /**
@@ -24,16 +25,30 @@ class CreateUserAccountRequest extends BaseFormRequest
 
         return [
             'name' => 'required|string|max:255',
-            // 'user_name' => 'required|string|max:255|unique:users,user_name',
             'email' => 'required|email|max:255|unique:users,email',
-            'country_id' => 'required|exists:countries,id,status,1',
-            'phone' => ['required', 'string', "max:10", new ValidPhoneNumber(request()->input('country_id'))],
+            'country_id' => [
+                'required_without_all:country_code',
+                Rule::exists('countries', 'id')
+            ],
+            'country_code' => [
+                'required_without_all:country_id',
+                'string',
+                'max:5',
+                Rule::exists('countries', 'dial_code')
+            ],
+            'phone' => [
+                'required',
+                'string',
+                'max:15', // Increased max length to accommodate international numbers
+                new ValidPhoneNumber(
+                    $this->input('country_id'),
+                    $this->input('country_code')
+                )
+            ],
             'city' => 'required|string|max:30',
             'gender' => ['required', 'in:' . implode(',', Gender::values())],
             'password' => 'required|string|min:8|confirmed',
-            "role"=>""
+            "role" => ""
         ];
     }
-
-
 }

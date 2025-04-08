@@ -5,6 +5,7 @@ namespace App\Services;
 use App\DTOs\UserDto;
 use App\Enums\MessUserStatus;
 use App\Helpers\Pipeline;
+use App\Models\Country;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -44,12 +45,16 @@ class UserService
             return Pipeline::error(message: Lang::get("auth.email_exits"));
         }
 
+        $country = Country::where("id", $userDto->country)->first();
+
+
+
         $user = User::create(
             [
                 "name" => $userDto->name,
                 "email" => $userDto->email,
-                "phone" => $userDto->phone,
-                "country" => $userDto->country,
+                "phone" => "{$country->dial_code}-{$userDto->phone}",
+                "country_id" => $userDto->country,
                 "city" => $userDto->city,
                 "gender" => $userDto->gender,
                 "password" => Hash::make($userDto->password),

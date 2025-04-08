@@ -13,4 +13,5 @@ enum MessUserStatus : string
     case Pending = 'pending';
     case Blocked = 'blocked';
     case Deleted = 'deleted';
+    case LEFT = 'left';
 }

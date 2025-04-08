@@ -27,11 +27,16 @@ class MessMemberController extends Controller
 
         $data = $request->validated();
 
-        $country = Country::where("id", $data['country_id'])->first();
+        if(array_key_exists("country_id", $data)){
+            $country = Country::where("id", $data['country_id'])->first();
+        }else{
+            $country = Country::where("dial_code", $data['country_code'])->first();
+        }
+
 
         $userDto = new UserDto(
             name: $data["name"],
-            country: $country->id,
+            country: $country->id ?? null,
             phone: $data["phone"],
             password: $data["password"],
             email: $data["email"],

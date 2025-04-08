@@ -33,6 +33,14 @@ class MessUser extends Model
         return !is_null($this->left_at);
     }
 
+    public function getStatusAttribute() {
+        if($this->isUserLeftMess){
+            return MessUserStatus::LEFT->value;
+        }
+
+        return $this->attributes['status'];
+    }
+
 
     /**
      * Get the user that owns the MessUser

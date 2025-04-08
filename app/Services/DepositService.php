@@ -72,7 +72,8 @@ class DepositService
     }
 
     function listDepositHistory(Month $month, MessUser $messUser) : Pipeline {
-        $deposits = $month->deposits()->where("mess_user_id", $messUser->id)->orderByDesc("created_at")->get();
+        $deposits = $month->deposits()->where("mess_user_id", $messUser->id)
+        ->with("messUser.user")->orderByDesc("created_at")->get();
         $totalAmount = $deposits->sum("amount");
         $data = [
             'deposits' => $deposits,

@@ -68,7 +68,7 @@ return MyApplication::configure(basePath: dirname(__DIR__))
             } elseif ($e instanceof NotFoundHttpException) {
                 $pipeline = Pipeline::error(message: $e->getMessage(), status: 404);
             }else{
-                $pipeline = Pipeline::error(message: $e->getMessage());
+                //$pipeline = Pipeline::error(message: $e->getMessage());
             }
 
             if ($request->is('api/*')) {
