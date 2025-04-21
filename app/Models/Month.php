@@ -99,6 +99,11 @@ class Month extends Model
         return $this->hasMany(Purchase::class);
     }
 
+    public function otherCosts(): HasMany
+    {
+        return $this->hasMany(OtherCost::class);
+    }
+
     /**
      * Get all of the messUsers for the Month
      *
