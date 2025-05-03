@@ -39,7 +39,7 @@ class OtherCostController extends Controller
         $validatedData['mess_id'] = app()->getMess()->id;
 
         // Call the service to add the other cost
-        $pipeline = $this->otherCostService->addOtherCost($validatedData);
+        $pipeline = $this->otherCostService->addOtherCost(app()->getMonth(), $validatedData);
 
         // Return the API response
         return $pipeline->toApiResponse();
@@ -53,14 +53,14 @@ class OtherCostController extends Controller
             "product" => "sometimes|string",
         ]);
 
-        $pipeline = $this->otherCostService->updateOtherCost($otherCost, $data);
+        $pipeline = $this->otherCostService->updateOtherCost(app()->getMonth(), $otherCost, $data);
 
         return $pipeline->toApiResponse();
     }
 
     public function delete(OtherCost $otherCost)
     {
-        $pipeline = $this->otherCostService->deleteOtherCost($otherCost);
+        $pipeline = $this->otherCostService->deleteOtherCost(app()->getMonth(), $otherCost);
 
         return $pipeline->toApiResponse();
     }

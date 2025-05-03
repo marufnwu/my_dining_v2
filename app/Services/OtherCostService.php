@@ -14,9 +14,9 @@ class OtherCostService
      * @param array $data
      * @return Pipeline
      */
-    public function addOtherCost(array $data): Pipeline
+    public function addOtherCost(Month $month, array $data): Pipeline
     {
-        $otherCost = OtherCost::create($data);
+        $otherCost = $month->otherCosts()->create($data);
         return Pipeline::success(data: $otherCost);
     }
 
@@ -27,7 +27,7 @@ class OtherCostService
      * @param array $data
      * @return Pipeline
      */
-    public function updateOtherCost(OtherCost $otherCost, array $data): Pipeline
+    public function updateOtherCost(Month $month, OtherCost $otherCost, array $data): Pipeline
     {
         $otherCost->update($data);
         return Pipeline::success(data: $otherCost->fresh());
@@ -39,7 +39,7 @@ class OtherCostService
      * @param OtherCost $otherCost
      * @return Pipeline
      */
-    public function deleteOtherCost(OtherCost $otherCost): Pipeline
+    public function deleteOtherCost(Month $month, OtherCost $otherCost): Pipeline
     {
         $otherCost->delete();
         return Pipeline::success(message: 'Other cost deleted successfully');
@@ -53,8 +53,8 @@ class OtherCostService
      */
     public function listOtherCosts(Month $month): Pipeline
     {
-        $otherCosts = OtherCost::where('month_id', $month->id)
-        ->with("messUser.user")
+        $otherCosts = $month->otherCosts()
+            ->with("messUser.user")
             ->orderBy('date', 'desc')
             ->get();
 
