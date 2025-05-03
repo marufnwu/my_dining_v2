@@ -57,8 +57,9 @@ return MyApplication::configure(basePath: dirname(__DIR__))
                 $pipeline = Pipeline::error(message: "Login Required", status: 401, errorCode: ErrorCode::AUTHENTICATION_REQUIRED->value);
             } elseif ($e instanceof EmailNotVerifiedException) {
                 $pipeline = Pipeline::error($e->getMessage(), errorCode: $e->getCode());
-             } elseif ($e instanceof ValidationException) {
-                $pipeline = Pipeline::validationError(array_values($e->errors()), message: 'Validation failed', status: 200);
+            } elseif ($e instanceof ValidationException) {
+                $errors = collect($e->errors())->flatten()->all();
+                $pipeline = Pipeline::validationError($errors, message: 'Validation failed', status: 200);
             } elseif ($e instanceof NoMessException) {
                 $pipeline = Pipeline::error(message: $e->getMessage(), status: 200, errorCode: ErrorCode::NO_MESS_ACCESS->value);
             } elseif ($e instanceof PermissionDeniedException) {

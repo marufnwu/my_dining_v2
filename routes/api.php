@@ -55,6 +55,7 @@ Route::as('api.')->group(function () {
             Route::prefix("month")->controller(MonthController::class)->group(function () {
                 Route::post("create", "createMonth");
                 Route::get("list", "list");
+                Route::put("change-status", "changeStatus");
             });
 
             Route::prefix("meal")->middleware("MonthChecker:false")->controller(MealController::class)->group(function () {

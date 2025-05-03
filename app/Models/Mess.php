@@ -39,7 +39,7 @@ class Mess extends Model
         'fund_add_enabled' => 'boolean',
     ];
 
-     /**
+    /**
      * Get the users associated with the mess.
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
@@ -60,17 +60,17 @@ class Mess extends Model
         return $this->hasMany(MessRole::class);
     }
 
-    public function adminRole() : HasOne
+    public function adminRole(): HasOne
     {
         return $this->hasOne(MessRole::class)->where('role', MessUserRole::ADMIN);
     }
 
-    public function managerRole() : HasOne
+    public function managerRole(): HasOne
     {
         return $this->hasOne(MessRole::class)->where('role', MessUserRole::MANAGER);
     }
 
-    public function memberRole() : HasOne
+    public function memberRole(): HasOne
     {
         return $this->hasOne(MessRole::class)->where('role', MessUserRole::MEMBER);
     }
@@ -83,6 +83,15 @@ class Mess extends Model
     public function months(): HasMany
     {
         return $this->hasMany(Month::class);
+    }
+
+    public function activeMonth(): HasOne
+    {
+        return $this->hasOne(Month::class)
+            ->where(function ($query) {
+                $query->whereNull('end_at')
+                    ->orWhere('end_at', '>=', now());
+            });
     }
 
 }
