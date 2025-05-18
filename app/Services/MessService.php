@@ -16,6 +16,7 @@ use App\Models\Month;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class MessService
@@ -27,6 +28,10 @@ class MessService
 
     function messRoles():Collection {
         return self::currentMess()?->roles ?? collect();
+    }
+
+    function messUser(User $user) : Pipeline {
+
     }
 
     function create($messName): Pipeline
@@ -46,16 +51,17 @@ class MessService
         $mess->load("adminRole");
         if ($mess) {
 
-            $mus = new MessUserService();
+            $mus = new MessUserService($mess);
 
-            $pipeline = $messUser = $mus->addUser($mess, UserService::currentUser(), $mess->adminRole);
+            $pipeline = $messUser = $mus->addUser( UserService::currentUser(), $mess->adminRole);
             if ($messUser->isSuccess()) {
                 DB::commit();
-                return Pipeline::success(data: $mess);
+                return Pipeline::success(data: Auth::user()->messUser);
             }
         } else {
             $pipeline = Pipeline::error()->withMessage("Failed to create mess");
         }
+
         DB::rollBack();
         return $pipeline;
     }

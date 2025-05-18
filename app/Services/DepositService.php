@@ -4,8 +4,10 @@ namespace App\Services;
 
 use App\Helpers\Pipeline;
 use App\Models\Deposit;
+use App\Models\Mess;
 use App\Models\MessUser;
 use App\Models\Month;
+use App\Models\User;
 
 class DepositService
 {
@@ -82,4 +84,35 @@ class DepositService
 
         return Pipeline::success(data: $data);
     }
+
+    /**
+     * Get total deposits in a specific month for a mess.
+     *
+     * @param Month $month
+     * @param Mess $mess
+     * @return Pipeline
+     */
+    public function getTotalDepositInMonth(Month $month, Mess $mess): Pipeline
+    {
+        $total = $mess->months()->where("id", operator: $month->id)->deposits()->sum("amount");
+
+        return Pipeline::success(data:$total);
+
+    }
+    /**
+     * Get total deposits in a specific month for a mess.
+     *
+     * @param Month $month
+     * @param Mess $mess
+     * @return Pipeline
+     */
+    public function getTotalDepositInMonthByUser(Month $month, Mess $mess, MessUser $messUser): Pipeline
+    {
+        $total = $mess->months()->where("id", operator: $month->id)->deposits()->where("user_id", $user)->sum("amount");
+
+        return Pipeline::success(data:$total);
+
+    }
+
+
 }

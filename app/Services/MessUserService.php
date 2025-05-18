@@ -20,6 +20,8 @@ class MessUserService
 {
 
 
+    public function __construct(protected ?Mess $mess = null) {}
+
     static function isUserInSameMess(MessUser $messUser, ?Mess $mess = null): bool
     {
         $mess = $mess ?? app()->getMess();
@@ -33,10 +35,10 @@ class MessUserService
 
     // Add your service methods here
 
-    function addUser(Mess $mess, User $user, ?MessRole $role = null): Pipeline
+    function addUser($user, ?MessRole $role = null): Pipeline
     {
 
-        if ($mess->status != MessStatus::ACTIVE) {
+        if ($this->mess->status != MessStatus::ACTIVE) {
             return Pipeline::error(message: "Mess is not active");
         }
 
@@ -50,7 +52,7 @@ class MessUserService
             throw new MustNotMessJoinException();
         }
 
-        $messUser = $mess->messUsers()->create([
+        $messUser = $this->mess->messUsers()->create([
             "user_id" => $user->id,
             "mess_role_id" => $role ? $role->id : null,
             "joined_at" => Carbon::now(),
@@ -89,9 +91,9 @@ class MessUserService
         return $pipeline;
     }
 
-    public function messMembers(): Pipeline
+    public function messMembers(?Mess $mess = null): Pipeline
     {
-        $mess = MessService::currentMess();
+        $mess = $mess ?? MessService::currentMess();
         return Pipeline::success(data: $mess->messUsers()->byStatus(MessUserStatus::Active)->get());
     }
 
@@ -133,5 +135,11 @@ class MessUserService
         $month->initiatedUser()->create(['mess_user_id' => $user->id, "month_id" => $month->id, "mess_id" => app()->getMess()->id]);
 
         return Pipeline::success();
+    }
+
+    public function getMessUser(User $user) : Pipeline {
+        $messUser = MessUser::with("mess", "user", "role.permissions")->where("mess_id", $this->mess?->id)->where("user_id", $user->id)->first();
+
+        return Pipeline::success($messUser);
     }
 }

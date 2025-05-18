@@ -11,7 +11,7 @@ use App\Services\UserService;
 
 class UserController extends Controller
 {
-    
+
     public function __construct(
         protected UserService $userService
     ) {}
@@ -20,7 +20,7 @@ class UserController extends Controller
     {
         $data = $request->validated();
 
-        $country = Country::where("id", $data['country_id'])->first();
+        $country = Country::where("id", $data['country_id'] ?? "" )->orWhere("dial_code", $data['country_code'] ?? "")->first();
 
         $userDto = new UserDto(
             name: $data["name"],

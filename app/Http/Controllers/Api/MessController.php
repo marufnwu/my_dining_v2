@@ -7,7 +7,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CreateMessRequest;
 use App\Http\Requests\CreateUserAccountRequest;
 use App\Models\Country;
+use App\Models\User;
 use App\Services\MessService;
+use App\Services\MessUserService;
 use Illuminate\Support\Facades\Request;
 
 class MessController extends Controller
@@ -22,5 +24,12 @@ class MessController extends Controller
         return $mess->toApiResponse();
     }
 
-    
+    function messUser(?User $user = null){
+        $user = $user ?? auth()->user();
+        $mus = new MessUserService(app()->getMess());
+
+        return $mus->getMessUser($user)->toApiResponse();
+    }
+
+
 }

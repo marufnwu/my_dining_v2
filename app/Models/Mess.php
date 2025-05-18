@@ -46,7 +46,7 @@ class Mess extends Model
      */
     public function messUsers(): HasMany
     {
-        return $this->hasMany(MessUser::class)->with("user", "role");
+        return $this->hasMany(MessUser::class)->with("user", "role.permissions");
     }
 
 

@@ -47,7 +47,7 @@ Route::as('api.')->group(function () {
                 ->group(function () {
                     Route::get("list", "list");
                     Route::post('create-and-add', 'createUserAddMess')->middleware('MessPermission:' . MessPermission::USER_ADD . ',' . MessPermission::USER_MANAGEMENT)->name('mess.member.create-and-add');
-                    Route::post("inititate/add/{messUser}", "initiateUser")->middleware("MonthChecker:false");
+                    Route::post("inititate/add/{messUser}", "initiateUser")->middleware("MonthChecker:true");
                     Route::post("inititate/add/all", "initiateAll")->middleware("MonthChecker:false");
                     Route::get("initiated/{status}", "inititatedUser")->middleware("MonthChecker:false");
                 });
@@ -95,6 +95,12 @@ Route::as('api.')->group(function () {
                 Route::get("list", "list");
             });
 
+
+            Route::prefix('mess')
+            ->controller(MessController::class)
+            ->group(function () {
+                Route::get('mess-user/{user?}', 'messUser')->name('mess.user');
+            });
 
 
 
