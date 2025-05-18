@@ -17,9 +17,12 @@ use App\Utils\ContainerData;
 
 class MessMemberController extends Controller
 {
-    public function __construct(
-        protected MessUserService $service
-    ) {}
+     protected MessUserService $service;
+
+    public function __construct()
+    {
+        $this->service = new MessUserService(app()->getMess());
+    }
 
     public  function createUserAddMess(CreateUserAccountRequest $request)
     {

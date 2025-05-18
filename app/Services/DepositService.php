@@ -73,9 +73,10 @@ class DepositService
         return Pipeline::success(data: $data);
     }
 
-    function listDepositHistory(Month $month, MessUser $messUser) : Pipeline {
+    function listDepositHistory(Month $month, MessUser $messUser): Pipeline
+    {
         $deposits = $month->deposits()->where("mess_user_id", $messUser->id)
-        ->with("messUser.user")->orderByDesc("created_at")->get();
+            ->with("messUser.user")->orderByDesc("created_at")->get();
         $totalAmount = $deposits->sum("amount");
         $data = [
             'deposits' => $deposits,
@@ -96,7 +97,7 @@ class DepositService
     {
         $total = $mess->months()->where("id", operator: $month->id)->deposits()->sum("amount");
 
-        return Pipeline::success(data:$total);
+        return Pipeline::success(data: $total);
 
     }
     /**
@@ -106,13 +107,47 @@ class DepositService
      * @param Mess $mess
      * @return Pipeline
      */
-    public function getTotalDepositInMonthByUser(Month $month, Mess $mess, MessUser $messUser): Pipeline
+    public function getTotalDepositInMonthByUser(Month $month,  MessUser $messUser): Pipeline
     {
-        $total = $mess->months()->where("id", operator: $month->id)->deposits()->where("user_id", $user)->sum("amount");
+        $total = $month
+            ->deposits()
+            ->where('mess_user_id', $messUser->id)
+            ->sum('amount');
 
-        return Pipeline::success(data:$total);
+        return Pipeline::success(data: $total);
 
     }
+
+
+    /**
+     * Get total deposit amount for a month
+     *
+     * @param Month $month
+     * @return Pipeline
+     */
+    public function getTotalDeposit(Month $month): Pipeline
+    {
+        $totalDeposit = $month->deposits()->sum('amount');
+
+        return Pipeline::success(data: $totalDeposit);
+    }
+
+    /**
+     * Get deposit amount for a specific user in a month
+     *
+     * @param Month $month
+     * @param MessUser $messUser
+     * @return Pipeline
+     */
+    public function getUserDeposit(Month $month, MessUser $messUser): Pipeline
+    {
+        $totalDeposit = $month->deposits()
+            ->where('mess_user_id', $messUser->id)
+            ->sum('amount');
+
+        return Pipeline::success(data: $totalDeposit);
+    }
+
 
 
 }

@@ -67,4 +67,19 @@ class PurchaseService
 
         return Pipeline::success(data: $data);
     }
+
+    /**
+     * Get total purchase amount for a month
+     *
+     * @param Month $month
+     * @return Pipeline
+     */
+    public function getTotalPurchases(Month $month): Pipeline
+    {
+        $totalPurchase = $month->purchases()->sum('price');
+
+        return Pipeline::success(data: $totalPurchase);
+    }
+
+    
 }

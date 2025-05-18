@@ -102,6 +102,7 @@ class Pipeline
 
     /**
      * Convert the object to a JsonResponse.
+     * @return JsonResponse
      */
     public function toApiResponse(): JsonResponse
     {

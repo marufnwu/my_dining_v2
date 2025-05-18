@@ -10,16 +10,18 @@ use App\Http\Controllers\Api\MessMemberController;
 use App\Http\Controllers\Api\MonthController;
 use App\Http\Controllers\Api\OtherCostController;
 use App\Http\Controllers\Api\PurchaseController;
+use App\Http\Controllers\Api\SummaryController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Middleware\CheckActiveMonth;
 use App\Http\Middleware\MustNotMessJoinChecker;
+use App\Services\MessSummaryService;
 use Illuminate\Support\Facades\Route;
 
 // Global API route prefix and naming
-Route::as('api.')->group(function () {
+Route:: as('api.')->group(function () {
 
     // Version 1 API routes
-    Route::as('v1.')->prefix('v1')->group(base_path('routes/api_v1.php'));
+    Route:: as('v1.')->prefix('v1')->group(base_path('routes/api_v1.php'));
 
     // Guest routes (unauthenticated users)
     Route::middleware('guest')->group(function () {
@@ -81,12 +83,15 @@ Route::as('api.')->group(function () {
                 Route::get("list", "list");
             });
 
-            Route::prefix("purchase")->middleware("MonthChecker:false")->controller(PurchaseController::class)->group(function () {
-                Route::post("add", "add");
-                Route::put("{purchase}/update", "update");
-                Route::delete("{purchase}/delete", "delete");
-                Route::get("list", "list");
-            });
+            Route::prefix("purchase")
+                ->middleware("MonthChecker:false")
+                ->controller(PurchaseController::class)
+                ->group(function () {
+                    Route::post("add", "add");
+                    Route::put("{purchase}/update", "update");
+                    Route::delete("{purchase}/delete", "delete");
+                    Route::get("list", "list");
+                });
 
             Route::prefix("fund")->middleware("MonthChecker:false")->controller(FundController::class)->group(function () {
                 Route::post("add", "add");
@@ -97,19 +102,29 @@ Route::as('api.')->group(function () {
 
 
             Route::prefix('mess')
-            ->controller(MessController::class)
-            ->group(function () {
-                Route::get('mess-user/{user?}', 'messUser')->name('mess.user');
-            });
+                ->controller(MessController::class)
+                ->group(function () {
+                    Route::get('mess-user/{user?}', 'messUser')->name('mess.user');
+                });
 
 
 
             Route::prefix("role")->group(function () {
                 //Route::get("list", "list");
             });
+
+            Route::prefix("summary")
+                ->middleware("MonthChecker:true")
+                ->controller(SummaryController::class)
+                ->group(function () {
+                    Route::get('months/{type}', 'monthSummary')
+                        ->where('type', 'minimal|details');
+                    Route::get("months/user/{type}/{messUser?}", "userSummary");
+                });
+
         });
 
-        // Routes that require the user to NOT be part of a mess
+        // Routes that require
         Route::prefix('mess')
             ->controller(MessController::class)
             ->middleware(MustNotMessJoinChecker::class)

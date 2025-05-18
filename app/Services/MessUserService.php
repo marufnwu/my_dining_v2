@@ -22,6 +22,11 @@ class MessUserService
 
     public function __construct(protected ?Mess $mess = null) {}
 
+    public function setMess(Mess $mess) : self {
+        $this->mess = $mess;
+        return $this;
+    }
+
     static function isUserInSameMess(MessUser $messUser, ?Mess $mess = null): bool
     {
         $mess = $mess ?? app()->getMess();
@@ -78,7 +83,7 @@ class MessUserService
 
 
         $mess = MessService::currentMess();
-        $pipeline = $this->addUser($mess, $user, $mess->memberRole);
+        $pipeline = $this->addUser( $user, $mess->memberRole);
 
 
         if ($pipeline->isSuccess()) {

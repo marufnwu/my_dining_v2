@@ -45,6 +45,22 @@ class OtherCostService
         return Pipeline::success(message: 'Other cost deleted successfully');
     }
 
+
+
+    /**
+     * Get total other costs amount for a month
+     *
+     * @param Month $month
+     * @return Pipeline
+     */
+    public function getTotalOtherCosts(Month $month): Pipeline
+    {
+        $totalOtherCost = $month->otherCosts()->sum('price');
+
+        return Pipeline::success(data: $totalOtherCost);
+    }
+
+
     /**
      * Get a list of other costs.
      *
@@ -66,5 +82,21 @@ class OtherCostService
         ];
 
         return Pipeline::success(data: $data);
+    }
+
+    /**
+     * Get other costs by type for a month
+     *
+     * @param Month $month
+     * @return Pipeline
+     */
+    public function getOtherCostsByType(Month $month): Pipeline
+    {
+        $costsByType = $month->otherCosts()
+            ->selectRaw('type, SUM(price) as total_price')
+            ->groupBy('type')
+            ->get();
+
+        return Pipeline::success(data: $costsByType);
     }
 }

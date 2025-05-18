@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Helpers\Pipeline;
 use App\Models\Meal;
+use App\Models\MessUser;
 use App\Models\Month;
 
 class MealService
@@ -114,5 +115,57 @@ class MealService
     {
         $meal = $month->meals()->where("date", $date)->where("mess_user_id", $messUserId)->first();
         return Pipeline::success($meal);
+    }
+
+     /**
+     * Get total meals for a specific month
+     *
+     * @param Month $month
+     * @return Pipeline
+     */
+    public function getTotalMeals(Month $month): Pipeline
+    {
+        $totalBreakfast = $month->meals()->sum('breakfast');
+        $totalLunch = $month->meals()->sum('lunch');
+        $totalDinner = $month->meals()->sum('dinner');
+
+        $data = [
+            'breakfast' => $totalBreakfast,
+            'lunch' => $totalLunch,
+            'dinner' => $totalDinner,
+            'total' => $totalBreakfast + $totalLunch + $totalDinner
+        ];
+
+        return Pipeline::success(data: $data);
+    }
+
+    /**
+     * Get meals for a specific user in a month
+     *
+     * @param Month $month
+     * @param MessUser $messUser
+     * @return Pipeline
+     */
+    public function getUserMeals(Month $month, MessUser $messUser): Pipeline
+    {
+        $meals = $month->meals()
+            ->where('mess_user_id', $messUser->id)
+            ->get();
+
+        $totalBreakfast = $meals->sum('breakfast');
+        $totalLunch = $meals->sum('lunch');
+        $totalDinner = $meals->sum('dinner');
+
+        $data = [
+            'meals' => $meals,
+            'summary' => [
+                'breakfast' => $totalBreakfast,
+                'lunch' => $totalLunch,
+                'dinner' => $totalDinner,
+                'total' => $totalBreakfast + $totalLunch + $totalDinner
+            ]
+        ];
+
+        return Pipeline::success(data: $data);
     }
 }

@@ -98,7 +98,6 @@ class User extends Authenticatable
         return $this->hasOne(MessUser::class, 'user_id', 'id')
             ->with("mess", "role")
             ->whereHas("mess")
-
             ->whereNull("left_at")
             ->latest()
             ->withDefault(null);
