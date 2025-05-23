@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PurchaseRequest extends Model
 {
@@ -37,9 +38,28 @@ class PurchaseRequest extends Model
         'date' => 'date',
         'price' => 'float',
         'deposit_request' => 'boolean',
-
-
         'purchase_type' => 'integer',
         'status' => 'integer',
+        'product_json' => 'json',
     ];
+
+    /**
+     * Get the month that owns the PurchaseRequest
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function month(): BelongsTo
+    {
+        return $this->belongsTo(Month::class);
+    }
+
+    /**
+     * Get the messUser that owns the PurchaseRequest
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function messUser(): BelongsTo
+    {
+        return $this->belongsTo(MessUser::class);
+    }
 }

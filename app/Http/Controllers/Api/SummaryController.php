@@ -36,13 +36,24 @@ class SummaryController extends Controller
      * @param ?MessUser $messUser
      * @return JsonResponse
      */
-    public function userSummary($type, ?MessUser $messUser = null): JsonResponse
+    public function userSummary(Request $request, $type, ?MessUser $messUser = null): JsonResponse
     {
+        $validatedData = $request->validate([
+            "mess_user_id" => "nullable|numeric|exists:mess_users,id"
+        ]);
+
         $month = app()->getMonth();
 
-        $messUser = $messUser ?? auth()->user()->messUser;
+        $messUser = $request->input("mess_user_id")
+            ? MessUser::find($validatedData["mess_user_id"])
+            : auth()->user()->messUser;
 
-        $response = $type === 'minimal'
+        if (!$messUser) {
+            return response()->json(["error" => "Invalid MessUser"], 404);
+        }
+
+        $isMinimal = $type === 'minimal';
+        $response = $isMinimal
             ? $this->service->getUserMinimalSummary($month, $messUser)
             : $this->service->getUserDetailedSummary($month, $messUser);
 

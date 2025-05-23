@@ -64,7 +64,7 @@ class PurchaseController extends Controller
     public function delete(Purchase $purchase)
     {
         // Gate::authorize('delete', $purchase);
-        $pipeline = $this->purchaseService->deletePurchase($purchase);
+        $pipeline = $this->purchaseService->deletePurchase(purchase: $purchase);
 
         return $pipeline->toApiResponse();
     }

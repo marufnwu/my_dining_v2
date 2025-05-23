@@ -130,14 +130,7 @@ class DataAggregator
         $userOtherCosts = $month->otherCosts()->where('mess_user_id', $messUser->id)->get();
         $userOtherCostTotal = $userOtherCosts->sum('price');
 
-        // Group user's purchases by category
-        $userPurchasesByCategory = $userPurchases->groupBy('category')->map(function ($group) {
-            return [
-                'count' => $group->count(),
-                'total' => $group->sum('price'),
-                'items' => $group->take(5)
-            ];
-        });
+
 
         // Get user's meal and deposit history
         $userMealHistory = $month->meals()
@@ -156,7 +149,6 @@ class DataAggregator
             'deposit_percentage' => $depositPercentage,
             'purchases' => [
                 'total' => $userPurchaseTotal,
-                'by_category' => $userPurchasesByCategory,
                 'recent' => $userPurchases->take(5),
             ],
             'other_costs' => [

@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\SummaryController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Middleware\CheckActiveMonth;
 use App\Http\Middleware\MustNotMessJoinChecker;
+use App\Models\PurchaseRequest;
 use App\Services\MessSummaryService;
 use Illuminate\Support\Facades\Route;
 
@@ -93,6 +94,17 @@ Route:: as('api.')->group(function () {
                     Route::get("list", "list");
                 });
 
+            Route::prefix("purchase-request")
+                ->middleware("MonthChecker:false")
+                ->controller(PurchaseRequest::class)
+                ->group(function () {
+                    Route::post("add", "create");
+                    Route::put("{purchaseRequest}/update", "update");
+                    Route::put("{purchaseRequest}/update/status", "updateStatus");
+                    Route::delete("{purchaseRequest}/delete", "delete");
+                    Route::get("list", "list");
+                });
+
             Route::prefix("fund")->middleware("MonthChecker:false")->controller(FundController::class)->group(function () {
                 Route::post("add", "add");
                 Route::put("{fund}/update", "update");
@@ -119,7 +131,7 @@ Route:: as('api.')->group(function () {
                 ->group(function () {
                     Route::get('months/{type}', 'monthSummary')
                         ->where('type', 'minimal|details');
-                    Route::get("months/user/{type}/{messUser?}", "userSummary");
+                    Route::get("months/user/{type}", "userSummary");
                 });
 
         });

@@ -14,16 +14,18 @@ return new class extends Migration
         Schema::create('purchase_requests', function (Blueprint $table) {
             $table->id();
             $table->date('date');
-            $table->integer('mess_user_id');
-            $table->integer('mess_id');
-            $table->string('type', 10);
+            $table->foreignId('mess_user_id');
+            $table->foreignId('mess_id');
+            $table->foreignId('month_id');  // Added month_id that was referenced in the model
+            $table->string('type', 10)->nullable();
             $table->integer('purchase_type')->default(1);
             $table->float('price');
             $table->text('product')->nullable();
             $table->longText('product_json')->nullable();
-            $table->boolean('deposit_request');
-            $table->integer('status');
+            $table->boolean('deposit_request')->default(false);
+            $table->integer('status')->default(0);  // Default to pending (0)
             $table->string('comment')->nullable();
+            $table->timestamps();  // Added timestamps for created_at and updated_at
         });
     }
 

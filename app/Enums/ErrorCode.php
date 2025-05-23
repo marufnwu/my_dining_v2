@@ -13,4 +13,5 @@ enum ErrorCode : int
     case NO_MESS_ACCESS = 1003;
     case USER_ALREADY_IN_MESS = 1004;
     case ALREADY_JOINED_MESS = 1005;
+    case PERMISSION_DENIED = 1006;
 }
