@@ -98,32 +98,37 @@ class PurchaseRequestService
         $query = PurchaseRequest::where('month_id', $month->id)
             ->with("messUser.user")
             ->orderBy('date', 'desc');
-            
+
         // Apply filters if provided
         if (isset($filters['status'])) {
             $query->where('status', $filters['status']);
         }
-        
+
         if (isset($filters['purchase_type'])) {
             $query->where('purchase_type', $filters['purchase_type']);
         }
-        
+
         if (isset($filters['deposit_request'])) {
             $query->where('deposit_request', $filters['deposit_request']);
         }
-        
+
+        // Filter by mess_user_id if provided (for regular users viewing their own requests)
+        if (isset($filters['mess_user_id'])) {
+            $query->where('mess_user_id', $filters['mess_user_id']);
+        }
+
         $purchaseRequests = $query->get();
 
         $totalPrice = $purchaseRequests->sum('price');
 
         $data = [
-            'purchase_requests' => $purchaseRequests,
+            'purchases' => $purchaseRequests,
             'total_price' => $totalPrice,
         ];
 
         return Pipeline::success(data: $data);
     }
-    
+
     /**
      * Get a specific purchase request.
      *
@@ -147,7 +152,7 @@ class PurchaseRequestService
         $pendingRequests = PurchaseRequest::where('month_id', $month->id)
             ->where('status', 0) // Assuming 0 is pending status
             ->count();
-            
+
         $pendingAmount = PurchaseRequest::where('month_id', $month->id)
             ->where('status', 0)
             ->sum('price');

@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\MessMemberController;
 use App\Http\Controllers\Api\MonthController;
 use App\Http\Controllers\Api\OtherCostController;
 use App\Http\Controllers\Api\PurchaseController;
+use App\Http\Controllers\Api\PurchaseRequestController;
 use App\Http\Controllers\Api\SummaryController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Middleware\CheckActiveMonth;
@@ -85,7 +86,7 @@ Route:: as('api.')->group(function () {
             });
 
             Route::prefix("purchase")
-                ->middleware("MonthChecker:false")
+                ->middleware(["MonthChecker:false"])
                 ->controller(PurchaseController::class)
                 ->group(function () {
                     Route::post("add", "add");
@@ -95,14 +96,14 @@ Route:: as('api.')->group(function () {
                 });
 
             Route::prefix("purchase-request")
-                ->middleware("MonthChecker:false")
-                ->controller(PurchaseRequest::class)
+                ->middleware(["MonthChecker:false", "mess.user:true"])
+                ->controller(PurchaseRequestController::class)
                 ->group(function () {
                     Route::post("add", "create");
                     Route::put("{purchaseRequest}/update", "update");
                     Route::put("{purchaseRequest}/update/status", "updateStatus");
                     Route::delete("{purchaseRequest}/delete", "delete");
-                    Route::get("list", "list");
+                    Route::get("/", "list");
                 });
 
             Route::prefix("fund")->middleware("MonthChecker:false")->controller(FundController::class)->group(function () {

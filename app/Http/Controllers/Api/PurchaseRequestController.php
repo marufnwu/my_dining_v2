@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Constants\MessPermission;
 use App\Enums\ErrorCode;
+use App\Enums\PurchaseRequestStatus;
+use App\Enums\PurchaseType;
 use App\Facades\Permission;
 use App\Helpers\Pipeline;
 use App\Http\Controllers\Controller;
@@ -25,25 +27,32 @@ class PurchaseRequestController extends Controller
 
     public function create(Request $request)
     {
+
         // Validate the request data
         $validatedData = $request->validate([
-            "mess_user_id" => [
-                "required",
-                "numeric",
-                new MessUserExistsInCurrentMess(),
-                new UserInitiatedInCurrentMonth(),
-            ],
+            // "mess_user_id" => [
+            //     "required",
+            //     "numeric",
+            //     new MessUserExistsInCurrentMess(),
+            //     new UserInitiatedInCurrentMonth(),
+            // ],
             "date" => "required|date",
             "price" => "required|numeric|min:1",
-            "product" => "required|string|max:255",
+            "product" => "sometimes|string|max:255",
             "product_json" => "sometimes|json|nullable",
-            "type" => "sometimes|string",
-            "purchase_type" => "required|integer",
+            "purchase_type" => ["required", new \Illuminate\Validation\Rules\Enum(PurchaseType::class)],
             "deposit_request" => "sometimes|boolean",
             "comment" => "sometimes|string|nullable",
         ]);
 
+        // Process product_json if it exists in the request
+        if ($request->has('product_json') && !is_null($request->product_json)) {
+            // Convert JSON string to array
+            $validatedData['product_json'] = json_decode($validatedData['product_json'], true);
+        }
+
         // Add additional data
+        $validatedData['mess_user_id'] = app()->getMessUser()->id;
         $validatedData['month_id'] = app()->getMonth()->id;
         $validatedData['mess_id'] = app()->getMess()->id;
         $validatedData['status'] = 0; // Default status (pending)
@@ -59,28 +68,41 @@ class PurchaseRequestController extends Controller
     {
 
 
-        #check if the user has permission to update the purchase request
-        #also check if current logged user is the owner of the purchase request
-
-        if (!Permission::canAccessModel($purchaseRequest, "mess_user_id")) {
-            # code...
+        if (
+            Permission::canAny([MessPermission::PURCHASE_REQUEST_MANAGEMENT, MessPermission::PURCHASE_REQUEST_UPDATE]) ||
+            Permission::modelBelongsToAuthMessUser($purchaseRequest) && Permission::modelAttributeIs($purchaseRequest, "status", 0)
+        ) {
+            // User has permission to update
+        } else {
+            // Determine the specific reason for denial
+            if (!Permission::modelBelongsToMessUser($purchaseRequest)) {
+                return Pipeline::error(
+                    "You don't have permission to update this purchase request",
+                    errorCode: ErrorCode::PERMISSION_DENIED
+                );
+            } else if (!Permission::modelAttributeIs($purchaseRequest, "status", 0)) {
+                return Pipeline::error(
+                    "Purchase request status has been changed. You cannot update it now.",
+                    errorCode: ErrorCode::PERMISSION_DENIED
+                );
+            } else {
+                return Pipeline::error(
+                    "You don't have permission to update this purchase request",
+                    errorCode: ErrorCode::PERMISSION_DENIED
+                );
+            }
         }
 
 
-        if (!Permission::canAnyAccessModel([
-            MessPermission::PURCHASE_REQUEST_MANAGEMENT,
-            MessPermission::PURCHASE_REQUEST_UPDATE,
-        ], $purchaseRequest)) {
-           return Pipeline::error("You don't have permission to update this purchase request", errorCode: ErrorCode::PERMISSION_DENIED);
-        }
+
+
 
         $data = $request->validate([
             "date" => "sometimes|date",
             "price" => "sometimes|numeric|min:1",
             "product" => "sometimes|string|max:255",
             "product_json" => "sometimes|json|nullable",
-            "type" => "sometimes|string",
-            "purchase_type" => "sometimes|integer",
+            "purchase_type" => ["required", new \Illuminate\Validation\Rules\Enum(PurchaseType::class)],
             "deposit_request" => "sometimes|boolean",
             "comment" => "sometimes|string|nullable",
         ]);
@@ -93,11 +115,13 @@ class PurchaseRequestController extends Controller
     public function updateStatus(Request $request, PurchaseRequest $purchaseRequest)
     {
 
-        if (!Permission::canAny([
-            MessPermission::PURCHASE_REQUEST_MANAGEMENT,
-            MessPermission::PURCHASE_REQUEST_UPDATE
-        ])) {
-           return Pipeline::error(message: "You don't have permission to update this purchase request", errorCode:ErrorCode::PERMISSION_DENIED);
+        if (
+            !Permission::canAny([
+                MessPermission::PURCHASE_REQUEST_MANAGEMENT,
+                MessPermission::PURCHASE_REQUEST_UPDATE
+            ])
+        ) {
+            return Pipeline::error(message: "You don't have permission to update this purchase request", errorCode: ErrorCode::PERMISSION_DENIED);
         }
 
         $data = $request->validate([
@@ -121,10 +145,19 @@ class PurchaseRequestController extends Controller
     public function list(Request $request)
     {
         $filters = $request->validate([
-            'status' => 'sometimes|integer',
-            'purchase_type' => 'sometimes|integer',
+            'status' => ['sometimes', new \Illuminate\Validation\Rules\Enum(PurchaseRequestStatus::class)],
+            'purchase_type' => ["sometimes", new \Illuminate\Validation\Rules\Enum(PurchaseType::class)],
             'deposit_request' => 'sometimes|boolean',
         ]);
+
+        // Check if user has purchase request management permission
+        $hasManagementPermission = Permission::canAny([MessPermission::PURCHASE_REQUEST_MANAGEMENT]);
+
+        // If user doesn't have management permission, only show their own requests
+        if (!$hasManagementPermission) {
+            $filters['mess_user_id'] = auth()->user()->messUser->id;
+        }
+
 
         $pipeline = $this->purchaseRequestService->listPurchaseRequests(app()->getMonth(), $filters);
 

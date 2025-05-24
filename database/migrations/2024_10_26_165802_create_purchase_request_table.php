@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('mess_id');
             $table->foreignId('month_id');  // Added month_id that was referenced in the model
             $table->string('type', 10)->nullable();
-            $table->integer('purchase_type')->default(1);
+            $table->string('purchase_type', 20)->nullable()->default(null);
             $table->float('price');
             $table->text('product')->nullable();
             $table->longText('product_json')->nullable();

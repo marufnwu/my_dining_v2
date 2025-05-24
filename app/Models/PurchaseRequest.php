@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\PurchaseRequestStatus;
+use App\Enums\PurchaseType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,6 +29,7 @@ class PurchaseRequest extends Model
         'deposit_request',
         'status',
         'comment',
+        "month_id"
     ];
 
     /**
@@ -38,9 +41,9 @@ class PurchaseRequest extends Model
         'date' => 'date',
         'price' => 'float',
         'deposit_request' => 'boolean',
-        'purchase_type' => 'integer',
-        'status' => 'integer',
-        'product_json' => 'json',
+        'purchase_type' => PurchaseType::class,
+        'status' => PurchaseRequestStatus::class,
+        'product_json' => 'array',
     ];
 
     /**

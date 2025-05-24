@@ -42,6 +42,7 @@ return MyApplication::configure(basePath: dirname(__DIR__))
             "MessJoinChecker" => \App\Http\Middleware\MessJoinChecker::class,
             "MessPermission" => \App\Http\Middleware\MessPermission::class,
             "MonthChecker" => \App\Http\Middleware\CheckActiveMonth::class,
+            "mess.user" => \App\Http\Middleware\MessUserChecker::class,
         ]);
     })
     ->withCommands([
