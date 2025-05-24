@@ -16,14 +16,27 @@ return new class extends Migration
     {
         Schema::create('subscriptions', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Mess::class);
-            $table->foreignIdFor(Plan::class);
-            $table->foreignIdFor(PlanPackage::class);
-            $table->unsignedBigInteger("order_id")->nullable();
-            $table->integer("duration")->comment('Duration in days');
-            $table->timestamp('start_at')->nullable();
-            $table->timestamp('end_at')->nullable();
-            $table->boolean('is_active')->default(true);
+            $table->foreignId('mess_id')->constrained()->onDelete('cascade');
+            $table->foreignId('plan_id')->constrained();
+            $table->foreignId('plan_package_id')->constrained('plan_packages');
+            $table->timestamp('starts_at');
+            $table->timestamp('expires_at');
+            $table->timestamp('trial_ends_at')->nullable();
+            $table->string('status');
+            $table->string('payment_method')->nullable();
+            $table->string('payment_id')->nullable();
+            $table->boolean('is_canceled')->default(false);
+            $table->timestamp('canceled_at')->nullable();
+
+            $table->unsignedBigInteger('last_order_id')->nullable();
+            $table->unsignedBigInteger('last_transaction_id')->nullable();
+            $table->string('payment_status')->default('pending');
+            $table->string('billing_cycle')->default('monthly');
+            $table->timestamp('next_billing_date')->nullable();
+            $table->decimal('total_spent', 10, 2)->default(0);
+            $table->string('invoice_reference')->nullable();
+
+            
             $table->timestamps();
         });
     }

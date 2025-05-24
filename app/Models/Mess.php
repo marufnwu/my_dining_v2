@@ -94,4 +94,126 @@ class Mess extends Model
             });
     }
 
+    /**
+     * Get the subscriptions for the mess.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    /**
+     * Get the active subscription for the mess.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function activeSubscription(): HasOne
+    {
+        return $this->hasOne(Subscription::class)
+            ->where(function ($query) {
+                $query->where('status', Subscription::STATUS_ACTIVE)
+                    ->orWhere('status', Subscription::STATUS_TRIAL);
+            })
+            ->where('expires_at', '>', now())
+            ->latest();
+    }
+
+    /**
+     * Check if mess has an active subscription.
+     *
+     * @return bool
+     */
+    public function hasActiveSubscription(): bool
+    {
+        return $this->activeSubscription()->exists();
+    }
+
+    /**
+     * Check if mess has access to a feature.
+     *
+     * @param string $featureName
+     * @return bool
+     */
+    public function hasFeatureAccess($featureName): bool
+    {
+        $subscription = $this->activeSubscription;
+
+        if (!$subscription) {
+            return false;
+        }
+
+        $feature = $subscription->plan->features()
+            ->where('name', $featureName)
+            ->first();
+
+        if (!$feature) {
+            return false;
+        }
+
+        if (!$feature->is_countable) {
+            return true;
+        }
+
+        $usage = $subscription->featureUsages()
+            ->where('plan_feature_id', $feature->id)
+            ->first();
+
+        return $usage && $usage->withinLimits();
+    }
+
+    /**
+     * Use a feature and record its usage.
+     *
+     * @param string $featureName
+     * @param int $amount
+     * @return bool
+     */
+    public function useFeature($featureName, $amount = 1): bool
+    {
+        return app('App\Services\SubscriptionService')->recordFeatureUsage($this, $featureName, $amount);
+    }
+
+    /**
+     * Get all orders associated with this mess.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function orders(): HasMany
+    {
+        return $this->hasMany(SubscriptionOrder::class);
+    }
+
+    /**
+     * Get all transactions associated with this mess.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
+    /**
+     * Get all invoices associated with this mess.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    /**
+     * Get total spent on subscriptions.
+     *
+     * @return float
+     */
+    public function getTotalSpentAttribute(): float
+    {
+        return $this->transactions()
+            ->where('status', Transaction::STATUS_COMPLETED)
+            ->sum('amount');
+    }
 }
