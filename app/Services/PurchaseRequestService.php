@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\PurchaseRequestStatus;
 use App\Helpers\Pipeline;
 use App\Models\PurchaseRequest;
 use App\Models\Month;
@@ -22,7 +23,7 @@ class PurchaseRequestService
     }
 
     /**
-     * Update an existing purchase request.
+     * Update a purchase request and handle approval and deposit requests.
      *
      * @param PurchaseRequest $purchaseRequest
      * @param array $data
@@ -30,7 +31,56 @@ class PurchaseRequestService
      */
     public function updatePurchaseRequest(PurchaseRequest $purchaseRequest, array $data): Pipeline
     {
+        $originalStatus = $purchaseRequest->status;
+        $wasApproved = false;
+
+
+        // Check if the status was changed to approved
+        if (
+            $originalStatus != PurchaseRequestStatus::APPROVED->value &&
+            $purchaseRequest->status == PurchaseRequestStatus::APPROVED->value
+        ) {
+            $wasApproved = true;
+        }
+
+        // If the purchase request was approved, create a purchase
+        if ($wasApproved) {
+
+
+            $purchaseService = new PurchaseService();
+            $depositService = new DepositService();
+
+            // Create a purchase record
+            $purchaseData = [
+                'date' => $purchaseRequest->date,
+                'mess_user_id' => $purchaseRequest->mess_user_id,
+                'mess_id' => $purchaseRequest->mess_id,
+                'month_id' => $purchaseRequest->month_id,
+                'price' => $purchaseRequest->price,
+                'product' => $purchaseRequest->product,
+            ];
+
+            $purchaseService->addPurchase($purchaseData);
+
+            // If deposit request is enabled, create a deposit
+            if ($purchaseRequest->deposit_request) {
+                $depositData = [
+                    'month_id' => $purchaseRequest->month_id,
+                    'mess_user_id' => $purchaseRequest->mess_user_id,
+                    'amount' => $purchaseRequest->price,
+                    'date' => now(),
+                    'type' => 1, // Assuming 1 is for regular deposits, adjust as needed
+                    'mess_id' => $purchaseRequest->mess_id,
+                ];
+
+                $depositService->addDeposit($depositData);
+            }
+        }
+
+        // Update the purchase request with the provided data
         $purchaseRequest->update($data);
+
+
         return Pipeline::success(data: $purchaseRequest->fresh());
     }
 
@@ -43,35 +93,80 @@ class PurchaseRequestService
      */
     public function updateStatus(PurchaseRequest $purchaseRequest, array $data): Pipeline
     {
+
+        // If approved (status code 1 is for approval), create actual purchase
+        if ($data['status'] == PurchaseRequestStatus::APPROVED->value && $purchaseRequest->status != PurchaseRequestStatus::APPROVED->value) {
+
+            $pr = $this->createPurchaseFromRequest($purchaseRequest);
+
+            if (!$pr->isSuccess()) {
+                return $pr;
+            }
+
+            // Process deposit if requested
+            if ($data['is_deposit'] ?? false) {
+                $dr = $this->createDepositFromRequest($purchaseRequest);
+
+                if (!$pr->isSuccess()) {
+                    return $dr;
+                }
+            }
+
+
+        }
+
+        if($data['status'] == PurchaseRequestStatus::REJECTED->value && $purchaseRequest->status == PurchaseRequestStatus::APPROVED->value){
+            return Pipeline::error("Request has already marked as approve");
+        }
+
         $purchaseRequest->update([
             'status' => $data['status'],
             'comment' => $data['comment'] ?? $purchaseRequest->comment,
         ]);
 
-        // If approved (assuming status code 1 is for approval), create actual purchase
-        if ($data['status'] === 1) {
-            $this->createPurchaseFromRequest($purchaseRequest);
-        }
-
         return Pipeline::success(data: $purchaseRequest->fresh());
     }
 
     /**
-     * Create a purchase from an approved purchase request.
+     * Create a purchase record from an approved purchase request.
      *
      * @param PurchaseRequest $purchaseRequest
      * @return void
      */
-    private function createPurchaseFromRequest(PurchaseRequest $purchaseRequest): void
+    protected function createPurchaseFromRequest(PurchaseRequest $purchaseRequest): Pipeline
     {
-        Purchase::create([
+        $purchaseData = [
             'date' => $purchaseRequest->date,
             'mess_user_id' => $purchaseRequest->mess_user_id,
             'mess_id' => $purchaseRequest->mess_id,
             'month_id' => $purchaseRequest->month_id,
             'price' => $purchaseRequest->price,
             'product' => $purchaseRequest->product,
-        ]);
+        ];
+
+        $service = new PurchaseService();
+
+        return $service->addPurchase($purchaseData);
+    }
+
+    /**
+     * Create a deposit record from an approved purchase request.
+     *
+     * @param PurchaseRequest $purchaseRequest
+     * @return void
+     */
+    protected function createDepositFromRequest(PurchaseRequest $purchaseRequest): Pipeline
+    {
+        $depositData = [
+            'month_id' => $purchaseRequest->month_id,
+            'mess_user_id' => $purchaseRequest->mess_user_id,
+            'amount' => $purchaseRequest->price,
+            'date' => now(),
+            'type' => 1, // Assuming 1 is for regular deposits
+            'mess_id' => $purchaseRequest->mess_id,
+        ];
+
+        return (new DepositService())->addDeposit($depositData);
     }
 
     /**
@@ -164,4 +259,8 @@ class PurchaseRequestService
 
         return Pipeline::success(data: $data);
     }
+
+
+
+
 }
