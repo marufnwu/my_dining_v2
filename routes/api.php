@@ -127,7 +127,7 @@ Route:: as('api.')->group(function () {
             });
 
             Route::prefix("summary")
-                ->middleware("MonthChecker:true")
+                ->middleware("MonthChecker:false")
                 ->controller(SummaryController::class)
                 ->group(function () {
                     Route::get('months/{type}', 'monthSummary')
