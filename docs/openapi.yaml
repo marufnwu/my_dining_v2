@@ -1,0 +1,885 @@
+openapi: 3.0.3
+info:
+  title: My Dining API
+  description: |
+    Complete API documentation for My Dining application - a comprehensive mess management system that handles meal tracking, deposits, purchases, user management, and financial reporting.
+    
+    ## Features
+    - User authentication and authorization
+    - Mess creation and member management  
+    - Monthly meal tracking with breakfast, lunch, dinner counts
+    - Financial management (deposits, purchases, other costs, funds)
+    - Purchase request workflow with approval system
+    - Comprehensive reporting and summaries
+    
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@mydining.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8000/api
+    description: Development server
+  - url: https://api.mydining.com/api
+    description: Production server
+
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/sign-up:
+    post:
+      tags:
+        - Authentication
+      summary: Create new user account
+      description: Register a new user account with personal information
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignUpRequest'
+      responses:
+        '200':
+          description: Account created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '422':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate user and return access token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/check-login:
+    get:
+      tags:
+        - Authentication
+      summary: Check authentication status
+      description: Verify if user is authenticated and return user information
+      responses:
+        '200':
+          description: User is authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfoResponse'
+        '401':
+          description: User not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /country/list:
+    get:
+      tags:
+        - Country
+      summary: Get list of countries
+      description: Retrieve all available countries with their dial codes
+      security: []
+      responses:
+        '200':
+          description: Countries retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Country'
+
+  /mess/create:
+    post:
+      tags:
+        - Mess Management
+      summary: Create new mess
+      description: Create a new mess (dining group) for the authenticated user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - mess_name
+              properties:
+                mess_name:
+                  type: string
+                  maxLength: 255
+                  example: "My Dining Mess"
+      responses:
+        '200':
+          description: Mess created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          mess:
+                            $ref: '#/components/schemas/Mess'
+
+  /mess/mess-user/{user_id}:
+    get:
+      tags:
+        - Mess Management
+      summary: Get mess user information
+      description: Retrieve mess user information for specified user or authenticated user
+      parameters:
+        - name: user_id
+          in: path
+          required: false
+          schema:
+            type: integer
+          description: User ID (optional, defaults to authenticated user)
+      responses:
+        '200':
+          description: Mess user information retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          mess_user:
+                            $ref: '#/components/schemas/MessUser'
+
+  /member/list:
+    get:
+      tags:
+        - Mess Members
+      summary: List mess members
+      description: Get all members of the current mess
+      responses:
+        '200':
+          description: Mess members retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/MessMember'
+
+  /member/create-and-add:
+    post:
+      tags:
+        - Mess Members
+      summary: Create user and add to mess
+      description: Create a new user account and add them to the current mess
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignUpRequest'
+      responses:
+        '200':
+          description: User created and added to mess successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          user:
+                            $ref: '#/components/schemas/User'
+                          mess_user:
+                            $ref: '#/components/schemas/MessUser'
+
+  /meal/add:
+    post:
+      tags:
+        - Meal Management
+      summary: Add meal record
+      description: Add meal consumption record for a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MealRequest'
+      responses:
+        '200':
+          description: Meal added successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          meal:
+                            $ref: '#/components/schemas/Meal'
+
+  /meal/{meal_id}/update:
+    put:
+      tags:
+        - Meal Management
+      summary: Update meal record
+      description: Update an existing meal record
+      parameters:
+        - name: meal_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Meal ID to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                breakfast:
+                  type: number
+                  minimum: 0
+                  example: 1
+                lunch:
+                  type: number
+                  minimum: 0
+                  example: 1
+                dinner:
+                  type: number
+                  minimum: 0
+                  example: 1
+      responses:
+        '200':
+          description: Meal updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          meal:
+                            $ref: '#/components/schemas/Meal'
+
+  /purchase-request/add:
+    post:
+      tags:
+        - Purchase Requests
+      summary: Create purchase request
+      description: Create a new purchase request for approval
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PurchaseRequestCreate'
+      responses:
+        '200':
+          description: Purchase request created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          purchase_request:
+                            $ref: '#/components/schemas/PurchaseRequest'
+
+  /summary/months/{type}:
+    get:
+      tags:
+        - Summary & Reports
+      summary: Get month summary
+      description: Get financial and meal summary for the current month
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [minimal, details]
+          description: Type of summary to retrieve
+      responses:
+        '200':
+          description: Summary retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        oneOf:
+                          - $ref: '#/components/schemas/MonthSummaryMinimal'
+                          - $ref: '#/components/schemas/MonthSummaryDetailed'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Operation successful"
+        data:
+          type: object
+          nullable: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "An error occurred"
+        errors:
+          type: object
+          nullable: true
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Validation failed"
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+
+    SignUpRequest:
+      type: object
+      required:
+        - name
+        - email
+        - phone
+        - city
+        - gender
+        - password
+        - password_confirmation
+      properties:
+        name:
+          type: string
+          maxLength: 255
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          example: "john@example.com"
+        country_id:
+          type: integer
+          example: 1
+        country_code:
+          type: string
+          maxLength: 5
+          example: "+1"
+        phone:
+          type: string
+          maxLength: 15
+          example: "1234567890"
+        city:
+          type: string
+          maxLength: 30
+          example: "New York"
+        gender:
+          type: string
+          enum: [Male, Female, Other]
+          example: "Male"
+        password:
+          type: string
+          minLength: 8
+          example: "password123"
+        password_confirmation:
+          type: string
+          minLength: 8
+          example: "password123"
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          example: "john@example.com"
+        password:
+          type: string
+          minLength: 8
+          example: "password123"
+
+    AuthResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                user:
+                  $ref: '#/components/schemas/User'
+                token:
+                  type: string
+                  example: "1|abcdefghijklmnopqrstuvwxyz"
+
+    UserInfoResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                user:
+                  $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          example: "john@example.com"
+        phone:
+          type: string
+          example: "1234567890"
+        city:
+          type: string
+          example: "New York"
+        gender:
+          type: string
+          example: "Male"
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-01-15T10:00:00Z"
+
+    Country:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "United States"
+        dial_code:
+          type: string
+          example: "+1"
+        code:
+          type: string
+          example: "US"
+
+    Mess:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "My Dining Mess"
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-01-15T10:00:00Z"
+
+    MessUser:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 1
+        mess_id:
+          type: integer
+          example: 1
+        role:
+          type: string
+          example: "admin"
+        status:
+          type: string
+          example: "active"
+
+    MessMember:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        user:
+          $ref: '#/components/schemas/User'
+        role:
+          type: string
+          example: "admin"
+        status:
+          type: string
+          example: "active"
+
+    MealRequest:
+      type: object
+      required:
+        - mess_user_id
+        - date
+        - breakfast
+        - lunch
+        - dinner
+      properties:
+        mess_user_id:
+          type: integer
+          example: 1
+        date:
+          type: string
+          format: date
+          example: "2025-01-15"
+        breakfast:
+          type: number
+          minimum: 0
+          example: 1
+        lunch:
+          type: number
+          minimum: 0
+          example: 1
+        dinner:
+          type: number
+          minimum: 0
+          example: 1
+
+    Meal:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        mess_user_id:
+          type: integer
+          example: 1
+        date:
+          type: string
+          format: date
+          example: "2025-01-15"
+        breakfast:
+          type: number
+          example: 1
+        lunch:
+          type: number
+          example: 1
+        dinner:
+          type: number
+          example: 1
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-01-15T10:00:00Z"
+
+    PurchaseRequestCreate:
+      type: object
+      required:
+        - date
+        - price
+        - purchase_type
+      properties:
+        date:
+          type: string
+          format: date
+          example: "2025-01-15"
+        price:
+          type: number
+          minimum: 1
+          example: 250.75
+        product:
+          type: string
+          maxLength: 255
+          example: "Vegetables and Rice"
+        product_json:
+          type: string
+          format: json
+          example: '[{"item": "Rice", "quantity": "5kg"}, {"item": "Vegetables", "quantity": "2kg"}]'
+        purchase_type:
+          type: string
+          enum: [other, meal]
+          example: "meal"
+        deposit_request:
+          type: boolean
+          example: false
+        comment:
+          type: string
+          nullable: true
+          example: "Weekly grocery shopping"
+
+    PurchaseRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        mess_user_id:
+          type: integer
+          example: 1
+        date:
+          type: string
+          format: date
+          example: "2025-01-15"
+        price:
+          type: number
+          example: 250.75
+        product:
+          type: string
+          example: "Vegetables and Rice"
+        product_json:
+          type: array
+          items:
+            type: object
+          example: [{"item": "Rice", "quantity": "5kg"}]
+        purchase_type:
+          type: string
+          example: "meal"
+        status:
+          type: integer
+          example: 0
+        deposit_request:
+          type: boolean
+          example: false
+        comment:
+          type: string
+          nullable: true
+          example: "Weekly grocery shopping"
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-01-15T10:00:00Z"
+
+    MonthSummaryMinimal:
+      type: object
+      properties:
+        month:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            name:
+              type: string
+              example: "January 2025"
+        total_deposits:
+          type: number
+          example: 5000.00
+        total_purchases:
+          type: number
+          example: 3000.00
+        total_other_costs:
+          type: number
+          example: 500.00
+        total_funds:
+          type: number
+          example: 1000.00
+        balance:
+          type: number
+          example: 2500.00
+        total_meals:
+          type: object
+          properties:
+            breakfast:
+              type: integer
+              example: 150
+            lunch:
+              type: integer
+              example: 180
+            dinner:
+              type: integer
+              example: 170
+
+    MonthSummaryDetailed:
+      type: object
+      properties:
+        month:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            name:
+              type: string
+              example: "January 2025"
+        financial_summary:
+          type: object
+          properties:
+            total_deposits:
+              type: number
+              example: 5000.00
+            total_purchases:
+              type: number
+              example: 3000.00
+            total_other_costs:
+              type: number
+              example: 500.00
+            total_funds:
+              type: number
+              example: 1000.00
+            balance:
+              type: number
+              example: 2500.00
+        meal_summary:
+          type: object
+          properties:
+            total_meals:
+              type: object
+              properties:
+                breakfast:
+                  type: integer
+                  example: 150
+                lunch:
+                  type: integer
+                  example: 180
+                dinner:
+                  type: integer
+                  example: 170
+            cost_per_meal:
+              type: object
+              properties:
+                breakfast:
+                  type: number
+                  example: 12.50
+                lunch:
+                  type: number
+                  example: 15.00
+                dinner:
+                  type: number
+                  example: 14.25
+        user_summaries:
+          type: array
+          items:
+            type: object
+            properties:
+              mess_user_id:
+                type: integer
+                example: 1
+              user_name:
+                type: string
+                example: "John Doe"
+              total_deposits:
+                type: number
+                example: 1000.00
+              total_meals:
+                type: integer
+                example: 45
+              meal_cost:
+                type: number
+                example: 675.00
+              balance:
+                type: number
+                example: 325.00
+
+tags:
+  - name: Authentication
+    description: User authentication and account management
+  - name: Country
+    description: Country and location data
+  - name: Mess Management
+    description: Mess creation and management
+  - name: Mess Members
+    description: Member management within a mess
+  - name: Month Management
+    description: Monthly period management
+  - name: Meal Management
+    description: Meal tracking and management
+  - name: Deposit Management
+    description: Financial deposit management
+  - name: Purchase Management
+    description: Purchase record management
+  - name: Purchase Requests
+    description: Purchase request workflow
+  - name: Other Cost Management
+    description: Additional cost management
+  - name: Fund Management
+    description: Fund and balance management
+  - name: Summary & Reports
+    description: Financial and meal reporting
