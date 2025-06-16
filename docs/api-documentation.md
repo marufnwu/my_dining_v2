@@ -3,6 +3,14 @@
 ## Overview
 This is the comprehensive API documentation for the My Dining application - a mess management system that handles meal tracking, deposits, purchases, and user management.
 
+## Documentation Index
+
+### Core Documentation
+- **[Model Relationships & Dependencies](./model-relationships.md)** - Complete database relationships and data flow
+- **[Database Schema](./database-schema.md)** - Visual database structure and architecture
+- **[Postman Collection](./postman-collection.json)** - API testing collection
+- **[OpenAPI Specification](./openapi.yaml)** - Machine-readable API specs
+
 ## Base Information
 - **Base URL**: `/api`
 - **Version**: v1 (available at `/api/v1`)
@@ -1490,3 +1498,9 @@ The API supports versioning through URL prefixes:
 ---
 
 **Note**: This documentation covers the current state of the API. For the most up-to-date information, please refer to the source code or contact the development team.
+
+## Related Documentation
+
+- **[Model Relationships & Dependencies](./model-relationships.md)**: Complete database schema and model relationship documentation
+- **[Postman Collection](./postman-collection.json)**: Ready-to-import API testing collection
+- **[OpenAPI Specification](./openapi.yaml)**: Machine-readable API specification
