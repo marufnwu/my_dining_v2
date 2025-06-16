@@ -3,15 +3,15 @@ info:
   title: My Dining API
   description: |
     Complete API documentation for My Dining application - a comprehensive mess management system that handles meal tracking, deposits, purchases, user management, and financial reporting.
-    
+
     ## Features
     - User authentication and authorization
-    - Mess creation and member management  
+    - Mess creation and member management
     - Monthly meal tracking with breakfast, lunch, dinner counts
     - Financial management (deposits, purchases, other costs, funds)
     - Purchase request workflow with approval system
     - Comprehensive reporting and summaries
-    
+
   version: 1.0.0
   contact:
     name: API Support
