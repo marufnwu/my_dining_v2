@@ -361,6 +361,357 @@
 							"path": ["month", "list"]
 						}
 					}
+				},
+				{
+					"name": "Change Month Status",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/month/change-status",
+							"host": ["{{base_url}}"],
+							"path": ["month", "change-status"]
+						}
+					}
+				},
+				{
+					"name": "Get Month Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/month/show/1",
+							"host": ["{{base_url}}"],
+							"path": ["month", "show", "1"]
+						}
+					}
+				},
+				{
+					"name": "Get Current Month Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/month/show",
+							"host": ["{{base_url}}"],
+							"path": ["month", "show"]
+						}
+					}
+				},
+				{
+					"name": "Get Month Summary",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/month/summary/1?include_user_details=true&include_daily_breakdown=true",
+							"host": ["{{base_url}}"],
+							"path": ["month", "summary", "1"],
+							"query": [
+								{
+									"key": "include_user_details",
+									"value": "true"
+								},
+								{
+									"key": "include_daily_breakdown",
+									"value": "true"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Close Month",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"create_next_month\": true,\n    \"next_month_type\": \"automatic\",\n    \"next_month_name\": \"February 2025\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/month/close",
+							"host": ["{{base_url}}"],
+							"path": ["month", "close"]
+						}
+					}
+				},
+				{
+					"name": "Duplicate Month",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"March 2025\",\n    \"type\": \"automatic\",\n    \"month\": 3,\n    \"year\": 2025,\n    \"copy_initiated_users\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/month/1/duplicate",
+							"host": ["{{base_url}}"],
+							"path": ["month", "1", "duplicate"]
+						}
+					}
+				},
+				{
+					"name": "Compare Months",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/month/compare?month1_id=1&month2_id=2&comparison_type=all",
+							"host": ["{{base_url}}"],
+							"path": ["month", "compare"],
+							"query": [
+								{
+									"key": "month1_id",
+									"value": "1"
+								},
+								{
+									"key": "month2_id",
+									"value": "2"
+								},
+								{
+									"key": "comparison_type",
+									"value": "all"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Month Statistics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/month/statistics?period=last_6_months&metrics[]=total_deposits&metrics[]=total_expenses&metrics[]=total_meals",
+							"host": ["{{base_url}}"],
+							"path": ["month", "statistics"],
+							"query": [
+								{
+									"key": "period",
+									"value": "last_6_months"
+								},
+								{
+									"key": "metrics[]",
+									"value": "total_deposits"
+								},
+								{
+									"key": "metrics[]",
+									"value": "total_expenses"
+								},
+								{
+									"key": "metrics[]",
+									"value": "total_meals"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Export Month Data",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/month/export/1?format=json&include_details=true&sections[]=meals&sections[]=deposits&sections[]=summary",
+							"host": ["{{base_url}}"],
+							"path": ["month", "export", "1"],
+							"query": [
+								{
+									"key": "format",
+									"value": "json"
+								},
+								{
+									"key": "include_details",
+									"value": "true"
+								},
+								{
+									"key": "sections[]",
+									"value": "meals"
+								},
+								{
+									"key": "sections[]",
+									"value": "deposits"
+								},
+								{
+									"key": "sections[]",
+									"value": "summary"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Month Timeline",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/month/timeline/1?start_date=2025-01-01&end_date=2025-01-31&activity_types[]=meals&activity_types[]=deposits",
+							"host": ["{{base_url}}"],
+							"path": ["month", "timeline", "1"],
+							"query": [
+								{
+									"key": "start_date",
+									"value": "2025-01-01"
+								},
+								{
+									"key": "end_date",
+									"value": "2025-01-31"
+								},
+								{
+									"key": "activity_types[]",
+									"value": "meals"
+								},
+								{
+									"key": "activity_types[]",
+									"value": "deposits"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Budget Analysis",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/month/budget-analysis/1?budget_amount=50000&category_budgets[groceries]=30000&category_budgets[utilities]=10000",
+							"host": ["{{base_url}}"],
+							"path": ["month", "budget-analysis", "1"],
+							"query": [
+								{
+									"key": "budget_amount",
+									"value": "50000"
+								},
+								{
+									"key": "category_budgets[groceries]",
+									"value": "30000"
+								},
+								{
+									"key": "category_budgets[utilities]",
+									"value": "10000"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Validate Month Data",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/month/validate/1",
+							"host": ["{{base_url}}"],
+							"path": ["month", "validate", "1"]
+						}
+					}
+				},
+				{
+					"name": "Get Performance Metrics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/month/performance/1?compare_with_previous=true&include_trends=true",
+							"host": ["{{base_url}}"],
+							"path": ["month", "performance", "1"],
+							"query": [
+								{
+									"key": "compare_with_previous",
+									"value": "true"
+								},
+								{
+									"key": "include_trends",
+									"value": "true"
+								}
+							]
+						}
+					}
 				}
 			]
 		},

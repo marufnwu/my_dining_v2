@@ -439,6 +439,512 @@ Same as sign-up endpoint
 #### Validation Rules
 - `status`: required, boolean
 
+### Get Month Details
+**Endpoint**: `GET /api/month/show/{monthId?}`
+**Access**: Protected (requires mess membership)
+
+#### Parameters
+- `monthId` (optional): Specific month ID (defaults to current active month)
+
+#### Response
+```json
+{
+    "success": true,
+    "message": "Month details retrieved successfully",
+    "data": {
+        "month": {
+            "id": 1,
+            "name": "January 2025",
+            "type": "automatic",
+            "start_at": "2025-01-01T00:00:00Z",
+            "end_at": "2025-01-31T23:59:59Z",
+            "is_active": true
+        },
+        "user_count": 5,
+        "total_meals": {
+            "breakfast": 150,
+            "lunch": 180,
+            "dinner": 170
+        },
+        "financial_summary": {
+            "total_deposits": 25000.00,
+            "total_purchases": 18000.00,
+            "total_other_costs": 2000.00,
+            "balance": 5000.00
+        },
+        "recent_activities": {
+            "latest_meals": [...],
+            "latest_deposits": [...],
+            "latest_purchases": [...]
+        }
+    }
+}
+```
+
+### Get Month Summary
+**Endpoint**: `GET /api/month/summary/{monthId?}`
+**Access**: Protected (requires mess membership)
+
+#### Parameters
+- `monthId` (optional): Specific month ID (defaults to current active month)
+
+#### Query Parameters
+- `include_user_details`: boolean - Include per-user breakdown
+- `include_daily_breakdown`: boolean - Include daily activity breakdown
+
+#### Response
+```json
+{
+    "success": true,
+    "message": "Month summary retrieved successfully",
+    "data": {
+        "month_info": {
+            "id": 1,
+            "name": "January 2025",
+            "type": "automatic",
+            "start_date": "2025-01-01",
+            "end_date": "2025-01-31",
+            "is_active": true
+        },
+        "financial_summary": {
+            "total_deposits": 25000.00,
+            "total_purchases": 18000.00,
+            "total_other_costs": 2000.00,
+            "net_balance": 5000.00
+        },
+        "meal_summary": {
+            "total_breakfast": 150,
+            "total_lunch": 180,
+            "total_dinner": 170,
+            "total_meals": 500
+        },
+        "user_summary": {
+            "total_users": 5,
+            "active_users": 5
+        },
+        "user_details": [
+            {
+                "user_id": 1,
+                "name": "John Doe",
+                "total_deposits": 5000.00,
+                "total_meals": 90,
+                "meal_cost_breakdown": {
+                    "breakfast": 30,
+                    "lunch": 35,
+                    "dinner": 32
+                }
+            }
+        ],
+        "daily_breakdown": [
+            {
+                "date": "2025-01-01",
+                "meals": {
+                    "breakfast": 5,
+                    "lunch": 5,
+                    "dinner": 5
+                },
+                "deposits": 1000.00,
+                "purchases": 500.00,
+                "other_costs": 0.00
+            }
+        ]
+    }
+}
+```
+
+### Close Month
+**Endpoint**: `POST /api/month/close`
+**Access**: Protected (requires mess membership)
+
+#### Request Body
+```json
+{
+    "create_next_month": true,
+    "next_month_type": "automatic",
+    "next_month_name": "February 2025"
+}
+```
+
+#### Validation Rules
+- `create_next_month`: nullable, boolean
+- `next_month_type`: nullable, enum (automatic, manual)
+- `next_month_name`: nullable, string, max 20 characters
+
+#### Response
+```json
+{
+    "success": true,
+    "message": "Month closed successfully and next month created",
+    "data": {
+        "closed_month": {
+            "id": 1,
+            "name": "January 2025",
+            "end_at": "2025-01-31T23:59:59Z"
+        },
+        "next_month": {
+            "id": 2,
+            "name": "February 2025",
+            "type": "automatic",
+            "start_at": "2025-02-01T00:00:00Z"
+        }
+    }
+}
+```
+
+### Duplicate Month
+**Endpoint**: `POST /api/month/{monthId}/duplicate`
+**Access**: Protected (requires mess membership)
+
+#### Request Body
+```json
+{
+    "name": "March 2025",
+    "type": "automatic",
+    "month": 3,
+    "year": 2025,
+    "copy_initiated_users": true
+}
+```
+
+#### Validation Rules
+- `name`: required, string, max 20 characters
+- `type`: required, enum (automatic, manual)
+- `month`: nullable, integer, 1-12, required if type is automatic
+- `year`: nullable, integer, min current year, required if type is automatic
+- `start_at`: nullable, date, required if type is manual
+- `copy_initiated_users`: nullable, boolean
+
+#### Response
+```json
+{
+    "success": true,
+    "message": "Month duplicated successfully",
+    "data": {
+        "id": 3,
+        "name": "March 2025",
+        "type": "automatic",
+        "start_at": "2025-03-01T00:00:00Z",
+        "copied_users": 5
+    }
+}
+```
+
+### Compare Months
+**Endpoint**: `GET /api/month/compare`
+**Access**: Protected (requires mess membership)
+
+#### Query Parameters
+- `month1_id`: required, integer - First month to compare
+- `month2_id`: required, integer - Second month to compare
+- `comparison_type`: nullable, enum (financial, meals, users, all)
+
+#### Response
+```json
+{
+    "success": true,
+    "message": "Month comparison completed successfully",
+    "data": {
+        "month1": {
+            "id": 1,
+            "name": "January 2025",
+            "period": "2025-01-01 to 2025-01-31"
+        },
+        "month2": {
+            "id": 2,
+            "name": "February 2025",
+            "period": "2025-02-01 to 2025-02-29"
+        },
+        "financial_comparison": {
+            "deposits": {
+                "month1": 25000.00,
+                "month2": 28000.00,
+                "difference": -3000.00
+            },
+            "expenses": {
+                "month1": 20000.00,
+                "month2": 22000.00,
+                "difference": -2000.00
+            }
+        },
+        "meal_comparison": {
+            "total_meals": {
+                "month1": 500,
+                "month2": 520
+            },
+            "breakdown": {
+                "breakfast": {
+                    "month1": 150,
+                    "month2": 155
+                },
+                "lunch": {
+                    "month1": 180,
+                    "month2": 185
+                },
+                "dinner": {
+                    "month1": 170,
+                    "month2": 180
+                }
+            }
+        },
+        "user_comparison": {
+            "initiated_users": {
+                "month1": 5,
+                "month2": 6,
+                "difference": -1
+            }
+        }
+    }
+}
+```
+
+### Get Month Statistics
+**Endpoint**: `GET /api/month/statistics`
+**Access**: Protected (requires mess membership)
+
+#### Query Parameters
+- `period`: nullable, enum (last_3_months, last_6_months, last_year, all)
+- `metrics[]`: nullable, array of strings (total_deposits, total_expenses, total_meals, user_count, avg_meal_cost)
+
+#### Response
+```json
+{
+    "success": true,
+    "message": "Statistics retrieved successfully",
+    "data": {
+        "period": "last_6_months",
+        "month_count": 6,
+        "date_range": {
+            "start": "2024-08-01",
+            "end": "2025-01-31"
+        },
+        "total_deposits": 150000.00,
+        "total_expenses": 120000.00,
+        "total_meals": 3000,
+        "avg_user_count": 5.2,
+        "avg_meal_cost": 40.00,
+        "monthly_breakdown": [
+            {
+                "month_id": 1,
+                "name": "January 2025",
+                "deposits": 25000.00,
+                "expenses": 20000.00,
+                "meals": 500,
+                "users": 5
+            }
+        ]
+    }
+}
+```
+
+### Export Month Data
+**Endpoint**: `GET /api/month/export/{monthId?}`
+**Access**: Protected (requires mess membership)
+
+#### Parameters
+- `monthId` (optional): Specific month ID (defaults to current active month)
+
+#### Query Parameters
+- `format`: nullable, enum (json, csv, excel)
+- `include_details`: nullable, boolean
+- `sections[]`: nullable, array (meals, deposits, purchases, other_costs, funds, summary)
+
+#### Response
+```json
+{
+    "success": true,
+    "message": "Month data exported successfully",
+    "data": {
+        "month_info": {
+            "id": 1,
+            "name": "January 2025",
+            "type": "automatic",
+            "start_date": "2025-01-01",
+            "end_date": "2025-01-31",
+            "exported_at": "2025-06-16T10:00:00Z"
+        },
+        "summary": {
+            "total_deposits": 25000.00,
+            "total_purchases": 18000.00,
+            "total_other_costs": 2000.00,
+            "total_meals": 500,
+            "user_count": 5
+        },
+        "meals": [...],
+        "deposits": [...],
+        "purchases": [...]
+    }
+}
+```
+
+### Get Month Timeline
+**Endpoint**: `GET /api/month/timeline/{monthId?}`
+**Access**: Protected (requires mess membership)
+
+#### Parameters
+- `monthId` (optional): Specific month ID (defaults to current active month)
+
+#### Query Parameters
+- `start_date`: nullable, date
+- `end_date`: nullable, date
+- `activity_types[]`: nullable, array (meals, deposits, purchases, other_costs, user_actions)
+- `user_id`: nullable, integer - Filter by specific user
+
+#### Response
+```json
+{
+    "success": true,
+    "message": "Activity timeline retrieved successfully",
+    "data": {
+        "timeline": [
+            {
+                "type": "meal",
+                "date": "2025-01-15",
+                "user": "John Doe",
+                "details": "Breakfast: 1, Lunch: 1, Dinner: 1",
+                "data": {...}
+            },
+            {
+                "type": "deposit",
+                "date": "2025-01-15",
+                "user": "Jane Doe",
+                "details": "Deposit: ৳1000.00",
+                "data": {...}
+            }
+        ],
+        "period": {
+            "start": "2025-01-01",
+            "end": "2025-01-31"
+        },
+        "total_activities": 250
+    }
+}
+```
+
+### Get Budget Analysis
+**Endpoint**: `GET /api/month/budget-analysis/{monthId?}`
+**Access**: Protected (requires mess membership)
+
+#### Parameters
+- `monthId` (optional): Specific month ID (defaults to current active month)
+
+#### Query Parameters
+- `budget_amount`: nullable, numeric - Total budget amount
+- `category_budgets[groceries]`: nullable, numeric - Category-wise budget
+- `category_budgets[utilities]`: nullable, numeric
+- `category_budgets[maintenance]`: nullable, numeric
+
+#### Response
+```json
+{
+    "success": true,
+    "message": "Budget analysis completed successfully",
+    "data": {
+        "month_info": {
+            "name": "January 2025",
+            "start_date": "2025-01-01",
+            "end_date": "2025-01-31"
+        },
+        "expenses": {
+            "total_purchases": 18000.00,
+            "total_other_costs": 2000.00,
+            "total_expenses": 20000.00
+        },
+        "income": {
+            "total_deposits": 25000.00
+        },
+        "balance": 5000.00,
+        "budget_analysis": {
+            "budget_amount": 22000.00,
+            "actual_expenses": 20000.00,
+            "variance": 2000.00,
+            "percentage_used": 90.91,
+            "status": "within_budget"
+        }
+    }
+}
+```
+
+### Validate Month Data
+**Endpoint**: `GET /api/month/validate/{monthId?}`
+**Access**: Protected (requires mess membership)
+
+#### Parameters
+- `monthId` (optional): Specific month ID (defaults to current active month)
+
+#### Response
+```json
+{
+    "success": true,
+    "message": "Month data validation completed",
+    "data": {
+        "month_id": 1,
+        "validation_date": "2025-06-16T10:00:00Z",
+        "status": "valid",
+        "issues": [],
+        "warnings": [
+            "Found 2 meals from users not initiated for this month"
+        ],
+        "summary": {
+            "total_issues": 0,
+            "total_warnings": 1
+        }
+    }
+}
+```
+
+### Get Performance Metrics
+**Endpoint**: `GET /api/month/performance/{monthId?}`
+**Access**: Protected (requires mess membership)
+
+#### Parameters
+- `monthId` (optional): Specific month ID (defaults to current active month)
+
+#### Query Parameters
+- `compare_with_previous`: nullable, boolean
+- `include_trends`: nullable, boolean
+
+#### Response
+```json
+{
+    "success": true,
+    "message": "Performance metrics retrieved successfully",
+    "data": {
+        "month_info": {
+            "id": 1,
+            "name": "January 2025",
+            "period": "2025-01-01 to 2025-01-31"
+        },
+        "performance_indicators": {
+            "total_users": 5,
+            "active_users_percentage": 100.0,
+            "avg_meals_per_user": 100.0,
+            "avg_deposit_per_user": 5000.00,
+            "cost_per_meal": 40.00
+        },
+        "comparison_with_previous": {
+            "previous_month": "December 2024",
+            "user_change": 1,
+            "expense_change": -500.00,
+            "meal_change": 50
+        },
+        "trends": {
+            "expense_trend": [
+                {
+                    "month": "January 2025",
+                    "expenses": 20000.00
+                }
+            ],
+            "user_trend": [
+                {
+                    "month": "January 2025",
+                    "users": 5
+                }
+            ]
+        }
+    }
+}
+```
+
 ## Meal Management
 
 ### Add Meal

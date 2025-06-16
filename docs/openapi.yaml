@@ -345,6 +345,527 @@ paths:
                           purchase_request:
                             $ref: '#/components/schemas/PurchaseRequest'
 
+  /month/create:
+    post:
+      tags:
+        - Month Management
+      summary: Create month
+      description: Create a new month period for mess operations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMonthRequest'
+      responses:
+        '200':
+          description: Month created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          month:
+                            $ref: '#/components/schemas/Month'
+
+  /month/list:
+    get:
+      tags:
+        - Month Management
+      summary: List months
+      description: Get list of all months for the current mess
+      responses:
+        '200':
+          description: Months retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Month'
+
+  /month/change-status:
+    put:
+      tags:
+        - Month Management
+      summary: Change month status
+      description: Update the status of the current month
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: boolean
+                  description: New status for the month
+      responses:
+        '200':
+          description: Month status updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /month/show/{monthId}:
+    get:
+      tags:
+        - Month Management
+      summary: Get month details
+      description: Get detailed information about a specific month with statistics
+      parameters:
+        - name: monthId
+          in: path
+          required: false
+          schema:
+            type: integer
+          description: Month ID (optional, defaults to current active month)
+      responses:
+        '200':
+          description: Month details retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/MonthDetails'
+
+  /month/summary/{monthId}:
+    get:
+      tags:
+        - Month Management
+      summary: Get month summary
+      description: Get comprehensive month summary with optional detailed breakdowns
+      parameters:
+        - name: monthId
+          in: path
+          required: false
+          schema:
+            type: integer
+          description: Month ID (optional, defaults to current active month)
+        - name: include_user_details
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: Include per-user breakdown
+        - name: include_daily_breakdown
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: Include daily activity breakdown
+      responses:
+        '200':
+          description: Month summary retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/MonthSummaryDetailed'
+
+  /month/close:
+    post:
+      tags:
+        - Month Management
+      summary: Close current month
+      description: Close the current month and optionally create the next month
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                create_next_month:
+                  type: boolean
+                  description: Whether to create the next month automatically
+                next_month_type:
+                  type: string
+                  enum: [automatic, manual]
+                  description: Type of next month to create
+                next_month_name:
+                  type: string
+                  maxLength: 20
+                  description: Name for the next month
+      responses:
+        '200':
+          description: Month closed successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          closed_month:
+                            $ref: '#/components/schemas/Month'
+                          next_month:
+                            $ref: '#/components/schemas/Month'
+
+  /month/{monthId}/duplicate:
+    post:
+      tags:
+        - Month Management
+      summary: Duplicate month
+      description: Create a new month by copying the structure of an existing month
+      parameters:
+        - name: monthId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Source month ID to duplicate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/CreateMonthRequest'
+                - type: object
+                  properties:
+                    copy_initiated_users:
+                      type: boolean
+                      description: Whether to copy initiated users from source month
+      responses:
+        '200':
+          description: Month duplicated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Month'
+
+  /month/compare:
+    get:
+      tags:
+        - Month Management
+      summary: Compare months
+      description: Compare two months across various metrics
+      parameters:
+        - name: month1_id
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: First month ID to compare
+        - name: month2_id
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: Second month ID to compare
+        - name: comparison_type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [financial, meals, users, all]
+            default: all
+          description: Type of comparison to perform
+      responses:
+        '200':
+          description: Month comparison completed successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/MonthComparison'
+
+  /month/statistics:
+    get:
+      tags:
+        - Month Management
+      summary: Get month statistics
+      description: Get statistical data over different time periods
+      parameters:
+        - name: period
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [last_3_months, last_6_months, last_year, all]
+            default: last_6_months
+          description: Time period for statistics
+        - name: metrics
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [total_deposits, total_expenses, total_meals, user_count, avg_meal_cost]
+          description: Metrics to include in statistics
+      responses:
+        '200':
+          description: Statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/MonthStatistics'
+
+  /month/export/{monthId}:
+    get:
+      tags:
+        - Month Management
+      summary: Export month data
+      description: Export month data in various formats
+      parameters:
+        - name: monthId
+          in: path
+          required: false
+          schema:
+            type: integer
+          description: Month ID (optional, defaults to current active month)
+        - name: format
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [json, csv, excel]
+            default: json
+          description: Export format
+        - name: include_details
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: true
+          description: Include detailed data
+        - name: sections
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [meals, deposits, purchases, other_costs, funds, summary]
+          description: Sections to include in export
+      responses:
+        '200':
+          description: Month data exported successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/MonthExport'
+
+  /month/timeline/{monthId}:
+    get:
+      tags:
+        - Month Management
+      summary: Get month activity timeline
+      description: Get chronological timeline of activities for a month
+      parameters:
+        - name: monthId
+          in: path
+          required: false
+          schema:
+            type: integer
+          description: Month ID (optional, defaults to current active month)
+        - name: start_date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Filter start date
+        - name: end_date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Filter end date
+        - name: activity_types
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [meals, deposits, purchases, other_costs, user_actions]
+          description: Types of activities to include
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Filter by specific user
+      responses:
+        '200':
+          description: Activity timeline retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ActivityTimeline'
+
+  /month/budget-analysis/{monthId}:
+    get:
+      tags:
+        - Month Management
+      summary: Get budget analysis
+      description: Analyze budget performance and variances for a month
+      parameters:
+        - name: monthId
+          in: path
+          required: false
+          schema:
+            type: integer
+          description: Month ID (optional, defaults to current active month)
+        - name: budget_amount
+          in: query
+          required: false
+          schema:
+            type: number
+            minimum: 0
+          description: Total budget amount
+        - name: category_budgets[groceries]
+          in: query
+          required: false
+          schema:
+            type: number
+            minimum: 0
+          description: Groceries budget
+        - name: category_budgets[utilities]
+          in: query
+          required: false
+          schema:
+            type: number
+            minimum: 0
+          description: Utilities budget
+        - name: category_budgets[maintenance]
+          in: query
+          required: false
+          schema:
+            type: number
+            minimum: 0
+          description: Maintenance budget
+      responses:
+        '200':
+          description: Budget analysis completed successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/BudgetAnalysis'
+
+  /month/validate/{monthId}:
+    get:
+      tags:
+        - Month Management
+      summary: Validate month data
+      description: Validate data integrity for a month
+      parameters:
+        - name: monthId
+          in: path
+          required: false
+          schema:
+            type: integer
+          description: Month ID (optional, defaults to current active month)
+      responses:
+        '200':
+          description: Month data validation completed
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/DataValidation'
+
+  /month/performance/{monthId}:
+    get:
+      tags:
+        - Month Management
+      summary: Get performance metrics
+      description: Get performance metrics and trends for a month
+      parameters:
+        - name: monthId
+          in: path
+          required: false
+          schema:
+            type: integer
+          description: Month ID (optional, defaults to current active month)
+        - name: compare_with_previous
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: true
+          description: Compare with previous month
+        - name: include_trends
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: true
+          description: Include trend analysis
+      responses:
+        '200':
+          description: Performance metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PerformanceMetrics'
+
   /summary/months/{type}:
     get:
       tags:
@@ -857,6 +1378,530 @@ components:
               balance:
                 type: number
                 example: 325.00
+
+    CreateMonthRequest:
+      type: object
+      required:
+        - type
+      properties:
+        name:
+          type: string
+          maxLength: 20
+          description: Name of the month period
+          example: "January 2025"
+        type:
+          type: string
+          enum: [automatic, manual]
+          description: Type of month creation
+          example: "automatic"
+        month:
+          type: integer
+          minimum: 1
+          maximum: 12
+          description: Month number (required for automatic type)
+          example: 1
+        year:
+          type: integer
+          description: Year (required for automatic type)
+          example: 2025
+        start_at:
+          type: string
+          format: date
+          description: Start date (required for manual type)
+          example: "2025-01-15"
+        force_close_other:
+          type: boolean
+          description: Force close other active months
+          example: false
+
+    Month:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "January 2025"
+        type:
+          type: string
+          enum: [automatic, manual]
+          example: "automatic"
+        start_at:
+          type: string
+          format: date-time
+          example: "2025-01-01T00:00:00Z"
+        end_at:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2025-01-31T23:59:59Z"
+        is_active:
+          type: boolean
+          example: true
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-01-01T00:00:00Z"
+
+    MonthDetails:
+      type: object
+      properties:
+        month:
+          $ref: '#/components/schemas/Month'
+        user_count:
+          type: integer
+          example: 5
+        total_meals:
+          type: object
+          properties:
+            breakfast:
+              type: number
+              example: 150
+            lunch:
+              type: number
+              example: 180
+            dinner:
+              type: number
+              example: 170
+        financial_summary:
+          type: object
+          properties:
+            total_deposits:
+              type: number
+              example: 25000.00
+            total_purchases:
+              type: number
+              example: 18000.00
+            total_other_costs:
+              type: number
+              example: 2000.00
+            balance:
+              type: number
+              example: 5000.00
+        recent_activities:
+          type: object
+          properties:
+            latest_meals:
+              type: array
+              items:
+                $ref: '#/components/schemas/Meal'
+            latest_deposits:
+              type: array
+              items:
+                $ref: '#/components/schemas/Deposit'
+            latest_purchases:
+              type: array
+              items:
+                $ref: '#/components/schemas/Purchase'
+
+    MonthComparison:
+      type: object
+      properties:
+        month1:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            name:
+              type: string
+              example: "January 2025"
+            period:
+              type: string
+              example: "2025-01-01 to 2025-01-31"
+        month2:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 2
+            name:
+              type: string
+              example: "February 2025"
+            period:
+              type: string
+              example: "2025-02-01 to 2025-02-29"
+        financial_comparison:
+          type: object
+          properties:
+            deposits:
+              type: object
+              properties:
+                month1:
+                  type: number
+                  example: 25000.00
+                month2:
+                  type: number
+                  example: 28000.00
+                difference:
+                  type: number
+                  example: -3000.00
+            expenses:
+              type: object
+              properties:
+                month1:
+                  type: number
+                  example: 20000.00
+                month2:
+                  type: number
+                  example: 22000.00
+                difference:
+                  type: number
+                  example: -2000.00
+        meal_comparison:
+          type: object
+          properties:
+            total_meals:
+              type: object
+              properties:
+                month1:
+                  type: integer
+                  example: 500
+                month2:
+                  type: integer
+                  example: 520
+            breakdown:
+              type: object
+              properties:
+                breakfast:
+                  type: object
+                  properties:
+                    month1:
+                      type: number
+                      example: 150
+                    month2:
+                      type: number
+                      example: 155
+                lunch:
+                  type: object
+                  properties:
+                    month1:
+                      type: number
+                      example: 180
+                    month2:
+                      type: number
+                      example: 185
+                dinner:
+                  type: object
+                  properties:
+                    month1:
+                      type: number
+                      example: 170
+                    month2:
+                      type: number
+                      example: 180
+
+    MonthStatistics:
+      type: object
+      properties:
+        period:
+          type: string
+          example: "last_6_months"
+        month_count:
+          type: integer
+          example: 6
+        date_range:
+          type: object
+          properties:
+            start:
+              type: string
+              format: date
+              example: "2024-08-01"
+            end:
+              type: string
+              format: date
+              example: "2025-01-31"
+        total_deposits:
+          type: number
+          example: 150000.00
+        total_expenses:
+          type: number
+          example: 120000.00
+        total_meals:
+          type: integer
+          example: 3000
+        avg_user_count:
+          type: number
+          example: 5.2
+        avg_meal_cost:
+          type: number
+          example: 40.00
+        monthly_breakdown:
+          type: array
+          items:
+            type: object
+            properties:
+              month_id:
+                type: integer
+                example: 1
+              name:
+                type: string
+                example: "January 2025"
+              deposits:
+                type: number
+                example: 25000.00
+              expenses:
+                type: number
+                example: 20000.00
+              meals:
+                type: integer
+                example: 500
+              users:
+                type: integer
+                example: 5
+
+    MonthExport:
+      type: object
+      properties:
+        month_info:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            name:
+              type: string
+              example: "January 2025"
+            type:
+              type: string
+              example: "automatic"
+            start_date:
+              type: string
+              format: date
+              example: "2025-01-01"
+            end_date:
+              type: string
+              format: date
+              example: "2025-01-31"
+            exported_at:
+              type: string
+              format: date-time
+              example: "2025-06-16T10:00:00Z"
+        summary:
+          type: object
+          properties:
+            total_deposits:
+              type: number
+              example: 25000.00
+            total_purchases:
+              type: number
+              example: 18000.00
+            total_other_costs:
+              type: number
+              example: 2000.00
+            total_meals:
+              type: integer
+              example: 500
+            user_count:
+              type: integer
+              example: 5
+
+    ActivityTimeline:
+      type: object
+      properties:
+        timeline:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                enum: [meal, deposit, purchase, other_cost]
+                example: "meal"
+              date:
+                type: string
+                format: date
+                example: "2025-01-15"
+              user:
+                type: string
+                example: "John Doe"
+              details:
+                type: string
+                example: "Breakfast: 1, Lunch: 1, Dinner: 1"
+              data:
+                type: object
+                description: The actual record data
+        period:
+          type: object
+          properties:
+            start:
+              type: string
+              format: date
+              example: "2025-01-01"
+            end:
+              type: string
+              format: date
+              example: "2025-01-31"
+        total_activities:
+          type: integer
+          example: 250
+
+    BudgetAnalysis:
+      type: object
+      properties:
+        month_info:
+          type: object
+          properties:
+            name:
+              type: string
+              example: "January 2025"
+            start_date:
+              type: string
+              format: date
+              example: "2025-01-01"
+            end_date:
+              type: string
+              format: date
+              example: "2025-01-31"
+        expenses:
+          type: object
+          properties:
+            total_purchases:
+              type: number
+              example: 18000.00
+            total_other_costs:
+              type: number
+              example: 2000.00
+            total_expenses:
+              type: number
+              example: 20000.00
+        income:
+          type: object
+          properties:
+            total_deposits:
+              type: number
+              example: 25000.00
+        balance:
+          type: number
+          example: 5000.00
+        budget_analysis:
+          type: object
+          properties:
+            budget_amount:
+              type: number
+              example: 22000.00
+            actual_expenses:
+              type: number
+              example: 20000.00
+            variance:
+              type: number
+              example: 2000.00
+            percentage_used:
+              type: number
+              example: 90.91
+            status:
+              type: string
+              enum: [within_budget, over_budget]
+              example: "within_budget"
+
+    DataValidation:
+      type: object
+      properties:
+        month_id:
+          type: integer
+          example: 1
+        validation_date:
+          type: string
+          format: date-time
+          example: "2025-06-16T10:00:00Z"
+        status:
+          type: string
+          enum: [valid, invalid]
+          example: "valid"
+        issues:
+          type: array
+          items:
+            type: string
+          example: []
+        warnings:
+          type: array
+          items:
+            type: string
+          example: ["Found 2 meals from users not initiated for this month"]
+        summary:
+          type: object
+          properties:
+            total_issues:
+              type: integer
+              example: 0
+            total_warnings:
+              type: integer
+              example: 1
+
+    PerformanceMetrics:
+      type: object
+      properties:
+        month_info:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            name:
+              type: string
+              example: "January 2025"
+            period:
+              type: string
+              example: "2025-01-01 to 2025-01-31"
+        performance_indicators:
+          type: object
+          properties:
+            total_users:
+              type: integer
+              example: 5
+            active_users_percentage:
+              type: number
+              example: 100.0
+            avg_meals_per_user:
+              type: number
+              example: 100.0
+            avg_deposit_per_user:
+              type: number
+              example: 5000.00
+            cost_per_meal:
+              type: number
+              example: 40.00
+        comparison_with_previous:
+          type: object
+          properties:
+            previous_month:
+              type: string
+              example: "December 2024"
+            user_change:
+              type: integer
+              example: 1
+            expense_change:
+              type: number
+              example: -500.00
+            meal_change:
+              type: integer
+              example: 50
+        trends:
+          type: object
+          properties:
+            expense_trend:
+              type: array
+              items:
+                type: object
+                properties:
+                  month:
+                    type: string
+                    example: "January 2025"
+                  expenses:
+                    type: number
+                    example: 20000.00
+            user_trend:
+              type: array
+              items:
+                type: object
+                properties:
+                  month:
+                    type: string
+                    example: "January 2025"
+                  users:
+                    type: integer
+                    example: 5
 
 tags:
   - name: Authentication

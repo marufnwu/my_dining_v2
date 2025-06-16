@@ -60,6 +60,25 @@ Route:: as('api.')->group(function () {
                 Route::post("create", "createMonth");
                 Route::get("list", "list");
                 Route::put("change-status", "changeStatus");
+
+                // Month details and information
+                Route::get("show/{monthId?}", "show");
+                Route::get("summary/{monthId?}", "summary");
+
+                // Month management actions
+                Route::post("close", "closeMonth");
+                Route::post("{monthId}/duplicate", "duplicate");
+
+                // Analytics and reporting
+                Route::get("compare", "compare");
+                Route::get("statistics", "statistics");
+                Route::get("export/{monthId?}", "export");
+                Route::get("timeline/{monthId?}", "timeline");
+
+                // Analysis features
+                Route::get("budget-analysis/{monthId?}", "budgetAnalysis");
+                Route::get("validate/{monthId?}", "validate");
+                Route::get("performance/{monthId?}", "performance");
             });
 
             Route::prefix("meal")->middleware("MonthChecker:false")->controller(MealController::class)->group(function () {
