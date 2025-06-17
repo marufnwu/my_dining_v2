@@ -168,5 +168,13 @@ Route:: as('api.')->group(function () {
         Route::prefix('auth')->group(function () {
             Route::get('check-login', [UserController::class, 'checkLogin'])->name('auth.check-login');
         });
+
+        // Profile management routes
+        Route::prefix('profile')->controller(UserController::class)->group(function () {
+            Route::get('/', 'getProfile')->name('profile.show');
+            Route::put('/', 'updateProfile')->name('profile.update');
+            Route::post('avatar', 'uploadAvatar')->name('profile.avatar.upload');
+            Route::delete('avatar', 'removeAvatar')->name('profile.avatar.remove');
+        });
     });
 });

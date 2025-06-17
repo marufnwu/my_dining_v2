@@ -2,122 +2,16 @@
 
 namespace App\Services;
 
-use App\DTOs\UserDto;
-use App\Enums\MessUserStatus;
 use App\Helpers\Pipeline;
-use App\Models\Country;
 use App\Models\User;
-use Carbon\Carbon;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Lang;
-use Illuminate\Support\Facades\Log;
-use Laravel\Sanctum\PersonalAccessToken;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
-class UserService
+class ProfileService
 {
-
-    public static function currentUser(): ?User
-    {
-        return Auth::user() ?? null;
-    }
-
-    function isUserNameExits(string $userName)
-    {
-        $count = User::where("user_name", $userName)->count();
-        return $count >= 1;
-    }
-
-    function isEmailExits(string $email)
-    {
-        $count = User::where("email", $email)->count();
-        return $count >= 1;
-    }
-
-    function createUser(UserDto $userDto): Pipeline
-    {
-
-
-        // if($this->isUserNameExits($userName)){
-        //     return Pipeline::error(message:Lang::get("auth.user_name_exits"));
-        // }
-
-        if ($this->isEmailExits($userDto->email)) {
-            return Pipeline::error(message: Lang::get("auth.email_exits"));
-        }
-
-        $country = Country::where("id", $userDto->country)->first();
-
-
-
-        $user = User::create(
-            [
-                "name" => $userDto->name,
-                "email" => $userDto->email,
-                "phone" => "{$country->dial_code}-{$userDto->phone}",
-                "country_id" => $userDto->country,
-                "city" => $userDto->city,
-                "gender" => $userDto->gender,
-                "password" => Hash::make($userDto->password),
-                "join_date" => Carbon::now(),
-                "status" => MessUserStatus::Active->value,
-            ]
-        );
-
-        return Pipeline::success($user);
-    }
-
-    function login($userNameOrEmail, $password)
-    {
-        $user = User::where("user_name", $userNameOrEmail)->orWhere("email", $userNameOrEmail)->first();
-
-        if (!$user || !Hash::check($password, $user->password)) {
-            return Pipeline::error("Username or email not matched with password");
-        }
-
-        $token = $user->createToken('Personal Access Token')->plainTextToken;
-
-        return $this->checkLogin($token);
-    }
-
-    function checkLogin($token = null): Pipeline
-    {
-        if ($token) {
-            // Manually find the user using Sanctum's token
-            $accessToken = PersonalAccessToken::findToken($token);
-
-            if (!$accessToken) {
-                return Pipeline::error("Invalid token");
-            }
-
-            $user = $accessToken->tokenable; // Get the user associated with the token
-
-            // Log in the user manually for this request
-            Auth::setUser($user);
-        } else {
-            // Use default Sanctum authentication (from request headers)
-            $user = Auth::user();
-        }
-
-        if (!$user) {
-            return Pipeline::error("User not found");
-        }
-        $user->withoutRelations();
-
-        // Fetch the messUser relationship separately
-        $messUser = $user->messUser()->with(["user", "mess", "role.permissions"])->first();
-
-        $data = [
-            "user" => $user->load("country"), // Only the user model
-            "mess_user" => $messUser, // Fetched separately
-            "token" => $token ?? request()->bearerToken() ?? null,
-        ];
-
-        return Pipeline::success($data);
-    }
-
-    function addEmailOtp(User $user) {}
-
     /**
      * Get current user profile with relationships
      */
@@ -182,7 +76,7 @@ class UserService
     /**
      * Upload user avatar
      */
-    public function uploadAvatar($file): Pipeline
+    public function uploadAvatar(UploadedFile $file): Pipeline
     {
         $user = Auth::user();
 
@@ -191,19 +85,12 @@ class UserService
         }
 
         // Validate file
-        if (!$file || !$file->isValid()) {
-            return Pipeline::error('Invalid file upload');
-        }
+        $validator = Validator::make(['avatar' => $file], [
+            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
 
-        $allowedTypes = ['jpeg', 'png', 'jpg', 'gif'];
-        $extension = $file->getClientOriginalExtension();
-
-        if (!in_array(strtolower($extension), $allowedTypes)) {
-            return Pipeline::error('Invalid file type. Only JPEG, PNG, JPG, and GIF are allowed');
-        }
-
-        if ($file->getSize() > 2048 * 1024) { // 2MB limit
-            return Pipeline::error('File size too large. Maximum 2MB allowed');
+        if ($validator->fails()) {
+            return Pipeline::error('Invalid file: ' . $validator->errors()->first());
         }
 
         try {
@@ -213,17 +100,17 @@ class UserService
             }
 
             // Generate unique filename
-            $filename = 'avatars/' . $user->id . '_' . time() . '.' . $extension;
+            $filename = 'avatars/' . $user->id . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
 
             // Store file
-            $path = $file->storeAs('public', $filename);
+            $path = Storage::disk('public')->put($filename, file_get_contents($file));
 
             if (!$path) {
                 return Pipeline::error('Failed to upload avatar');
             }
 
             // Update user photo_url
-            $user->update(['photo_url' => '/storage/' . $filename]);
+            $user->update(['photo_url' => Storage::url($filename)]);
 
             return Pipeline::success([
                 'photo_url' => $user->photo_url,
@@ -323,16 +210,16 @@ class UserService
     private function deleteAvatarFile(string $photoUrl): void
     {
         try {
-            // Extract filename from URL path
-            $path = str_replace('/storage/', '', $photoUrl);
-            $fullPath = storage_path('app/public/' . $path);
+            // Extract filename from URL
+            $filename = basename(parse_url($photoUrl, PHP_URL_PATH));
+            $path = 'avatars/' . $filename;
 
-            if (file_exists($fullPath)) {
-                unlink($fullPath);
+            if (Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
             }
         } catch (\Exception $e) {
             // Log error but don't fail the operation
-            Log::warning('Failed to delete avatar file: ' . $e->getMessage());
+            \Log::warning('Failed to delete avatar file: ' . $e->getMessage());
         }
     }
 }

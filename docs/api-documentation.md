@@ -152,6 +152,109 @@ All API responses follow a consistent structure:
 }
 ```
 
+## Profile Management
+
+### Get Profile
+**Endpoint**: `GET /api/profile`
+**Access**: Protected (requires authentication)
+
+#### Response
+```json
+{
+    "success": true,
+    "message": "Profile retrieved successfully",
+    "data": {
+        "user": {
+            "id": 1,
+            "name": "John Doe",
+            "email": "john@example.com",
+            "phone": "+1-1234567890",
+            "city": "New York",
+            "gender": "male",
+            "photo_url": "/storage/avatars/1_1234567890.jpg",
+            "country": {
+                "id": 1,
+                "name": "United States",
+                "dial_code": "+1",
+                "code": "US"
+            }
+        },
+        "profile_completion": 85,
+        "last_updated": "2025-06-17T10:30:00.000000Z"
+    }
+}
+```
+
+### Update Profile
+**Endpoint**: `PUT /api/profile`
+**Access**: Protected (requires authentication)
+
+#### Request Body
+```json
+{
+    "name": "John Smith",
+    "city": "Los Angeles",
+    "gender": "male"
+}
+```
+
+#### Validation Rules
+- `name`: sometimes, required, string, max 255 characters
+- `city`: sometimes, required, string, max 255 characters
+- `gender`: sometimes, required, enum (male, female, other)
+
+#### Response
+```json
+{
+    "success": true,
+    "message": "Profile updated successfully",
+    "data": {
+        "user": {
+            "id": 1,
+            "name": "John Smith",
+            "email": "john@example.com",
+            "city": "Los Angeles",
+            "gender": "male"
+        }
+    }
+}
+```
+
+### Upload Avatar
+**Endpoint**: `POST /api/profile/avatar`
+**Access**: Protected (requires authentication)
+
+#### Request Body
+- Content-Type: `multipart/form-data`
+- Form field: `avatar` (image file)
+
+#### Validation Rules
+- `avatar`: required, image, mimes (jpeg, png, jpg, gif), max 2MB
+
+#### Response
+```json
+{
+    "success": true,
+    "message": "Avatar uploaded successfully",
+    "data": {
+        "photo_url": "/storage/avatars/1_1234567890.jpg"
+    }
+}
+```
+
+### Remove Avatar
+**Endpoint**: `DELETE /api/profile/avatar`
+**Access**: Protected (requires authentication)
+
+#### Response
+```json
+{
+    "success": true,
+    "message": "Avatar removed successfully",
+    "data": {}
+}
+```
+
 ## Country Management
 
 ### Get Countries List
