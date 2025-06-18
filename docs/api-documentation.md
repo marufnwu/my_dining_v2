@@ -332,1674 +332,418 @@ All API responses follow a consistent structure:
 }
 ```
 
-## Mess Member Management
+## Mess Management (Extended)
 
-### List Mess Members
-**Endpoint**: `GET /api/member/list`
+### Get Current Mess Information
+**Endpoint**: `GET /api/mess-management/info`
 **Access**: Protected (requires mess membership)
 
 #### Response
 ```json
 {
     "success": true,
-    "message": "Mess members retrieved successfully",
-    "data": [
-        {
+    "message": "Current mess information retrieved successfully",
+    "data": {
+        "mess": {
             "id": 1,
-            "user": {
-                "id": 1,
-                "name": "John Doe",
-                "email": "john@example.com"
-            },
+            "name": "My Dining Mess",
+            "created_at": "2025-01-01T00:00:00Z",
+            "updated_at": "2025-01-15T10:30:00Z"
+        },
+        "user_role": {
+            "id": 1,
             "role": "admin",
-            "status": "active"
-        }
-    ]
-}
-```
-
-### Create User and Add to Mess
-**Endpoint**: `POST /api/member/create-and-add`
-**Access**: Protected (requires USER_ADD or USER_MANAGEMENT permission)
-
-#### Request Body
-```json
-{
-    "name": "Jane Doe",
-    "email": "jane@example.com",
-    "country_id": 1,
-    "phone": "1234567891",
-    "city": "New York",
-    "gender": "female",
-    "password": "password123",
-    "password_confirmation": "password123"
-}
-```
-
-#### Validation Rules
-Same as sign-up endpoint
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "User created and added to mess successfully",
-    "data": {
-        "user": {
-            "id": 2,
-            "name": "Jane Doe",
-            "email": "jane@example.com"
-        },
-        "mess_user": {
-            "id": 2,
-            "role": "member",
-            "status": "active"
-        }
-    }
-}
-```
-
-### Initiate User for Month
-**Endpoint**: `POST /api/member/initiate/add/{mess_user_id}`
-**Access**: Protected (requires active month)
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "User initiated successfully",
-    "data": {
-        "initiated": true
-    }
-}
-```
-
-### Initiate All Users
-**Endpoint**: `POST /api/member/initiate/add/all`
-**Access**: Protected
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "All users initiated successfully",
-    "data": {
-        "initiated_count": 5
-    }
-}
-```
-
-### Get Initiated Users
-**Endpoint**: `GET /api/member/initiated/{status}`
-**Access**: Protected
-
-#### Parameters
-- `status`: boolean (true/false) - filter by initiation status
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Initiated users retrieved",
-    "data": [
-        {
-            "id": 1,
-            "user": {
-                "name": "John Doe"
-            },
-            "initiated": true
-        }
-    ]
-}
-```
-
-## Month Management
-
-### Create Month
-**Endpoint**: `POST /api/month/create`
-**Access**: Protected (requires mess membership)
-
-#### Request Body
-
-##### Automatic Month
-```json
-{
-    "name": "January 2025",
-    "type": "automatic",
-    "month": 1,
-    "year": 2025,
-    "force_close_other": false
-}
-```
-
-##### Manual Month
-```json
-{
-    "name": "Custom Period",
-    "type": "manual",
-    "start_at": "2025-01-15",
-    "force_close_other": false
-}
-```
-
-#### Validation Rules
-- `name`: nullable, string, max 20 characters
-- `type`: required, enum (automatic, manual)
-- `month`: nullable, integer, 1-12, required if type is automatic
-- `year`: nullable, integer, current year, required if type is automatic
-- `start_at`: nullable, date, required if type is manual
-- `force_close_other`: nullable, boolean
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Month created successfully",
-    "data": {
-        "month": {
-            "id": 1,
-            "name": "January 2025",
-            "type": "automatic",
-            "start_date": "2025-01-01",
-            "status": "active"
-        }
-    }
-}
-```
-
-### List Months
-**Endpoint**: `GET /api/month/list`
-**Access**: Protected (requires mess membership)
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Months retrieved successfully",
-    "data": [
-        {
-            "id": 1,
-            "name": "January 2025",
-            "type": "automatic",
-            "start_date": "2025-01-01",
-            "status": "active"
-        }
-    ]
-}
-```
-
-### Change Month Status
-**Endpoint**: `PUT /api/month/change-status`
-**Access**: Protected (requires mess membership)
-
-#### Request Body
-```json
-{
-    "status": true
-}
-```
-
-#### Validation Rules
-- `status`: required, boolean
-
-### Get Month Details
-**Endpoint**: `GET /api/month/show/{monthId?}`
-**Access**: Protected (requires mess membership)
-
-#### Parameters
-- `monthId` (optional): Specific month ID (defaults to current active month)
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Month details retrieved successfully",
-    "data": {
-        "month": {
-            "id": 1,
-            "name": "January 2025",
-            "type": "automatic",
-            "start_at": "2025-01-01T00:00:00Z",
-            "end_at": "2025-01-31T23:59:59Z",
-            "is_active": true
-        },
-        "user_count": 5,
-        "total_meals": {
-            "breakfast": 150,
-            "lunch": 180,
-            "dinner": 170
-        },
-        "financial_summary": {
-            "total_deposits": 25000.00,
-            "total_purchases": 18000.00,
-            "total_other_costs": 2000.00,
-            "balance": 5000.00
-        },
-        "recent_activities": {
-            "latest_meals": [...],
-            "latest_deposits": [...],
-            "latest_purchases": [...]
-        }
-    }
-}
-```
-
-### Get Month Summary
-**Endpoint**: `GET /api/month/summary/{monthId?}`
-**Access**: Protected (requires mess membership)
-
-#### Parameters
-- `monthId` (optional): Specific month ID (defaults to current active month)
-
-#### Query Parameters
-- `include_user_details`: boolean - Include per-user breakdown
-- `include_daily_breakdown`: boolean - Include daily activity breakdown
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Month summary retrieved successfully",
-    "data": {
-        "month_info": {
-            "id": 1,
-            "name": "January 2025",
-            "type": "automatic",
-            "start_date": "2025-01-01",
-            "end_date": "2025-01-31",
-            "is_active": true
-        },
-        "financial_summary": {
-            "total_deposits": 25000.00,
-            "total_purchases": 18000.00,
-            "total_other_costs": 2000.00,
-            "net_balance": 5000.00
-        },
-        "meal_summary": {
-            "total_breakfast": 150,
-            "total_lunch": 180,
-            "total_dinner": 170,
-            "total_meals": 500
-        },
-        "user_summary": {
-            "total_users": 5,
-            "active_users": 5
-        },
-        "user_details": [
-            {
-                "user_id": 1,
-                "name": "John Doe",
-                "total_deposits": 5000.00,
-                "total_meals": 90,
-                "meal_cost_breakdown": {
-                    "breakfast": 30,
-                    "lunch": 35,
-                    "dinner": 32
-                }
-            }
-        ],
-        "daily_breakdown": [
-            {
-                "date": "2025-01-01",
-                "meals": {
-                    "breakfast": 5,
-                    "lunch": 5,
-                    "dinner": 5
-                },
-                "deposits": 1000.00,
-                "purchases": 500.00,
-                "other_costs": 0.00
-            }
-        ]
-    }
-}
-```
-
-### Close Month
-**Endpoint**: `POST /api/month/close`
-**Access**: Protected (requires mess membership)
-
-#### Request Body
-```json
-{
-    "create_next_month": true,
-    "next_month_type": "automatic",
-    "next_month_name": "February 2025"
-}
-```
-
-#### Validation Rules
-- `create_next_month`: nullable, boolean
-- `next_month_type`: nullable, enum (automatic, manual)
-- `next_month_name`: nullable, string, max 20 characters
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Month closed successfully and next month created",
-    "data": {
-        "closed_month": {
-            "id": 1,
-            "name": "January 2025",
-            "end_at": "2025-01-31T23:59:59Z"
-        },
-        "next_month": {
-            "id": 2,
-            "name": "February 2025",
-            "type": "automatic",
-            "start_at": "2025-02-01T00:00:00Z"
-        }
-    }
-}
-```
-
-### Duplicate Month
-**Endpoint**: `POST /api/month/{monthId}/duplicate`
-**Access**: Protected (requires mess membership)
-
-#### Request Body
-```json
-{
-    "name": "March 2025",
-    "type": "automatic",
-    "month": 3,
-    "year": 2025,
-    "copy_initiated_users": true
-}
-```
-
-#### Validation Rules
-- `name`: required, string, max 20 characters
-- `type`: required, enum (automatic, manual)
-- `month`: nullable, integer, 1-12, required if type is automatic
-- `year`: nullable, integer, min current year, required if type is automatic
-- `start_at`: nullable, date, required if type is manual
-- `copy_initiated_users`: nullable, boolean
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Month duplicated successfully",
-    "data": {
-        "id": 3,
-        "name": "March 2025",
-        "type": "automatic",
-        "start_at": "2025-03-01T00:00:00Z",
-        "copied_users": 5
-    }
-}
-```
-
-### Compare Months
-**Endpoint**: `GET /api/month/compare`
-**Access**: Protected (requires mess membership)
-
-#### Query Parameters
-- `month1_id`: required, integer - First month to compare
-- `month2_id`: required, integer - Second month to compare
-- `comparison_type`: nullable, enum (financial, meals, users, all)
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Month comparison completed successfully",
-    "data": {
-        "month1": {
-            "id": 1,
-            "name": "January 2025",
-            "period": "2025-01-01 to 2025-01-31"
-        },
-        "month2": {
-            "id": 2,
-            "name": "February 2025",
-            "period": "2025-02-01 to 2025-02-29"
-        },
-        "financial_comparison": {
-            "deposits": {
-                "month1": 25000.00,
-                "month2": 28000.00,
-                "difference": -3000.00
-            },
-            "expenses": {
-                "month1": 20000.00,
-                "month2": 22000.00,
-                "difference": -2000.00
-            }
-        },
-        "meal_comparison": {
-            "total_meals": {
-                "month1": 500,
-                "month2": 520
-            },
-            "breakdown": {
-                "breakfast": {
-                    "month1": 150,
-                    "month2": 155
-                },
-                "lunch": {
-                    "month1": 180,
-                    "month2": 185
-                },
-                "dinner": {
-                    "month1": 170,
-                    "month2": 180
-                }
-            }
-        },
-        "user_comparison": {
-            "initiated_users": {
-                "month1": 5,
-                "month2": 6,
-                "difference": -1
-            }
-        }
-    }
-}
-```
-
-### Get Month Statistics
-**Endpoint**: `GET /api/month/statistics`
-**Access**: Protected (requires mess membership)
-
-#### Query Parameters
-- `period`: nullable, enum (last_3_months, last_6_months, last_year, all)
-- `metrics[]`: nullable, array of strings (total_deposits, total_expenses, total_meals, user_count, avg_meal_cost)
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Statistics retrieved successfully",
-    "data": {
-        "period": "last_6_months",
-        "month_count": 6,
-        "date_range": {
-            "start": "2024-08-01",
-            "end": "2025-01-31"
-        },
-        "total_deposits": 150000.00,
-        "total_expenses": 120000.00,
-        "total_meals": 3000,
-        "avg_user_count": 5.2,
-        "avg_meal_cost": 40.00,
-        "monthly_breakdown": [
-            {
-                "month_id": 1,
-                "name": "January 2025",
-                "deposits": 25000.00,
-                "expenses": 20000.00,
-                "meals": 500,
-                "users": 5
-            }
-        ]
-    }
-}
-```
-
-### Export Month Data
-**Endpoint**: `GET /api/month/export/{monthId?}`
-**Access**: Protected (requires mess membership)
-
-#### Parameters
-- `monthId` (optional): Specific month ID (defaults to current active month)
-
-#### Query Parameters
-- `format`: nullable, enum (json, csv, excel)
-- `include_details`: nullable, boolean
-- `sections[]`: nullable, array (meals, deposits, purchases, other_costs, funds, summary)
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Month data exported successfully",
-    "data": {
-        "month_info": {
-            "id": 1,
-            "name": "January 2025",
-            "type": "automatic",
-            "start_date": "2025-01-01",
-            "end_date": "2025-01-31",
-            "exported_at": "2025-06-16T10:00:00Z"
-        },
-        "summary": {
-            "total_deposits": 25000.00,
-            "total_purchases": 18000.00,
-            "total_other_costs": 2000.00,
-            "total_meals": 500,
-            "user_count": 5
-        },
-        "meals": [...],
-        "deposits": [...],
-        "purchases": [...]
-    }
-}
-```
-
-### Get Month Timeline
-**Endpoint**: `GET /api/month/timeline/{monthId?}`
-**Access**: Protected (requires mess membership)
-
-#### Parameters
-- `monthId` (optional): Specific month ID (defaults to current active month)
-
-#### Query Parameters
-- `start_date`: nullable, date
-- `end_date`: nullable, date
-- `activity_types[]`: nullable, array (meals, deposits, purchases, other_costs, user_actions)
-- `user_id`: nullable, integer - Filter by specific user
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Activity timeline retrieved successfully",
-    "data": {
-        "timeline": [
-            {
-                "type": "meal",
-                "date": "2025-01-15",
-                "user": "John Doe",
-                "details": "Breakfast: 1, Lunch: 1, Dinner: 1",
-                "data": {...}
-            },
-            {
-                "type": "deposit",
-                "date": "2025-01-15",
-                "user": "Jane Doe",
-                "details": "Deposit: ৳1000.00",
-                "data": {...}
-            }
-        ],
-        "period": {
-            "start": "2025-01-01",
-            "end": "2025-01-31"
-        },
-        "total_activities": 250
-    }
-}
-```
-
-### Get Budget Analysis
-**Endpoint**: `GET /api/month/budget-analysis/{monthId?}`
-**Access**: Protected (requires mess membership)
-
-#### Parameters
-- `monthId` (optional): Specific month ID (defaults to current active month)
-
-#### Query Parameters
-- `budget_amount`: nullable, numeric - Total budget amount
-- `category_budgets[groceries]`: nullable, numeric - Category-wise budget
-- `category_budgets[utilities]`: nullable, numeric
-- `category_budgets[maintenance]`: nullable, numeric
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Budget analysis completed successfully",
-    "data": {
-        "month_info": {
-            "name": "January 2025",
-            "start_date": "2025-01-01",
-            "end_date": "2025-01-31"
-        },
-        "expenses": {
-            "total_purchases": 18000.00,
-            "total_other_costs": 2000.00,
-            "total_expenses": 20000.00
-        },
-        "income": {
-            "total_deposits": 25000.00
-        },
-        "balance": 5000.00,
-        "budget_analysis": {
-            "budget_amount": 22000.00,
-            "actual_expenses": 20000.00,
-            "variance": 2000.00,
-            "percentage_used": 90.91,
-            "status": "within_budget"
-        }
-    }
-}
-```
-
-### Validate Month Data
-**Endpoint**: `GET /api/month/validate/{monthId?}`
-**Access**: Protected (requires mess membership)
-
-#### Parameters
-- `monthId` (optional): Specific month ID (defaults to current active month)
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Month data validation completed",
-    "data": {
-        "month_id": 1,
-        "validation_date": "2025-06-16T10:00:00Z",
-        "status": "valid",
-        "issues": [],
-        "warnings": [
-            "Found 2 meals from users not initiated for this month"
-        ],
-        "summary": {
-            "total_issues": 0,
-            "total_warnings": 1
-        }
-    }
-}
-```
-
-### Get Performance Metrics
-**Endpoint**: `GET /api/month/performance/{monthId?}`
-**Access**: Protected (requires mess membership)
-
-#### Parameters
-- `monthId` (optional): Specific month ID (defaults to current active month)
-
-#### Query Parameters
-- `compare_with_previous`: nullable, boolean
-- `include_trends`: nullable, boolean
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Performance metrics retrieved successfully",
-    "data": {
-        "month_info": {
-            "id": 1,
-            "name": "January 2025",
-            "period": "2025-01-01 to 2025-01-31"
-        },
-        "performance_indicators": {
-            "total_users": 5,
-            "active_users_percentage": 100.0,
-            "avg_meals_per_user": 100.0,
-            "avg_deposit_per_user": 5000.00,
-            "cost_per_meal": 40.00
-        },
-        "comparison_with_previous": {
-            "previous_month": "December 2024",
-            "user_change": 1,
-            "expense_change": -500.00,
-            "meal_change": 50
-        },
-        "trends": {
-            "expense_trend": [
-                {
-                    "month": "January 2025",
-                    "expenses": 20000.00
-                }
-            ],
-            "user_trend": [
-                {
-                    "month": "January 2025",
-                    "users": 5
-                }
+            "permissions": [
+                "USER_MANAGEMENT",
+                "MESS_CLOSE",
+                "JOIN_REQUEST_MANAGEMENT"
             ]
-        }
-    }
-}
-```
-
-## Meal Management
-
-### Add Meal
-**Endpoint**: `POST /api/meal/add`
-**Access**: Protected (requires active month)
-
-#### Request Body
-```json
-{
-    "mess_user_id": 1,
-    "date": "2025-01-15",
-    "breakfast": 1,
-    "lunch": 1,
-    "dinner": 1
-}
-```
-
-#### Validation Rules
-- `mess_user_id`: required, numeric, must exist in current mess and be initiated
-- `date`: required, date
-- `breakfast`: required, numeric, min 0
-- `lunch`: required, numeric, min 0
-- `dinner`: required, numeric, min 0
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Meal added successfully",
-    "data": {
-        "meal": {
-            "id": 1,
-            "mess_user_id": 1,
-            "date": "2025-01-15",
-            "breakfast": 1,
-            "lunch": 1,
-            "dinner": 1
-        }
-    }
-}
-```
-
-### Update Meal
-**Endpoint**: `PUT /api/meal/{meal_id}/update`
-**Access**: Protected (requires active month)
-
-#### Request Body
-```json
-{
-    "breakfast": 0,
-    "lunch": 1,
-    "dinner": 1
-}
-```
-
-#### Validation Rules
-- `breakfast`: sometimes, numeric, min 0
-- `lunch`: sometimes, numeric, min 0
-- `dinner`: sometimes, numeric, min 0
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Meal updated successfully",
-    "data": {
-        "meal": {
-            "id": 1,
-            "breakfast": 0,
-            "lunch": 1,
-            "dinner": 1
-        }
-    }
-}
-```
-
-### Delete Meal
-**Endpoint**: `DELETE /api/meal/{meal_id}/delete`
-**Access**: Protected (requires active month)
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Meal deleted successfully",
-    "data": null
-}
-```
-
-### List Meals
-**Endpoint**: `GET /api/meal/list`
-**Access**: Protected (requires active month)
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Meals retrieved successfully",
-    "data": [
-        {
-            "id": 1,
-            "mess_user": {
-                "id": 1,
-                "user": {
-                    "name": "John Doe"
-                }
-            },
-            "date": "2025-01-15",
-            "breakfast": 1,
-            "lunch": 1,
-            "dinner": 1
-        }
-    ]
-}
-```
-
-### Get User Meal by Date
-**Endpoint**: `GET /api/meal/user/{mess_user_id}/by-date`
-**Access**: Protected (requires active month)
-
-#### Query Parameters
-```
-?date=2025-01-15
-```
-
-#### Validation Rules
-- `date`: required, date
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "User meal retrieved successfully",
-    "data": {
-        "meal": {
-            "id": 1,
-            "date": "2025-01-15",
-            "breakfast": 1,
-            "lunch": 1,
-            "dinner": 1
-        }
-    }
-}
-```
-
-## Deposit Management
-
-### Add Deposit
-**Endpoint**: `POST /api/deposit/add`
-**Access**: Protected (requires active month)
-
-#### Request Body
-```json
-{
-    "mess_user_id": 1,
-    "date": "2025-01-15",
-    "amount": 1000.50
-}
-```
-
-#### Validation Rules
-- `mess_user_id`: required, numeric, must exist in current mess and be initiated
-- `date`: required, date
-- `amount`: required, numeric, min 0
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Deposit added successfully",
-    "data": {
-        "deposit": {
-            "id": 1,
-            "mess_user_id": 1,
-            "date": "2025-01-15",
-            "amount": 1000.50
-        }
-    }
-}
-```
-
-### Update Deposit
-**Endpoint**: `PUT /api/deposit/{deposit_id}/update`
-**Access**: Protected (requires active month)
-
-#### Request Body
-```json
-{
-    "date": "2025-01-16",
-    "amount": 1200.00
-}
-```
-
-#### Validation Rules
-- `date`: sometimes, date
-- `amount`: sometimes, numeric, min 0
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Deposit updated successfully",
-    "data": {
-        "deposit": {
-            "id": 1,
-            "date": "2025-01-16",
-            "amount": 1200.00
-        }
-    }
-}
-```
-
-### Delete Deposit
-**Endpoint**: `DELETE /api/deposit/{deposit_id}/delete`
-**Access**: Protected (requires active month)
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Deposit deleted successfully",
-    "data": null
-}
-```
-
-### List Deposits
-**Endpoint**: `GET /api/deposit/list`
-**Access**: Protected (requires active month)
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Deposits retrieved successfully",
-    "data": [
-        {
-            "id": 1,
-            "mess_user": {
-                "id": 1,
-                "user": {
-                    "name": "John Doe"
-                }
-            },
-            "date": "2025-01-15",
-            "amount": 1000.50
-        }
-    ]
-}
-```
-
-### Get Deposit History
-**Endpoint**: `GET /api/deposit/history/{mess_user_id}`
-**Access**: Protected (requires active month)
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Deposit history retrieved successfully",
-    "data": [
-        {
-            "id": 1,
-            "date": "2025-01-15",
-            "amount": 1000.50
-        }
-    ]
-}
-```
-
-## Purchase Management
-
-### Add Purchase
-**Endpoint**: `POST /api/purchase/add`
-**Access**: Protected (requires active month)
-
-#### Request Body
-```json
-{
-    "mess_user_id": 1,
-    "date": "2025-01-15",
-    "price": 250.75,
-    "product": "Vegetables and Rice"
-}
-```
-
-#### Validation Rules
-- `mess_user_id`: required, numeric, must exist in current mess and be initiated
-- `date`: required, date
-- `price`: required, numeric, min 1
-- `product`: required, string, max 255 characters
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Purchase added successfully",
-    "data": {
-        "purchase": {
-            "id": 1,
-            "mess_user_id": 1,
-            "date": "2025-01-15",
-            "price": 250.75,
-            "product": "Vegetables and Rice"
-        }
-    }
-}
-```
-
-### Update Purchase
-**Endpoint**: `PUT /api/purchase/{purchase_id}/update`
-**Access**: Protected (requires active month)
-
-#### Request Body
-```json
-{
-    "date": "2025-01-16",
-    "price": 300.00,
-    "product": "Vegetables, Rice and Fish"
-}
-```
-
-#### Validation Rules
-- `date`: sometimes, date
-- `price`: sometimes, numeric, min 1
-- `product`: sometimes, string
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Purchase updated successfully",
-    "data": {
-        "purchase": {
-            "id": 1,
-            "date": "2025-01-16",
-            "price": 300.00,
-            "product": "Vegetables, Rice and Fish"
-        }
-    }
-}
-```
-
-### Delete Purchase
-**Endpoint**: `DELETE /api/purchase/{purchase_id}/delete`
-**Access**: Protected (requires active month)
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Purchase deleted successfully",
-    "data": null
-}
-```
-
-### List Purchases
-**Endpoint**: `GET /api/purchase/list`
-**Access**: Protected (requires active month)
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Purchases retrieved successfully",
-    "data": [
-        {
-            "id": 1,
-            "mess_user": {
-                "id": 1,
-                "user": {
-                    "name": "John Doe"
-                }
-            },
-            "date": "2025-01-15",
-            "price": 250.75,
-            "product": "Vegetables and Rice"
-        }
-    ]
-}
-```
-
-## Purchase Request Management
-
-### Create Purchase Request
-**Endpoint**: `POST /api/purchase-request/add`
-**Access**: Protected (requires active month and mess user status)
-
-#### Request Body
-```json
-{
-    "date": "2025-01-15",
-    "price": 250.75,
-    "product": "Vegetables and Rice",
-    "product_json": "[{\"item\": \"Rice\", \"quantity\": \"5kg\"}, {\"item\": \"Vegetables\", \"quantity\": \"2kg\"}]",
-    "purchase_type": "grocery",
-    "deposit_request": false,
-    "comment": "Weekly grocery shopping"
-}
-```
-
-#### Validation Rules
-- `date`: required, date
-- `price`: required, numeric, min 1
-- `product`: sometimes, string, max 255 characters
-- `product_json`: sometimes, valid JSON, nullable
-- `purchase_type`: required, enum (grocery, utility, maintenance, etc.)
-- `deposit_request`: sometimes, boolean
-- `comment`: sometimes, string, nullable
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Purchase request created successfully",
-    "data": {
-        "purchase_request": {
-            "id": 1,
-            "mess_user_id": 1,
-            "date": "2025-01-15",
-            "price": 250.75,
-            "product": "Vegetables and Rice",
-            "product_json": [
-                {"item": "Rice", "quantity": "5kg"},
-                {"item": "Vegetables", "quantity": "2kg"}
-            ],
-            "purchase_type": "grocery",
-            "deposit_request": false,
-            "comment": "Weekly grocery shopping",
-            "status": 0
-        }
-    }
-}
-```
-
-### Update Purchase Request
-**Endpoint**: `PUT /api/purchase-request/{request_id}/update`
-**Access**: Protected (requires active month and mess user status or proper permissions)
-
-#### Request Body
-```json
-{
-    "date": "2025-01-16",
-    "price": 300.00,
-    "product": "Vegetables, Rice and Fish",
-    "product_json": "[{\"item\": \"Rice\", \"quantity\": \"5kg\"}, {\"item\": \"Fish\", \"quantity\": \"1kg\"}]",
-    "purchase_type": "grocery",
-    "status": "approved",
-    "deposit_request": true,
-    "comment": "Updated grocery shopping list"
-}
-```
-
-#### Validation Rules
-- `date`: sometimes, date
-- `price`: sometimes, numeric, min 1
-- `product`: sometimes, string, max 255 characters
-- `product_json`: sometimes, valid JSON, nullable
-- `purchase_type`: required, enum
-- `status`: required, enum (pending, approved, rejected, completed)
-- `deposit_request`: sometimes, boolean
-- `comment`: sometimes, string, nullable
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Purchase request updated successfully",
-    "data": {
-        "purchase_request": {
-            "id": 1,
-            "date": "2025-01-16",
-            "price": 300.00,
-            "product": "Vegetables, Rice and Fish",
-            "status": "approved"
-        }
-    }
-}
-```
-
-### Update Purchase Request Status
-**Endpoint**: `PUT /api/purchase-request/{request_id}/update/status`
-**Access**: Protected (requires PURCHASE_REQUEST_MANAGEMENT or PURCHASE_REQUEST_UPDATE permission)
-
-#### Request Body
-```json
-{
-    "status": 1,
-    "comment": "Approved for purchase",
-    "is_deposit": false
-}
-```
-
-#### Validation Rules
-- `status`: required, integer (status code)
-- `comment`: sometimes, string, nullable
-- `is_deposit`: sometimes, boolean, nullable
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Purchase request status updated successfully",
-    "data": {
-        "purchase_request": {
-            "id": 1,
-            "status": 1,
-            "comment": "Approved for purchase"
-        }
-    }
-}
-```
-
-### Delete Purchase Request
-**Endpoint**: `DELETE /api/purchase-request/{request_id}/delete`
-**Access**: Protected (requires active month and mess user status)
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Purchase request deleted successfully",
-    "data": null
-}
-```
-
-### List Purchase Requests
-**Endpoint**: `GET /api/purchase-request/`
-**Access**: Protected (requires active month and mess user status)
-
-#### Query Parameters
-```
-?status=pending&purchase_type=grocery&deposit_request=false
-```
-
-#### Validation Rules
-- `status`: sometimes, enum (pending, approved, rejected, completed)
-- `purchase_type`: sometimes, enum
-- `deposit_request`: sometimes, boolean
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Purchase requests retrieved successfully",
-    "data": [
-        {
-            "id": 1,
-            "mess_user": {
-                "id": 1,
-                "user": {
-                    "name": "John Doe"
-                }
-            },
-            "date": "2025-01-15",
-            "price": 250.75,
-            "product": "Vegetables and Rice",
-            "purchase_type": "grocery",
-            "status": 0,
-            "deposit_request": false
-        }
-    ]
-}
-```
-
-### Get Purchase Request Details
-**Endpoint**: `GET /api/purchase-request/{request_id}`
-**Access**: Protected (requires active month and mess user status)
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Purchase request retrieved successfully",
-    "data": {
-        "purchase_request": {
-            "id": 1,
-            "mess_user": {
-                "id": 1,
-                "user": {
-                    "name": "John Doe"
-                }
-            },
-            "date": "2025-01-15",
-            "price": 250.75,
-            "product": "Vegetables and Rice",
-            "product_json": [
-                {"item": "Rice", "quantity": "5kg"},
-                {"item": "Vegetables", "quantity": "2kg"}
-            ],
-            "purchase_type": "grocery",
-            "status": 0,
-            "deposit_request": false,
-            "comment": "Weekly grocery shopping"
-        }
-    }
-}
-```
-
-## Other Cost Management
-
-### Add Other Cost
-**Endpoint**: `POST /api/other-cost/add`
-**Access**: Protected (requires active month)
-
-#### Request Body
-```json
-{
-    "mess_user_id": 1,
-    "date": "2025-01-15",
-    "price": 150.00,
-    "product": "Gas bill"
-}
-```
-
-#### Validation Rules
-- `mess_user_id`: required, numeric, must exist in current mess and be initiated
-- `date`: required, date
-- `price`: required, numeric, min 0
-- `product`: required, string, max 255 characters
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Other cost added successfully",
-    "data": {
-        "other_cost": {
-            "id": 1,
-            "mess_user_id": 1,
-            "date": "2025-01-15",
-            "price": 150.00,
-            "product": "Gas bill"
-        }
-    }
-}
-```
-
-### Update Other Cost
-**Endpoint**: `PUT /api/other-cost/{cost_id}/update`
-**Access**: Protected (requires active month)
-
-#### Request Body
-```json
-{
-    "date": "2025-01-16",
-    "price": 175.00,
-    "product": "Gas and electricity bill"
-}
-```
-
-#### Validation Rules
-- `date`: sometimes, date
-- `price`: sometimes, numeric, min 0
-- `product`: sometimes, string
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Other cost updated successfully",
-    "data": {
-        "other_cost": {
-            "id": 1,
-            "date": "2025-01-16",
-            "price": 175.00,
-            "product": "Gas and electricity bill"
-        }
-    }
-}
-```
-
-### Delete Other Cost
-**Endpoint**: `DELETE /api/other-cost/{cost_id}/delete`
-**Access**: Protected (requires active month)
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Other cost deleted successfully",
-    "data": null
-}
-```
-
-### List Other Costs
-**Endpoint**: `GET /api/other-cost/list`
-**Access**: Protected (requires active month)
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Other costs retrieved successfully",
-    "data": [
-        {
-            "id": 1,
-            "mess_user": {
-                "id": 1,
-                "user": {
-                    "name": "John Doe"
-                }
-            },
-            "date": "2025-01-15",
-            "price": 150.00,
-            "product": "Gas bill"
-        }
-    ]
-}
-```
-
-## Fund Management
-
-### Add Fund
-**Endpoint**: `POST /api/fund/add`
-**Access**: Protected (requires active month)
-
-#### Request Body
-```json
-{
-    "date": "2025-01-15",
-    "amount": 500.00,
-    "comment": "Emergency fund from external source"
-}
-```
-
-#### Validation Rules
-- `date`: required, date
-- `amount`: required, numeric, min 0
-- `comment`: required, string
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Fund added successfully",
-    "data": {
-        "fund": {
-            "id": 1,
-            "date": "2025-01-15",
-            "amount": 500.00,
-            "comment": "Emergency fund from external source"
-        }
-    }
-}
-```
-
-### Update Fund
-**Endpoint**: `PUT /api/fund/{fund_id}/update`
-**Access**: Protected (requires active month)
-
-#### Request Body
-```json
-{
-    "date": "2025-01-16",
-    "amount": 600.00,
-    "comment": "Updated emergency fund amount"
-}
-```
-
-#### Validation Rules
-- `date`: sometimes, date
-- `amount`: sometimes, numeric, min 0
-- `comment`: nullable, string
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Fund updated successfully",
-    "data": {
-        "fund": {
-            "id": 1,
-            "date": "2025-01-16",
-            "amount": 600.00,
-            "comment": "Updated emergency fund amount"
-        }
-    }
-}
-```
-
-### Delete Fund
-**Endpoint**: `DELETE /api/fund/{fund_id}/delete`
-**Access**: Protected (requires active month)
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Fund deleted successfully",
-    "data": null
-}
-```
-
-### List Funds
-**Endpoint**: `GET /api/fund/list`
-**Access**: Protected (requires active month)
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Funds retrieved successfully",
-    "data": [
-        {
-            "id": 1,
-            "date": "2025-01-15",
-            "amount": 500.00,
-            "comment": "Emergency fund from external source"
-        }
-    ]
-}
-```
-
-## Summary and Reports
-
-### Get Month Summary
-**Endpoint**: `GET /api/summary/months/{type}`
-**Access**: Protected (requires active month)
-
-#### Parameters
-- `type`: string (minimal|details) - type of summary to retrieve
-
-#### Minimal Summary Response
-```json
-{
-    "success": true,
-    "message": "Monthly minimal summary retrieved",
-    "data": {
-        "month": {
-            "id": 1,
-            "name": "January 2025"
         },
-        "total_deposits": 5000.00,
-        "total_purchases": 3000.00,
-        "total_other_costs": 500.00,
-        "total_funds": 1000.00,
-        "balance": 2500.00,
-        "total_meals": {
-            "breakfast": 150,
-            "lunch": 180,
-            "dinner": 170
-        }
-    }
-}
-```
-
-#### Detailed Summary Response
-```json
-{
-    "success": true,
-    "message": "Monthly detailed summary retrieved",
-    "data": {
-        "month": {
+        "member_count": 5,
+        "active_month": {
             "id": 1,
-            "name": "January 2025"
+            "name": "January 2025",
+            "start_date": "2025-01-01",
+            "end_date": "2025-01-31",
+            "is_active": true
         },
-        "financial_summary": {
-            "total_deposits": 5000.00,
-            "total_purchases": 3000.00,
-            "total_other_costs": 500.00,
-            "total_funds": 1000.00,
-            "balance": 2500.00
-        },
-        "meal_summary": {
-            "total_meals": {
-                "breakfast": 150,
-                "lunch": 180,
-                "dinner": 170
-            },
-            "cost_per_meal": {
-                "breakfast": 12.50,
-                "lunch": 15.00,
-                "dinner": 14.25
-            }
-        },
-        "user_summaries": [
+        "recent_activities": [
             {
-                "mess_user_id": 1,
-                "user_name": "John Doe",
-                "total_deposits": 1000.00,
-                "total_meals": 45,
-                "meal_cost": 675.00,
-                "balance": 325.00
+                "type": "user_joined",
+                "user": "Jane Doe",
+                "date": "2025-01-10T14:30:00Z"
             }
         ]
     }
 }
 ```
 
-### Get User Summary
-**Endpoint**: `GET /api/summary/months/user/{type}`
-**Access**: Protected (requires active month)
+### Leave Current Mess
+**Endpoint**: `POST /api/mess-management/leave`
+**Access**: Protected (requires mess membership)
 
-#### Parameters
-- `type`: string (minimal|details) - type of user summary to retrieve
-
-#### Query Parameters
-```
-?mess_user_id=1
-```
-
-#### Validation Rules
-- `mess_user_id`: nullable, numeric, must exist in mess_users table
-
-#### User Minimal Summary Response
+#### Response
 ```json
 {
     "success": true,
-    "message": "User minimal summary retrieved",
+    "message": "Successfully left the mess",
     "data": {
-        "user": {
-            "mess_user_id": 1,
-            "name": "John Doe"
+        "left_mess": {
+            "id": 1,
+            "name": "My Dining Mess"
         },
-        "total_deposits": 1000.00,
-        "total_meals": 45,
-        "meal_cost": 675.00,
-        "balance": 325.00
+        "left_at": "2025-06-18T10:30:00Z"
     }
 }
 ```
 
-#### User Detailed Summary Response
+#### Error Response (Only Admin)
+```json
+{
+    "success": false,
+    "message": "Cannot leave mess: You are the only administrator. Please assign another administrator before leaving.",
+    "errors": {
+        "admin_constraint": "Admin users cannot leave if they are the only admin"
+    }
+}
+```
+
+### Close Mess
+**Endpoint**: `POST /api/mess-management/close`
+**Access**: Protected (requires MESS_CLOSE permission)
+
+#### Request Body
+```json
+{
+    "confirmation": true,
+    "reason": "Mess operations concluded"
+}
+```
+
+#### Validation Rules
+- `confirmation`: required, boolean, must be true
+- `reason`: optional, string, max 500 characters
+
+#### Response
 ```json
 {
     "success": true,
-    "message": "User detailed summary retrieved",
+    "message": "Mess has been successfully closed",
     "data": {
-        "user": {
-            "mess_user_id": 1,
-            "name": "John Doe"
+        "closed_mess": {
+            "id": 1,
+            "name": "My Dining Mess",
+            "closed_at": "2025-06-18T10:30:00Z",
+            "closed_by": "John Doe"
         },
-        "deposits": [
+        "final_summary": {
+            "total_members": 5,
+            "total_months": 6,
+            "final_balance": 1500.00
+        }
+    }
+}
+```
+
+### Get Available Messes
+**Endpoint**: `GET /api/mess-management/available`
+**Access**: Protected (authenticated users only)
+
+#### Query Parameters
+- `search`: optional, string - Search by mess name
+- `limit`: optional, integer - Limit results (default: 20)
+
+#### Response
+```json
+{
+    "success": true,
+    "message": "Available messes retrieved successfully",
+    "data": {
+        "messes": [
             {
-                "id": 1,
-                "date": "2025-01-15",
-                "amount": 1000.00
+                "id": 2,
+                "name": "University Hostel Mess",
+                "member_count": 8,
+                "created_at": "2025-01-01T00:00:00Z",
+                "location": "Dhaka",
+                "description": "Hostel mess for university students",
+                "is_accepting_members": true,
+                "join_request_exists": false
+            },
+            {
+                "id": 3,
+                "name": "Office Colleagues Mess",
+                "member_count": 6,
+                "created_at": "2025-02-01T00:00:00Z",
+                "location": "Chittagong",
+                "description": "Mess for office colleagues",
+                "is_accepting_members": true,
+                "join_request_exists": true
             }
         ],
-        "meals": [
+        "total": 2,
+        "current_user_mess_status": "not_in_mess"
+    }
+}
+```
+
+### Send Join Request
+**Endpoint**: `POST /api/mess-management/join-request/{mess_id}`
+**Access**: Protected (authenticated users only)
+
+#### Parameters
+- `mess_id`: required, integer - ID of the mess to join
+
+#### Request Body
+```json
+{
+    "message": "I would like to join your mess. I am a responsible member and will follow all rules."
+}
+```
+
+#### Validation Rules
+- `message`: optional, string, max 500 characters
+
+#### Response
+```json
+{
+    "success": true,
+    "message": "Join request sent successfully",
+    "data": {
+        "join_request": {
+            "id": 1,
+            "mess_id": 2,
+            "mess_name": "University Hostel Mess",
+            "user_id": 1,
+            "status": "pending",
+            "message": "I would like to join your mess. I am a responsible member and will follow all rules.",
+            "requested_at": "2025-06-18T10:30:00Z"
+        }
+    }
+}
+```
+
+#### Error Response (Already Has Pending Request)
+```json
+{
+    "success": false,
+    "message": "You already have a pending join request. Please cancel it before creating a new one.",
+    "errors": {
+        "pending_request": {
+            "mess_name": "Office Colleagues Mess",
+            "request_id": 2,
+            "requested_at": "2025-06-17T14:20:00Z"
+        }
+    }
+}
+```
+
+### Get User's Join Requests
+**Endpoint**: `GET /api/mess-management/join-requests`
+**Access**: Protected (requires mess membership)
+
+#### Query Parameters
+- `status`: optional, enum (pending, accepted, rejected) - Filter by status
+- `limit`: optional, integer - Limit results (default: 20)
+
+#### Response
+```json
+{
+    "success": true,
+    "message": "Join requests retrieved successfully",
+    "data": {
+        "join_requests": [
             {
                 "id": 1,
-                "date": "2025-01-15",
-                "breakfast": 1,
-                "lunch": 1,
-                "dinner": 1
+                "mess": {
+                    "id": 2,
+                    "name": "University Hostel Mess",
+                    "member_count": 8
+                },
+                "status": "pending",
+                "message": "I would like to join your mess.",
+                "requested_at": "2025-06-18T10:30:00Z",
+                "updated_at": "2025-06-18T10:30:00Z",
+                "can_cancel": true
+            },
+            {
+                "id": 2,
+                "mess": {
+                    "id": 3,
+                    "name": "Office Colleagues Mess",
+                    "member_count": 6
+                },
+                "status": "rejected",
+                "message": "Looking to join for lunch arrangements",
+                "requested_at": "2025-06-15T09:00:00Z",
+                "updated_at": "2025-06-16T11:30:00Z",
+                "rejection_reason": "Currently not accepting new members",
+                "can_cancel": false
             }
         ],
-        "financial_summary": {
-            "total_deposits": 1000.00,
-            "total_meal_cost": 675.00,
-            "balance": 325.00
+        "total": 2,
+        "pending_count": 1
+    }
+}
+```
+
+### Cancel Join Request
+**Endpoint**: `DELETE /api/mess-management/join-requests/{request_id}`
+**Access**: Protected (requires mess membership)
+
+#### Parameters
+- `request_id`: required, integer - ID of the join request to cancel
+
+#### Response
+```json
+{
+    "success": true,
+    "message": "Join request cancelled successfully",
+    "data": {
+        "cancelled_request": {
+            "id": 1,
+            "mess_name": "University Hostel Mess",
+            "cancelled_at": "2025-06-18T11:00:00Z"
+        }
+    }
+}
+```
+
+### Get Incoming Join Requests (Admin)
+**Endpoint**: `GET /api/mess-management/incoming-requests`
+**Access**: Protected (requires JOIN_REQUEST_MANAGEMENT permission)
+
+#### Query Parameters
+- `status`: optional, enum (pending, accepted, rejected) - Filter by status
+- `limit`: optional, integer - Limit results (default: 20)
+
+#### Response
+```json
+{
+    "success": true,
+    "message": "Incoming join requests retrieved successfully",
+    "data": {
+        "join_requests": [
+            {
+                "id": 3,
+                "user": {
+                    "id": 5,
+                    "name": "Alice Johnson",
+                    "email": "alice@example.com",
+                    "phone": "+880-1234567890",
+                    "city": "Dhaka"
+                },
+                "status": "pending",
+                "message": "I am looking for a reliable mess to join. I can contribute to cooking duties.",
+                "requested_at": "2025-06-18T09:15:00Z",
+                "user_background": {
+                    "previous_mess_experience": true,
+                    "dietary_restrictions": "Vegetarian"
+                }
+            },
+            {
+                "id": 4,
+                "user": {
+                    "id": 6,
+                    "name": "Bob Smith",
+                    "email": "bob@example.com",
+                    "phone": "+880-1234567891",
+                    "city": "Dhaka"
+                },
+                "status": "pending",
+                "message": "Student looking for affordable mess arrangement near university.",
+                "requested_at": "2025-06-17T16:45:00Z"
+            }
+        ],
+        "total": 2,
+        "pending_count": 2
+    }
+}
+```
+
+### Accept Join Request (Admin)
+**Endpoint**: `POST /api/mess-management/incoming-requests/{request_id}/accept`
+**Access**: Protected (requires JOIN_REQUEST_MANAGEMENT permission)
+
+#### Parameters
+- `request_id`: required, integer - ID of the join request to accept
+
+#### Request Body
+```json
+{
+    "welcome_message": "Welcome to our mess! Please check the house rules document.",
+    "assign_role": "member",
+    "initiate_for_current_month": true
+}
+```
+
+#### Validation Rules
+- `welcome_message`: optional, string, max 500 characters
+- `assign_role`: optional, enum (member, admin), default: member
+- `initiate_for_current_month`: optional, boolean, default: true
+
+#### Response
+```json
+{
+    "success": true,
+    "message": "Join request accepted successfully",
+    "data": {
+        "accepted_request": {
+            "id": 3,
+            "user": {
+                "id": 5,
+                "name": "Alice Johnson",
+                "email": "alice@example.com"
+            },
+            "accepted_at": "2025-06-18T11:30:00Z",
+            "accepted_by": "John Doe"
+        },
+        "new_member": {
+            "mess_user_id": 6,
+            "role": "member",
+            "status": "active",
+            "initiated_for_current_month": true
+        },
+        "welcome_message": "Welcome to our mess! Please check the house rules document."
+    }
+}
+```
+
+### Reject Join Request (Admin)
+**Endpoint**: `POST /api/mess-management/incoming-requests/{request_id}/reject`
+**Access**: Protected (requires JOIN_REQUEST_MANAGEMENT permission)
+
+#### Parameters
+- `request_id`: required, integer - ID of the join request to reject
+
+#### Request Body
+```json
+{
+    "reason": "Currently at full capacity. Please try again next month.",
+    "allow_future_requests": true
+}
+```
+
+#### Validation Rules
+- `reason`: optional, string, max 500 characters
+- `allow_future_requests`: optional, boolean, default: true
+
+#### Response
+```json
+{
+    "success": true,
+    "message": "Join request rejected",
+    "data": {
+        "rejected_request": {
+            "id": 4,
+            "user": {
+                "id": 6,
+                "name": "Bob Smith",
+                "email": "bob@example.com"
+            },
+            "rejected_at": "2025-06-18T12:00:00Z",
+            "rejected_by": "John Doe",
+            "reason": "Currently at full capacity. Please try again next month."
         }
     }
 }
@@ -2008,9 +752,9 @@ Same as sign-up endpoint
 ## Enumerations
 
 ### Gender
-- `Male`: Male gender
-- `Female`: Female gender  
-- `Other`: Other/Undefined gender
+- `male`: Male gender
+- `female`: Female gender  
+- `other`: Other/Undefined gender
 
 ### Month Type
 - `manual`: Manually created month with custom start date
@@ -2024,6 +768,12 @@ Same as sign-up endpoint
 - `0` (PENDING): Request is pending approval
 - `1` (APPROVED): Request has been approved
 - `2` (REJECTED): Request has been rejected
+
+### Mess Join Request Status
+- `0` (PENDING): Join request is pending review
+- `1` (ACCEPTED): Join request has been accepted
+- `2` (REJECTED): Join request has been rejected
+- `3` (CANCELLED): Join request was cancelled by the user
 
 ## Status Codes
 
@@ -2095,6 +845,13 @@ Same as sign-up endpoint
 - `MessPermission`: Checks specific mess permissions
   - `USER_ADD`: Can add users to mess
   - `USER_MANAGEMENT`: Can manage users
+  - `MESS_CLOSE`: Can close/terminate a mess
+  - `JOIN_REQUEST_MANAGEMENT`: Can view, accept, or reject join requests
+
+### Mess Roles
+- `admin`: Full administrative access to mess management
+- `member`: Standard member access to mess features
+- `viewer`: Read-only access to mess information
 
 ## Rate Limiting
 API endpoints may be subject to rate limiting. Standard Laravel rate limiting applies.
@@ -2106,10 +863,11 @@ The API supports versioning through URL prefixes:
 
 ---
 
-**Note**: This documentation covers the current state of the API. For the most up-to-date information, please refer to the source code or contact the development team.
+**Note**: This documentation covers the current state of the API including the new mess management features. For the most up-to-date information, please refer to the source code or contact the development team.
 
 ## Related Documentation
 
 - **[Model Relationships & Dependencies](./model-relationships.md)**: Complete database schema and model relationship documentation
+- **[Mess Management API](./mess-management-api.md)**: Detailed documentation for mess management endpoints
 - **[Postman Collection](./postman-collection.json)**: Ready-to-import API testing collection
 - **[OpenAPI Specification](./openapi.yaml)**: Machine-readable API specification

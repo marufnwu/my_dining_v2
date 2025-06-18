@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\DepositController;
 use App\Http\Controllers\Api\FundController;
 use App\Http\Controllers\Api\MealController;
 use App\Http\Controllers\Api\MessController;
+use App\Http\Controllers\Api\MessManagementController;
 use App\Http\Controllers\Api\MessMemberController;
 use App\Http\Controllers\Api\MonthController;
 use App\Http\Controllers\Api\OtherCostController;
@@ -139,6 +140,29 @@ Route::as('api.')->group(function () {
                     Route::get('mess-user/{user?}', 'messUser')->name('mess.user');
                 });
 
+            // Mess management routes (requires being part of a mess)
+            Route::prefix('mess-management')
+                ->controller(MessManagementController::class)
+                ->group(function () {
+                    // View current mess info
+                    Route::get('info', 'getCurrentMessInfo')->name('mess-management.info');
+
+                    // Leave current mess
+                    Route::post('leave', 'leaveMess')->name('mess-management.leave');
+
+                    // Close mess (admin only)
+                    Route::post('close', 'closeMess')->name('mess-management.close');
+
+                    // User's join requests management
+                    Route::get('join-requests', 'getUserJoinRequests')->name('mess-management.join-requests');
+                    Route::delete('join-requests/{request}', 'cancelJoinRequest')->name('mess-management.cancel-join-request');
+
+                    // Mess admin: manage incoming join requests
+                    Route::get('incoming-requests', 'getMessJoinRequests')->name('mess-management.incoming-requests');
+                    Route::post('incoming-requests/{request}/accept', 'acceptJoinRequest')->name('mess-management.accept-request');
+                    Route::post('incoming-requests/{request}/reject', 'rejectJoinRequest')->name('mess-management.reject-request');
+                });
+
 
 
             Route::prefix("role")->group(function () {
@@ -156,12 +180,23 @@ Route::as('api.')->group(function () {
 
         });
 
-        // Routes that require
+        // Routes that require the user NOT to be part of a mess
         Route::prefix('mess')
             ->controller(MessController::class)
             ->middleware(MustNotMessJoinChecker::class)
             ->group(function () {
                 Route::post('create', 'createMess')->name('mess.create');
+            });
+
+        // Mess discovery and joining routes (available to all authenticated users)
+        Route::prefix('mess-management')
+            ->controller(MessManagementController::class)
+            ->group(function () {
+                // View available messes to join
+                Route::get('available', 'getAvailableMesses')->name('mess-management.available');
+
+                // Send join request to a mess
+                Route::post('join-request/{mess}', 'sendJoinRequest')->name('mess-management.send-join-request');
             });
 
         // Authentication check route

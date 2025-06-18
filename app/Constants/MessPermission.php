@@ -42,4 +42,9 @@ class MessPermission
     const PURCHASE_REQUEST_VIEW = 'purchase_request_view';
     const PURCHASE_REQUEST_MANAGEMENT = 'purchase_management';
 
+    // Mess Join Request Permissions
+    const MESS_JOIN_REQUEST_MANAGE = 'mess_join_request_manage';
+    const MESS_CLOSE = 'mess_close';
+    const MESS_SETTINGS = 'mess_settings';
+
 }

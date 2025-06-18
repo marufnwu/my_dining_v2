@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Enums\MessJoinRequestStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MessRequest extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Traits\HasModelName;
 
     /**
      * The attributes that are mass assignable.
@@ -39,6 +41,46 @@ class MessRequest extends Model
         'old_mess_id' => 'integer',
         'new_mess_id' => 'integer',
         'accept_by' => 'integer',
-        'status' => 'integer',
+        'status' => MessJoinRequestStatus::class,
     ];
+
+    /**
+     * Get the user making the request
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'old_user_id');
+    }
+
+    /**
+     * Get the new user (if request is approved)
+     */
+    public function newUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'new_user_id');
+    }
+
+    /**
+     * Get the old mess being left
+     */
+    public function oldMess(): BelongsTo
+    {
+        return $this->belongsTo(Mess::class, 'old_mess_id');
+    }
+
+    /**
+     * Get the new mess being joined
+     */
+    public function newMess(): BelongsTo
+    {
+        return $this->belongsTo(Mess::class, 'new_mess_id');
+    }
+
+    /**
+     * Get the user who accepted/rejected the request
+     */
+    public function acceptedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'accept_by');
+    }
 }
