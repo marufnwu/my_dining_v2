@@ -20,7 +20,7 @@ use App\Services\MessSummaryService;
 use Illuminate\Support\Facades\Route;
 
 // Global API route prefix and naming
-Route:: as('api.')->group(function () {
+Route::as('api.')->group(function () {
 
     // Version 1 API routes
     Route:: as('v1.')->prefix('v1')->group(base_path('routes/api_v1.php'));

@@ -27,14 +27,14 @@ return MyApplication::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
 
+        // Global middleware for all requests
         $middleware->append([
             CheckMaintenanceMode::class,
         ]);
 
-        $middleware->api( [
+        // API middleware - correct syntax for Laravel 11
+        $middleware->appendToGroup('api', [
             ForceJson::class,
-            Illuminate\Routing\Middleware\SubstituteBindings::class
-
         ]);
 
         $middleware->alias([
@@ -43,19 +43,33 @@ return MyApplication::configure(basePath: dirname(__DIR__))
             "MessPermission" => \App\Http\Middleware\MessPermission::class,
             "MonthChecker" => \App\Http\Middleware\CheckActiveMonth::class,
             "mess.user" => \App\Http\Middleware\MessUserChecker::class,
+            "force.json" => \App\Http\Middleware\ForceJson::class,
         ]);
+
+        // Configure authentication redirects
+        $middleware->redirectGuestsTo(function ($request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                // Don't redirect API requests, let exception handler deal with it
+                return null;
+            }
+            // For web routes, return a simple path instead of route() since login route doesn't exist
+            return '/login';
+        });
     })
     ->withCommands([
         FreshMigrateAndSeed::class
     ])
     ->withExceptions(function (Exceptions $exceptions) {
-        // custom response sanctum
-        $exceptions->render(function (Exception $e,  $request) {
+        // custom response for API routes
+        $exceptions->render(function (Exception $e, $request) {
 
             $pipeline = null;
 
             if ($e instanceof AuthenticationException) {
-                $pipeline = Pipeline::error(message: "Login Required", status: 401, errorCode: ErrorCode::AUTHENTICATION_REQUIRED->value);
+                // For API routes, always return JSON instead of redirecting
+                if ($request->is('api/*') || $request->expectsJson()) {
+                    $pipeline = Pipeline::error(message: "Authentication required", status: 401, errorCode: ErrorCode::AUTHENTICATION_REQUIRED->value);
+                }
             } elseif ($e instanceof EmailNotVerifiedException) {
                 $pipeline = Pipeline::error($e->getMessage(), errorCode: $e->getCode());
             } elseif ($e instanceof ValidationException) {
@@ -69,15 +83,12 @@ return MyApplication::configure(basePath: dirname(__DIR__))
                 $pipeline = Pipeline::error(message: $e->getMessage(), status: 403, errorCode: $e->getCode());
             } elseif ($e instanceof NotFoundHttpException) {
                 $pipeline = Pipeline::error(message: $e->getMessage(), status: 404);
-            }else{
-                //$pipeline = Pipeline::error(message: $e->getMessage());
             }
 
-            if ($request->is('api/*')) {
+            // Return JSON response for API routes
+            if ($request->is('api/*') || $request->expectsJson()) {
                 if ($pipeline) {
                     return $pipeline->toApiResponse();
-                }else{
-
                 }
             }
         });
