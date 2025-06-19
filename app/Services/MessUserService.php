@@ -276,10 +276,13 @@ class MessUserService
             ->get()
             ->map(function ($mess) {
                 return [
-                    'id' => $mess->id,
-                    'name' => $mess->name,
+                    'mess' => $mess->toArray(),
                     'member_count' => $mess->messUsers->count(),
-                    'created_at' => $mess->created_at,
+                    'is_accepting_members' => $mess->is_accepting_members,
+                    'join_request_exists' => \App\Models\MessRequest::where('old_user_id', \Illuminate\Support\Facades\Auth::id())
+                        ->where('new_mess_id', $mess->id)
+                        ->where('status', \App\Enums\MessJoinRequestStatus::PENDING)
+                        ->exists(),
                 ];
             });
 

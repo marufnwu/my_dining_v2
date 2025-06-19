@@ -94,4 +94,13 @@ class Mess extends Model
             });
     }
 
+    /**
+     * Determine if the mess is accepting new members
+     *
+     * @return bool
+     */
+    public function getIsAcceptingMembersAttribute(): bool
+    {
+        return $this->status === MessStatus::ACTIVE;
+    }
 }
