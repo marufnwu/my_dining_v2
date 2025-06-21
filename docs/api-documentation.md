@@ -278,6 +278,7 @@ All API responses follow a consistent structure:
 ```
 
 ## Mess Management
+For comprehensive documentation on all mess management endpoints, please refer to the [Mess Management API Documentation](./mess-management-api.md).
 
 ### Create Mess
 **Endpoint**: `POST /api/mess/create`
