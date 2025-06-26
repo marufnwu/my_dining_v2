@@ -19,6 +19,7 @@ return new class extends Migration
             $table->boolean("is_free")->default(false);
             $table->integer('duration')->comment('Duration in days');
             $table->decimal('price', 10, 2)->default(0);
+            $table->integer('default_grace_period_days')->default(3)->comment('Default grace period in days');
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

@@ -16,6 +16,8 @@ class Subscription extends Model
         'starts_at',
         'expires_at',
         'trial_ends_at',
+        'grace_period_ends_at',
+        'admin_grace_period_days',
         'status',
         'payment_method',
         'payment_id',
@@ -35,6 +37,7 @@ class Subscription extends Model
         'starts_at',
         'expires_at',
         'trial_ends_at',
+        'grace_period_ends_at',
         'canceled_at',
         'next_billing_date',
     ];
@@ -42,6 +45,7 @@ class Subscription extends Model
     protected $casts = [
         'is_canceled' => 'boolean',
         'total_spent' => 'decimal:2',
+        'admin_grace_period_days' => 'integer',
     ];
 
     const STATUS_ACTIVE = 'active';
@@ -49,11 +53,7 @@ class Subscription extends Model
     const STATUS_EXPIRED = 'expired';
     const STATUS_TRIAL = 'trial';
     const STATUS_UNPAID = 'unpaid';
-
-    const PAYMENT_STATUS_PAID = 'paid';
-    const PAYMENT_STATUS_PENDING = 'pending';
-    const PAYMENT_STATUS_FAILED = 'failed';
-    const PAYMENT_STATUS_REFUNDED = 'refunded';
+    const STATUS_GRACE_PERIOD = 'grace_period';
 
     /**
      * Get the mess that owns the subscription.
@@ -125,6 +125,49 @@ class Subscription extends Model
     public function featureUsages(): HasMany
     {
         return $this->hasMany(FeatureUsage::class);
+    }
+
+    /**
+     * Check if subscription is in grace period.
+     */
+    public function inGracePeriod(): bool
+    {
+        return $this->status === self::STATUS_GRACE_PERIOD &&
+               $this->grace_period_ends_at > Carbon::now();
+    }
+
+    /**
+     * Check if subscription has grace period expired.
+     */
+    public function gracePeriodExpired(): bool
+    {
+        return $this->grace_period_ends_at &&
+               $this->grace_period_ends_at <= Carbon::now();
+    }
+
+    /**
+     * Calculate total grace period (default + admin).
+     */
+    public function getTotalGracePeriodDays(): int
+    {
+        return $this->package->default_grace_period_days + $this->admin_grace_period_days;
+    }
+
+    /**
+     * Calculate grace period end date.
+     */
+    public function calculateGracePeriodEndDate(): Carbon
+    {
+        $totalGraceDays = $this->getTotalGracePeriodDays();
+        return $this->expires_at->copy()->addDays($totalGraceDays);
+    }
+
+    /**
+     * Check if subscription is active (including grace period).
+     */
+    public function isActiveOrInGrace(): bool
+    {
+        return $this->isActive() || $this->inGracePeriod();
     }
 
     /**

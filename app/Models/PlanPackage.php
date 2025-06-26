@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class PlanPackage extends Model
 {
-    protected $fillable = ['plan_id', 'is_trial', 'is_free', 'duration', 'price', 'is_active'];
+    protected $fillable = ['plan_id', 'is_trial', 'is_free', 'duration', 'price', 'default_grace_period_days', 'is_active'];
 
     /**
      * Get the plan that owns the package.

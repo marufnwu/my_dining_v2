@@ -105,7 +105,7 @@ class Mess extends Model
     }
 
     /**
-     * Get the active subscription for the mess.
+     * Get the active subscription for the mess (including grace period).
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
@@ -114,9 +114,13 @@ class Mess extends Model
         return $this->hasOne(Subscription::class)
             ->where(function ($query) {
                 $query->where('status', Subscription::STATUS_ACTIVE)
-                    ->orWhere('status', Subscription::STATUS_TRIAL);
+                    ->orWhere('status', Subscription::STATUS_TRIAL)
+                    ->orWhere('status', Subscription::STATUS_GRACE_PERIOD);
             })
-            ->where('expires_at', '>', now())
+            ->where(function ($query) {
+                $query->where('expires_at', '>', now())
+                    ->orWhere('grace_period_ends_at', '>', now());
+            })
             ->latest();
     }
 

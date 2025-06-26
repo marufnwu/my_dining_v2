@@ -22,6 +22,8 @@ return new class extends Migration
             $table->timestamp('starts_at');
             $table->timestamp('expires_at');
             $table->timestamp('trial_ends_at')->nullable();
+            $table->timestamp('grace_period_ends_at')->nullable()->comment('When grace period ends');
+            $table->integer('admin_grace_period_days')->default(0)->comment('Additional grace period set by admin');
             $table->string('status');
             $table->string('payment_method')->nullable();
             $table->string('payment_id')->nullable();
@@ -36,7 +38,7 @@ return new class extends Migration
             $table->decimal('total_spent', 10, 2)->default(0);
             $table->string('invoice_reference')->nullable();
 
-            
+
             $table->timestamps();
         });
     }
