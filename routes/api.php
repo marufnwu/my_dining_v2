@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\DepositController;
 use App\Http\Controllers\Api\FundController;
 use App\Http\Controllers\Api\MealController;
 use App\Http\Controllers\Api\MessController;
+use App\Http\Controllers\Api\MessManagementController;
 use App\Http\Controllers\Api\MessMemberController;
 use App\Http\Controllers\Api\MonthController;
 use App\Http\Controllers\Api\OtherCostController;
@@ -132,14 +133,25 @@ Route:: as('api.')->group(function () {
                 Route::get("list", "list");
             });
 
-
             Route::prefix('mess')
                 ->controller(MessController::class)
                 ->group(function () {
                     Route::get('mess-user/{user?}', 'messUser')->name('mess.user');
                 });
 
-
+            // Mess Management routes (for users currently in a mess)
+            Route::prefix('mess-management')
+                ->controller(MessManagementController::class)
+                ->group(function () {
+                    Route::get('info', 'getCurrentMess');
+                    Route::post('leave', 'leaveMess');
+                    Route::get('join-requests', 'getUserJoinRequests');
+                    Route::delete('join-requests/{messRequest}', 'cancelJoinRequest');
+                    Route::get('incoming-requests', 'getMessJoinRequests');
+                    Route::post('incoming-requests/{messRequest}/accept', 'acceptJoinRequest');
+                    Route::post('incoming-requests/{messRequest}/reject', 'rejectJoinRequest');
+                    Route::post('close', 'closeMess');
+                });
 
             Route::prefix("role")->group(function () {
                 //Route::get("list", "list");
@@ -162,6 +174,14 @@ Route:: as('api.')->group(function () {
             ->middleware(MustNotMessJoinChecker::class)
             ->group(function () {
                 Route::post('create', 'createMess')->name('mess.create');
+            });
+
+        // Mess Management routes (for all authenticated users)
+        Route::prefix('mess-management')
+            ->controller(MessManagementController::class)
+            ->group(function () {
+                Route::get('available', 'getAvailableMesses');
+                Route::post('join-request/{mess}', 'sendJoinRequest');
             });
 
         // Authentication check route

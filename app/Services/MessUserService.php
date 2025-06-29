@@ -154,7 +154,7 @@ class MessUserService
     /**
      * Get current user's mess information
      */
-    public function getCurrentMessInfo(): Pipeline
+    public function getCurrentMessInfo(bool $withUser = false): Pipeline
     {
         $user = Auth::user();
         if (!$user) {
@@ -166,16 +166,9 @@ class MessUserService
             return Pipeline::error(message: "User is not part of any mess");
         }
 
-        $data = [
-            'mess' => $messUser->mess,
-            'user_role' => $messUser->role,
-            'permissions' => $messUser->role?->permissions->pluck('permission')->toArray() ?? [],
-            'is_admin' => $messUser->role?->is_admin ?? false,
-            'joined_at' => $messUser->joined_at,
-            'status' => $messUser->status,
-        ];
 
-        return Pipeline::success($data);
+
+        return Pipeline::success($messUser);
     }
 
     /**
