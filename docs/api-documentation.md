@@ -3,6 +3,120 @@
 ## Overview
 This is the comprehensive API documentation for the My Dining application - a mess management system that handles meal tracking, deposits, purchases, and user management.
 
+## Table of Contents
+
+### Quick Navigation
+- [📋 Documentation Index](#documentation-index)
+- [🔧 Base Information](#base-information)
+- [📤 Response Format](#response-format)
+- [🔐 Authentication](#authentication)
+- [👤 Profile Management](#profile-management)
+- [🌍 Country Management](#country-management)
+- [🏠 Mess Management](#mess-management)
+- [👥 Mess Member Management](#mess-member-management)
+- [📅 Month Management](#month-management)
+- [🍽️ Meal Management](#meal-management)
+- [💰 Deposit Management](#deposit-management)
+- [🛒 Purchase Management](#purchase-management)
+- [📝 Purchase Request Management](#purchase-request-management)
+- [💸 Other Cost Management](#other-cost-management)
+- [💵 Fund Management](#fund-management)
+- [📊 Summary and Reports](#summary-and-reports)
+- [📋 Enumerations](#enumerations)
+- [🔢 Status Codes](#status-codes)
+- [❌ Error Handling](#error-handling)
+- [🛡️ Middleware and Permissions](#middleware-and-permissions)
+- [⚡ Rate Limiting](#rate-limiting)
+- [🔄 Versioning](#versioning)
+- [📖 Related Documentation](#related-documentation)
+
+### API Endpoints Reference
+
+#### 🔐 Authentication
+- [Sign Up](#sign-up) - `POST /api/auth/sign-up`
+- [Login](#login) - `POST /api/auth/login`
+- [Check Login Status](#check-login-status) - `GET /api/auth/check-login`
+
+#### 👤 Profile Management
+- [Get Profile](#get-profile) - `GET /api/profile`
+- [Update Profile](#update-profile) - `PUT /api/profile`
+- [Upload Avatar](#upload-avatar) - `POST /api/profile/avatar`
+- [Remove Avatar](#remove-avatar) - `DELETE /api/profile/avatar`
+
+#### 🌍 Country Management
+- [Get Countries List](#get-countries-list) - `GET /api/country/list`
+
+#### 🏠 Mess Management
+- [Create Mess](#create-mess) - `POST /api/mess/create`
+- [Get Mess User Information](#get-mess-user-information) - `GET /api/mess/mess-user/{user_id?}`
+
+#### 👥 Mess Member Management
+- [List Mess Members](#list-mess-members) - `GET /api/member/list`
+- [Create User and Add to Mess](#create-user-and-add-to-mess) - `POST /api/member/create-and-add`
+- [Initiate User for Month](#initiate-user-for-month) - `POST /api/member/initiate/add/{mess_user_id}`
+- [Initiate All Users](#initiate-all-users) - `POST /api/member/initiate/add/all`
+- [Get Initiated Users](#get-initiated-users) - `GET /api/member/initiated/{status}`
+
+#### 📅 Month Management
+- [Create Month](#create-month) - `POST /api/month/create`
+- [List Months](#list-months) - `GET /api/month/list`
+- [Change Month Status](#change-month-status) - `PUT /api/month/change-status`
+- [Get Month Details](#get-month-details) - `GET /api/month/show/{monthId?}`
+- [Get Month Summary](#get-month-summary) - `GET /api/month/summary/{monthId?}`
+- [Close Month](#close-month) - `POST /api/month/close`
+- [Duplicate Month](#duplicate-month) - `POST /api/month/{monthId}/duplicate`
+- [Compare Months](#compare-months) - `GET /api/month/compare`
+- [Get Month Statistics](#get-month-statistics) - `GET /api/month/statistics`
+- [Export Month Data](#export-month-data) - `GET /api/month/export/{monthId?}`
+- [Get Month Timeline](#get-month-timeline) - `GET /api/month/timeline/{monthId?}`
+- [Get Budget Analysis](#get-budget-analysis) - `GET /api/month/budget-analysis/{monthId?}`
+- [Validate Month Data](#validate-month-data) - `GET /api/month/validate/{monthId?}`
+- [Get Performance Metrics](#get-performance-metrics) - `GET /api/month/performance/{monthId?}`
+
+#### 🍽️ Meal Management
+- [Add Meal](#add-meal) - `POST /api/meal/add`
+- [Update Meal](#update-meal) - `PUT /api/meal/{meal_id}/update`
+- [Delete Meal](#delete-meal) - `DELETE /api/meal/{meal_id}/delete`
+- [List Meals](#list-meals) - `GET /api/meal/list`
+- [Get User Meal by Date](#get-user-meal-by-date) - `GET /api/meal/user/{mess_user_id}/by-date`
+
+#### 💰 Deposit Management
+- [Add Deposit](#add-deposit) - `POST /api/deposit/add`
+- [Update Deposit](#update-deposit) - `PUT /api/deposit/{deposit_id}/update`
+- [Delete Deposit](#delete-deposit) - `DELETE /api/deposit/{deposit_id}/delete`
+- [List Deposits](#list-deposits) - `GET /api/deposit/list`
+- [Get Deposit History](#get-deposit-history) - `GET /api/deposit/history/{mess_user_id}`
+
+#### 🛒 Purchase Management
+- [Add Purchase](#add-purchase) - `POST /api/purchase/add`
+- [Update Purchase](#update-purchase) - `PUT /api/purchase/{purchase_id}/update`
+- [Delete Purchase](#delete-purchase) - `DELETE /api/purchase/{purchase_id}/delete`
+- [List Purchases](#list-purchases) - `GET /api/purchase/list`
+
+#### 📝 Purchase Request Management
+- [Create Purchase Request](#create-purchase-request) - `POST /api/purchase-request/add`
+- [Update Purchase Request](#update-purchase-request) - `PUT /api/purchase-request/{request_id}/update`
+- [Update Purchase Request Status](#update-purchase-request-status) - `PUT /api/purchase-request/{request_id}/update/status`
+- [Delete Purchase Request](#delete-purchase-request) - `DELETE /api/purchase-request/{request_id}/delete`
+- [List Purchase Requests](#list-purchase-requests) - `GET /api/purchase-request/`
+- [Get Purchase Request Details](#get-purchase-request-details) - `GET /api/purchase-request/{request_id}`
+
+#### 💸 Other Cost Management
+- [Add Other Cost](#add-other-cost) - `POST /api/other-cost/add`
+- [Update Other Cost](#update-other-cost) - `PUT /api/other-cost/{cost_id}/update`
+- [Delete Other Cost](#delete-other-cost) - `DELETE /api/other-cost/{cost_id}/delete`
+- [List Other Costs](#list-other-costs) - `GET /api/other-cost/list`
+
+#### 💵 Fund Management
+- [Add Fund](#add-fund) - `POST /api/fund/add`
+- [Update Fund](#update-fund) - `PUT /api/fund/{fund_id}/update`
+- [Delete Fund](#delete-fund) - `DELETE /api/fund/{fund_id}/delete`
+- [List Funds](#list-funds) - `GET /api/fund/list`
+
+#### 📊 Summary and Reports
+- [Get Month Summary](#get-month-summary-1) - `GET /api/summary/months/{type}`
+- [Get User Summary](#get-user-summary) - `GET /api/summary/months/user/{type}`
+
 ## Documentation Index
 
 ### Core Documentation

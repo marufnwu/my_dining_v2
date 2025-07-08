@@ -145,8 +145,6 @@ Route:: as('api.')->group(function () {
                 ->group(function () {
                     Route::get('info', 'getCurrentMess');
                     Route::post('leave', 'leaveMess');
-                    Route::get('join-requests', 'getUserJoinRequests');
-                    Route::delete('join-requests/{messRequest}', 'cancelJoinRequest');
                     Route::get('incoming-requests', 'getMessJoinRequests');
                     Route::post('incoming-requests/{messRequest}/accept', 'acceptJoinRequest');
                     Route::post('incoming-requests/{messRequest}/reject', 'rejectJoinRequest');
@@ -181,7 +179,9 @@ Route:: as('api.')->group(function () {
             ->controller(MessManagementController::class)
             ->group(function () {
                 Route::get('available', 'getAvailableMesses');
-                Route::post('join-request/{mess}', 'sendJoinRequest');
+                Route::post('join-request', 'sendJoinRequest');
+                Route::get('join-requests', 'getUserJoinRequests');
+                Route::delete('join-requests/{messRequest}', 'cancelJoinRequest');
             });
 
         // Authentication check route

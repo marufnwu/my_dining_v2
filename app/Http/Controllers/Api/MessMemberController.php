@@ -69,6 +69,6 @@ class MessMemberController extends Controller
 
     function initiateAll()
     {
-        return $this->service->initiateAll($messUser)->toApiResponse();
+        return $this->service->initiateAll()->toApiResponse();
     }
 }

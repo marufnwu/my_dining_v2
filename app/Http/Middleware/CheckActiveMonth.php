@@ -58,25 +58,29 @@ class CheckActiveMonth
         if ($request->route('month')) {
             $routeMonth = $request->route('month');
             // If the route parameter is a Month model instance, get its ID
-            return is_object($routeMonth) ? $routeMonth->id : $routeMonth;
+            $monthId = is_object($routeMonth) ? $routeMonth->id : $routeMonth;
+            return is_numeric($monthId) ? (int) $monthId : null;
         }
 
         // Check if 'month_id' exists in query parameters
         // This will handle requests like /something?month_id=123
         if ($request->query('month_id')) {
-            return $request->query('month_id');
+            $monthId = $request->query('month_id');
+            return is_numeric($monthId) ? (int) $monthId : null;
         }
 
         // Check if 'month_id' exists in request body
         // This will handle form submissions and JSON requests with month_id in the payload
         if ($request->has('month_id')) {
-            return $request->input('month_id');
+            $monthId = $request->input('month_id');
+            return is_numeric($monthId) ? (int) $monthId : null;
         }
 
         // Finally, check the "Month-ID" header
         // This will be the fallback for your Android retrofit setup
         if ($request->hasHeader("Month-ID")) {
-            return $request->header("Month-ID");
+            $monthId = $request->header("Month-ID");
+            return is_numeric($monthId) ? (int) $monthId : null;
         }
 
         // If no month ID found anywhere, return null

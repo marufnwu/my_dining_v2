@@ -66,7 +66,7 @@ class Pipeline
      * @param int|null $errorCode Optional error code for client-side handling
      * @return static
      */
-    public static function error(string $message = 'An error occurred', int $status = 400, $data = [], ?int $errorCode = null): self
+    public static function error(string $message = 'An error occurred', int $status = 200, $data = [], ?int $errorCode = null): self
     {
         return new self($data, $message, $status, false, $errorCode);
     }

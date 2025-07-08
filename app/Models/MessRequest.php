@@ -18,8 +18,9 @@ class MessRequest extends Model
      */
     protected $fillable = [
         'user_name',
-        'old_user_id',
-        'new_user_id',
+        'user_id',
+        'old_mess_user_id',
+        'new_mess_user_id',
         'request_date',
         'accept_date',
         'old_mess_id',
@@ -36,8 +37,9 @@ class MessRequest extends Model
     protected $casts = [
         'request_date' => 'datetime',
         'accept_date' => 'datetime',
-        'old_user_id' => 'integer',
-        'new_user_id' => 'integer',
+        'user_id' => 'integer',
+        'old_mess_user_id' => 'integer',
+        'new_mess_user_id' => 'integer',
         'old_mess_id' => 'integer',
         'new_mess_id' => 'integer',
         'accept_by' => 'integer',
@@ -49,15 +51,7 @@ class MessRequest extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'old_user_id');
-    }
-
-    /**
-     * Get the new user (if request is approved)
-     */
-    public function newUser(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'new_user_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     /**
@@ -82,5 +76,21 @@ class MessRequest extends Model
     public function acceptedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'accept_by');
+    }
+
+    /**
+     * Get the old mess user relationship
+     */
+    public function oldMessUser(): BelongsTo
+    {
+        return $this->belongsTo(MessUser::class, 'old_mess_user_id');
+    }
+
+    /**
+     * Get the new mess user relationship (if request is approved)
+     */
+    public function newMessUser(): BelongsTo
+    {
+        return $this->belongsTo(MessUser::class, 'new_mess_user_id');
     }
 }

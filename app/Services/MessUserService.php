@@ -102,12 +102,38 @@ class MessUserService
     public function messMembers(?Mess $mess = null): Pipeline
     {
         $mess = $mess ?? MessService::currentMess();
-        return Pipeline::success(data: $mess->messUsers()->byStatus(MessUserStatus::Active)->get());
+
+        // Get all mess users with their status
+        $allMessUsers = $mess->messUsers()->with('user', 'role')->get();
+
+        // Build array of {status, users: []}
+        $groupedMembers = [];
+
+        foreach (MessUserStatus::cases() as $status) {
+            $users = $allMessUsers
+                ->filter(function ($messUser) use ($status) {
+                    return $messUser->status === $status->value;
+                })
+                ->values()
+                ->toArray();
+            if (!empty($users)) {
+                $groupedMembers[] = [
+                    'status' => $status->value,
+                    'users' => $users
+                ];
+            }
+        }
+
+        return Pipeline::success(data: $groupedMembers);
     }
 
     public function initiated(Month $month, $status): Pipeline
     {
-        $messUser = $status ?  $month->initiatedUser()->with("messUser.user")->get()->pluck("messUser") : $month->notInitiatedUser;
+        if ($status) {
+            $messUser = $month->initiatedUser()->with("messUser.user")->get()->pluck("messUser");
+        } else {
+            $messUser = $month->notInitiatedUser()->byStatus(MessUserStatus::Active)->get();
+        }
         return Pipeline::success($messUser ?? collect());
     }
 
@@ -117,6 +143,11 @@ class MessUserService
             return Pipeline::error(message: "User is not in the same mess");
         }
 
+        // Check if user status is active
+        if ($user->status !== MessUserStatus::Active->value) {
+            return Pipeline::error(message: "User status is not active");
+        }
+
         $month = app()->getMonth();
 
         if (MessUserService::isUserInitiated($user, $month)) {
@@ -128,21 +159,48 @@ class MessUserService
         return Pipeline::success();
     }
 
-    public function initiateAll(MessUser $user): Pipeline
+    public function initiateAll(): Pipeline
     {
-        if (!MessUserService::isUserInSameMess($user)) {
-            return Pipeline::error(message: "User is not in the same mess");
-        }
-
         $month = app()->getMonth();
+        $mess = app()->getMess();
 
-        if (MessUserService::isUserInitiated($user, $month)) {
-            return Pipeline::error(message: "User is already initiated");
+        if (!$month || !$mess) {
+            return Pipeline::error(message: "Month or mess context not available");
         }
 
-        $month->initiatedUser()->create(['mess_user_id' => $user->id, "month_id" => $month->id, "mess_id" => app()->getMess()->id]);
+        // Get all active mess users who are not already initiated
+        $activeMessUsers = $mess->messUsers()
+            ->byStatus(MessUserStatus::Active)
+            ->whereDoesntHave('initiatedUser', function ($query) use ($month) {
+                $query->where('month_id', $month->id);
+            })
+            ->get();
 
-        return Pipeline::success();
+        if ($activeMessUsers->isEmpty()) {
+            return Pipeline::success(message: "No users to initiate");
+        }
+
+        $initiatedCount = 0;
+        $failedCount = 0;
+
+        foreach ($activeMessUsers as $messUser) {
+            try {
+                $month->initiatedUser()->create([
+                    'mess_user_id' => $messUser->id,
+                    'month_id' => $month->id,
+                    'mess_id' => $mess->id
+                ]);
+                $initiatedCount++;
+            } catch (\Exception $e) {
+                $failedCount++;
+            }
+        }
+
+        return Pipeline::success([
+            'initiated_count' => $initiatedCount,
+            'failed_count' => $failedCount,
+            'total_processed' => $activeMessUsers->count()
+        ], message: "Bulk initiation completed. Initiated: {$initiatedCount}, Failed: {$failedCount}");
     }
 
     public function getMessUser(User $user) : Pipeline {
@@ -202,7 +260,7 @@ class MessUserService
         }
 
         // Cancel any pending join requests
-        MessRequest::where('old_user_id', $user->id)
+        MessRequest::where('user_id', $user->id)
             ->where('status', MessJoinRequestStatus::PENDING)
             ->update(['status' => MessJoinRequestStatus::CANCELLED]);
 
@@ -225,8 +283,13 @@ class MessUserService
             return Pipeline::error(message: "User not authenticated");
         }
 
+        // Check if user is already in a mess
+        if ($user->messUser) {
+            return Pipeline::error(message: "You are already in a mess. Please leave it first before joining another.");
+        }
+
         // Check if user has any pending requests
-        $existingRequest = MessRequest::where('old_user_id', $user->id)
+        $existingRequest = MessRequest::where('user_id', $user->id)
             ->where('status', MessJoinRequestStatus::PENDING)
             ->first();
 
@@ -234,16 +297,18 @@ class MessUserService
             return Pipeline::error(message: "You have a pending join request. Please cancel it first.");
         }
 
+
         // Check if target mess is active
         if ($targetMess->status !== MessStatus::ACTIVE) {
-            return Pipeline::error(message: "Cannot join inactive mess");
+            return Pipeline::error(message: "Cannot join deactivated mess");
         }
 
-        // Create join request
+        // Create join request (user might not be in any mess currently)
         $request = MessRequest::create([
             'user_name' => $user->name,
-            'old_user_id' => $user->id,
-            'old_mess_id' => $user->messUser?->mess_id,
+            'user_id' => $user->id,
+            'old_mess_user_id' => $user->messUser?->id, // nullable - user might not be in any mess
+            'old_mess_id' => $user->messUser?->mess_id, // nullable - user might not be in any mess
             'new_mess_id' => $targetMess->id,
             'request_date' => Carbon::now(),
             'status' => MessJoinRequestStatus::PENDING
@@ -272,7 +337,7 @@ class MessUserService
                     'mess' => $mess->toArray(),
                     'member_count' => $mess->messUsers->count(),
                     'is_accepting_members' => $mess->is_accepting_members,
-                    'join_request_exists' => \App\Models\MessRequest::where('old_user_id', \Illuminate\Support\Facades\Auth::id())
+                    'join_request_exists' => \App\Models\MessRequest::where('user_id', \Illuminate\Support\Facades\Auth::id())
                         ->where('new_mess_id', $mess->id)
                         ->where('status', \App\Enums\MessJoinRequestStatus::PENDING)
                         ->exists(),
@@ -280,6 +345,49 @@ class MessUserService
             });
 
         return Pipeline::success($messes);
+    }
+
+    /**
+     * Send join request when user is not in any mess
+     */
+    public function sendJoinRequestWithoutMess(Mess $targetMess): Pipeline
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return Pipeline::error(message: "User not authenticated");
+        }
+
+        // Check if user is already in a mess
+        if ($user->messUser) {
+            return Pipeline::error(message: "You are already in a mess. Please leave it first.");
+        }
+
+        // Check if user has any pending requests
+        $existingRequest = MessRequest::where('user_id', $user->id)
+            ->where('status', MessJoinRequestStatus::PENDING)
+            ->first();
+
+        if ($existingRequest) {
+            return Pipeline::error(message: "You have a pending join request. Please cancel it first.");
+        }
+
+        // Check if target mess is active
+        if ($targetMess->status !== MessStatus::ACTIVE) {
+            return Pipeline::error(message: "Cannot join deactivated mess");
+        }
+
+        // Create join request (user is not in any mess)
+        $request = MessRequest::create([
+            'user_name' => $user->name,
+            'user_id' => $user->id,
+            'old_mess_user_id' => null, // user is not in any mess
+            'old_mess_id' => null, // user is not in any mess
+            'new_mess_id' => $targetMess->id,
+            'request_date' => Carbon::now(),
+            'status' => MessJoinRequestStatus::PENDING
+        ]);
+
+        return Pipeline::success($request, message: "Join request sent successfully");
     }
 
     /**
@@ -292,8 +400,8 @@ class MessUserService
             return Pipeline::error(message: "User not authenticated");
         }
 
-        $requests = MessRequest::where('old_user_id', $user->id)
-            ->with(['newMess', 'acceptedBy'])
+        $requests = MessRequest::where('user_id', $user->id)
+            ->with(['newMess', 'oldMess', 'oldMessUser', 'newMessUser', 'acceptedBy'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -310,7 +418,7 @@ class MessUserService
             return Pipeline::error(message: "User not authenticated");
         }
 
-        if ($request->old_user_id !== $user->id) {
+        if ($request->user_id !== $user->id) {
             return Pipeline::error(message: "You can only cancel your own requests");
         }
 
@@ -328,22 +436,36 @@ class MessUserService
      */
     public function getMessJoinRequests(?Mess $mess = null): Pipeline
     {
+        $user = Auth::user();
+        if (!$user) {
+            return Pipeline::error(message: "User not authenticated");
+        }
+
         $mess = $mess ?? $this->mess ?? app()->getMess();
 
         if (!$mess) {
             return Pipeline::error(message: "No mess context available");
         }
 
+        // Check if user has permission to view join requests
+        $messUser = $user->messUser;
+        if (!$messUser || !$messUser->role?->is_admin) {
+            return Pipeline::error(message: "You don't have permission to view join requests");
+
+
+        }
+
+
         $requests = MessRequest::where('new_mess_id', $mess->id)
             ->where('status', MessJoinRequestStatus::PENDING)
-            ->with(['user', 'oldMess'])
+            ->with(['user', 'oldMess', 'oldMessUser'])
             ->orderBy('created_at', 'asc')
             ->get();
 
         return Pipeline::success($requests);
     }
 
-    /**
+        /**
      * Accept join request (requires permission)
      */
     public function acceptJoinRequest(MessRequest $request): Pipeline
@@ -353,9 +475,28 @@ class MessUserService
             return Pipeline::error(message: "User not authenticated");
         }
 
+        // Check if user has permission to accept join requests
+        $currentMess = app()->getMess();
+        if (!$currentMess) {
+            return Pipeline::error(message: "No mess context available");
+        }
+
+        // Check if the request is for the current mess
+        if ($request->new_mess_id !== $currentMess->id) {
+            return Pipeline::error(message: "Request is not for this mess");
+        }
+
+        // Check if user has admin role or permission to accept join requests
+        $messUser = $user->messUser;
+        if (!$messUser || !$messUser->role?->is_admin) {
+            return Pipeline::error(message: "You don't have permission to accept join requests");
+        }
+
         if ($request->status !== MessJoinRequestStatus::PENDING) {
             return Pipeline::error(message: "Request is not pending");
-        }        $request->load(['newMess', 'user']);
+        }
+
+        $request->load(['newMess', 'user']);
         /** @var Mess $targetMess */
         $targetMess = $request->newMess;
         if (!$targetMess || $targetMess->status !== MessStatus::ACTIVE) {
@@ -388,7 +529,7 @@ class MessUserService
                 'status' => MessJoinRequestStatus::APPROVED,
                 'accept_date' => Carbon::now(),
                 'accept_by' => $user->id,
-                'new_user_id' => $requestingUser->id
+                'new_mess_user_id' => $addResult->data->id
             ]);
 
             DB::commit();
@@ -410,6 +551,23 @@ class MessUserService
             return Pipeline::error(message: "User not authenticated");
         }
 
+        // Check if user has permission to reject join requests
+        $currentMess = app()->getMess();
+        if (!$currentMess) {
+            return Pipeline::error(message: "No mess context available");
+        }
+
+        // Check if the request is for the current mess
+        if ($request->new_mess_id !== $currentMess->id) {
+            return Pipeline::error(message: "Request is not for this mess");
+        }
+
+        // Check if user has admin role or permission to reject join requests
+        $messUser = $user->messUser;
+        if (!$messUser || !$messUser->role?->is_admin) {
+            return Pipeline::error(message: "You don't have permission to reject join requests");
+        }
+
         if ($request->status !== MessJoinRequestStatus::PENDING) {
             return Pipeline::error(message: "Request is not pending");
         }
@@ -421,6 +579,158 @@ class MessUserService
         ]);
 
         return Pipeline::success(message: "Join request rejected successfully");
+    }
+
+    /**
+     * Bulk accept join requests (requires admin permission)
+     */
+    public function bulkAcceptJoinRequests(array $requestIds): Pipeline
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return Pipeline::error(message: "User not authenticated");
+        }
+
+        // Check if user has permission
+        $currentMess = app()->getMess();
+        if (!$currentMess) {
+            return Pipeline::error(message: "No mess context available");
+        }
+
+        $messUser = $user->messUser;
+        if (!$messUser || !$messUser->role?->is_admin) {
+            return Pipeline::error(message: "You don't have permission to accept join requests");
+        }
+
+        $requests = MessRequest::whereIn('id', $requestIds)
+            ->where('new_mess_id', $currentMess->id)
+            ->where('status', MessJoinRequestStatus::PENDING)
+            ->with(['newMess', 'user'])
+            ->get();
+
+        if ($requests->isEmpty()) {
+            return Pipeline::error(message: "No valid pending requests found");
+        }
+
+        DB::beginTransaction();
+        try {
+            $acceptedCount = 0;
+            $failedCount = 0;
+
+            foreach ($requests as $request) {
+                $result = $this->acceptJoinRequest($request);
+                if ($result->isSuccess()) {
+                    $acceptedCount++;
+                } else {
+                    $failedCount++;
+                }
+            }
+
+            DB::commit();
+            return Pipeline::success([
+                'accepted' => $acceptedCount,
+                'failed' => $failedCount
+            ], message: "Bulk operation completed. Accepted: {$acceptedCount}, Failed: {$failedCount}");
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return Pipeline::error(message: "Failed to process bulk requests: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get join request statistics for current mess (requires admin permission)
+     */
+    public function getJoinRequestStats(?Mess $mess = null): Pipeline
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return Pipeline::error(message: "User not authenticated");
+        }
+
+        $mess = $mess ?? $this->mess ?? app()->getMess();
+
+        if (!$mess) {
+            return Pipeline::error(message: "No mess context available");
+        }
+
+        // Check if user has permission to view statistics
+        $messUser = $user->messUser;
+        if (!$messUser || !$messUser->role?->is_admin) {
+            return Pipeline::error(message: "You don't have permission to view join request statistics");
+        }
+
+        $stats = [
+            'pending' => MessRequest::where('new_mess_id', $mess->id)
+                ->where('status', MessJoinRequestStatus::PENDING)
+                ->count(),
+            'approved' => MessRequest::where('new_mess_id', $mess->id)
+                ->where('status', MessJoinRequestStatus::APPROVED)
+                ->count(),
+            'rejected' => MessRequest::where('new_mess_id', $mess->id)
+                ->where('status', MessJoinRequestStatus::REJECTED)
+                ->count(),
+            'cancelled' => MessRequest::where('new_mess_id', $mess->id)
+                ->where('status', MessJoinRequestStatus::CANCELLED)
+                ->count(),
+            'total' => MessRequest::where('new_mess_id', $mess->id)->count(),
+        ];
+
+        return Pipeline::success($stats);
+    }
+
+    /**
+     * Bulk reject join requests (requires admin permission)
+     */
+    public function bulkRejectJoinRequests(array $requestIds, ?string $reason = null): Pipeline
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return Pipeline::error(message: "User not authenticated");
+        }
+
+        // Check if user has permission
+        $currentMess = app()->getMess();
+        if (!$currentMess) {
+            return Pipeline::error(message: "No mess context available");
+        }
+
+        $messUser = $user->messUser;
+        if (!$messUser || !$messUser->role?->is_admin) {
+            return Pipeline::error(message: "You don't have permission to reject join requests");
+        }
+
+        $requests = MessRequest::whereIn('id', $requestIds)
+            ->where('new_mess_id', $currentMess->id)
+            ->where('status', MessJoinRequestStatus::PENDING)
+            ->get();
+
+        if ($requests->isEmpty()) {
+            return Pipeline::error(message: "No valid pending requests found");
+        }
+
+        DB::beginTransaction();
+        try {
+            $rejectedCount = 0;
+
+            foreach ($requests as $request) {
+                $request->update([
+                    'status' => MessJoinRequestStatus::REJECTED,
+                    'accept_date' => Carbon::now(),
+                    'accept_by' => $user->id
+                ]);
+                $rejectedCount++;
+            }
+
+            DB::commit();
+            return Pipeline::success([
+                'rejected' => $rejectedCount
+            ], message: "Bulk reject completed. Rejected: {$rejectedCount} requests");
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return Pipeline::error(message: "Failed to process bulk reject: " . $e->getMessage());
+        }
     }
 
     /**

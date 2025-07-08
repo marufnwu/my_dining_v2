@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\MessStatus;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -15,7 +16,7 @@ class MessSeeder extends Seeder
         DB::table('messes')->insert([
             [
                 'name' => 'Default Mess',
-                'status' => 'active',
+                'status' => MessStatus::ACTIVE,
                 'ad_free' => true,
                 'all_user_add_meal' => false,
                 'fund_add_enabled' => true,
@@ -24,7 +25,7 @@ class MessSeeder extends Seeder
             ],
             [
                 'name' => 'Mess A',
-                'status' => 'inactive',
+                'status' => MessStatus::DEACTIVATED,
                 'ad_free' => false,
                 'all_user_add_meal' => true,
                 'fund_add_enabled' => false,
@@ -33,7 +34,7 @@ class MessSeeder extends Seeder
             ],
             [
                 'name' => 'Mess B',
-                'status' => 'active',
+                'status' => MessStatus::ACTIVE,
                 'ad_free' => true,
                 'all_user_add_meal' => true,
                 'fund_add_enabled' => true,
@@ -42,7 +43,7 @@ class MessSeeder extends Seeder
             ],
             [
                 'name' => 'Mess C',
-                'status' => 'inactive',
+                'status' => 'deactivated',
                 'ad_free' => false,
                 'all_user_add_meal' => false,
                 'fund_add_enabled' => true,
@@ -51,7 +52,7 @@ class MessSeeder extends Seeder
             ],
             [
                 'name' => 'Mess D',
-                'status' => 'active',
+                'status' => MessStatus::ACTIVE,
                 'ad_free' => true,
                 'all_user_add_meal' => false,
                 'fund_add_enabled' => false,
