@@ -1,0 +1,323 @@
+{
+  "info": {
+    "_postman_id": "my-dining-v2-complete-api",
+    "name": "My Dining v2 - Complete API Collection",
+    "description": "Comprehensive API collection for My Dining v2 - Laravel Mess Management System\n\n🚀 **Features:**\n- Complete authentication flow\n- Mess management operations\n- Meal request system (NEW)\n- User and member management\n- Financial management (deposits, purchases, funds)\n- Detailed documentation with request/response examples\n- Automated testing scripts\n- Environment variable management\n\n📖 **Documentation:**\n- API Base URL: `{{base_url}}`\n- Authentication: Bearer Token\n- Content-Type: application/json\n- All endpoints include proper error handling\n\n🔧 **Setup Instructions:**\n1. Import this collection\n2. Import the environment file\n3. Set your base_url in environment\n4. Run Login to get authentication token\n5. Start testing the APIs!\n\n📋 **Endpoints Overview:**\n- Authentication (3 endpoints)\n- Profile Management (4 endpoints)\n- Mess Management (15+ endpoints)\n- Meal Management (5 endpoints)\n- Meal Request System (10 endpoints)\n- Purchase Management (8 endpoints)\n- Financial Management (12+ endpoints)\n- Summary & Reports (4 endpoints)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "my-dining-v2"
+  },
+  "item": [
+    {
+      "name": "🔐 Authentication",
+      "description": "User authentication endpoints including sign up, login, and authentication checks.",
+      "item": [
+        {
+          "name": "Sign Up",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test response status",
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "// Test response structure",
+                  "pm.test('Response has correct structure', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('success');",
+                  "    pm.expect(responseJson).to.have.property('message');",
+                  "    pm.expect(responseJson).to.have.property('data');",
+                  "});",
+                  "",
+                  "// Test user creation",
+                  "pm.test('User created successfully', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.success).to.be.true;",
+                  "    pm.expect(responseJson.data).to.have.property('user');",
+                  "    pm.expect(responseJson.data).to.have.property('token');",
+                  "});",
+                  "",
+                  "// Auto-save token if registration successful",
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.token) {",
+                  "        pm.environment.set('auth_token', response.data.token);",
+                  "        console.log('🎉 Registration successful! Token saved.');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{$randomFullName}}\",\n  \"email\": \"{{$randomEmail}}\",\n  \"country_id\": 1,\n  \"phone\": \"{{$randomPhoneNumber}}\",\n  \"city\": \"{{$randomCity}}\",\n  \"gender\": \"{{$randomArrayElement(['Male', 'Female'])}}\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/sign-up",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "sign-up"]
+            },
+            "description": "**Create a new user account**\n\n📋 **Request Body:**\n- `name` (string, required): Full name of the user\n- `email` (string, required): Valid email address\n- `country_id` (integer, required): Country ID from countries list\n- `phone` (string, required): Phone number\n- `city` (string, required): City name\n- `gender` (string, required): 'Male', 'Female', or 'Other'\n- `password` (string, required): Minimum 8 characters\n- `password_confirmation` (string, required): Must match password\n\n✅ **Success Response (201):**\n```json\n{\n  \"success\": true,\n  \"message\": \"Account created successfully\",\n  \"data\": {\n    \"user\": {\n      \"id\": 1,\n      \"name\": \"John Doe\",\n      \"email\": \"john@example.com\",\n      \"country_id\": 1,\n      \"phone\": \"1234567890\",\n      \"city\": \"New York\",\n      \"gender\": \"Male\",\n      \"status\": \"active\",\n      \"join_date\": \"2025-07-10\",\n      \"is_email_verified\": false\n    },\n    \"token\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...\"\n  }\n}\n```\n\n❌ **Error Response (422):**\n```json\n{\n  \"success\": false,\n  \"message\": \"Validation failed\",\n  \"errors\": {\n    \"email\": [\"The email has already been taken.\"]\n  }\n}\n```"
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test response status",
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "// Test response structure",
+                  "pm.test('Response has correct structure', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('success');",
+                  "    pm.expect(responseJson).to.have.property('message');",
+                  "    pm.expect(responseJson).to.have.property('data');",
+                  "});",
+                  "",
+                  "// Test login success",
+                  "pm.test('Login successful', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.success).to.be.true;",
+                  "    pm.expect(responseJson.data).to.have.property('user');",
+                  "    pm.expect(responseJson.data).to.have.property('token');",
+                  "});",
+                  "",
+                  "// Auto-save token",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.token) {",
+                  "        pm.environment.set('auth_token', response.data.token);",
+                  "        pm.environment.set('user_id', response.data.user.id);",
+                  "        ",
+                  "        // Set admin token if user has admin role",
+                  "        if (response.data.user.mess_user && response.data.user.mess_user.role && response.data.user.mess_user.role.is_admin) {",
+                  "            pm.environment.set('admin_token', response.data.token);",
+                  "        }",
+                  "        ",
+                  "        console.log('🎉 Login successful! Token saved.');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "**Authenticate user and get access token**\n\n📋 **Request Body:**\n- `email` (string, required): User's email address\n- `password` (string, required): User's password\n\n✅ **Success Response (200):**\n```json\n{\n  \"success\": true,\n  \"message\": \"Login successful\",\n  \"data\": {\n    \"user\": {\n      \"id\": 1,\n      \"name\": \"John Doe\",\n      \"email\": \"john@example.com\",\n      \"mess_user\": {\n        \"id\": 1,\n        \"mess_id\": 1,\n        \"role\": {\n          \"id\": 1,\n          \"name\": \"Admin\",\n          \"is_admin\": true\n        },\n        \"status\": \"active\"\n      }\n    },\n    \"token\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...\"\n  }\n}\n```\n\n❌ **Error Response (401):**\n```json\n{\n  \"success\": false,\n  \"message\": \"Invalid credentials\",\n  \"errors\": []\n}\n```"
+          },
+          "response": []
+        },
+        {
+          "name": "Check Login Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test response status",
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "// Test authentication status",
+                  "pm.test('User is authenticated', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.success).to.be.true;",
+                  "    pm.expect(responseJson.data).to.have.property('user');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/check-login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "check-login"]
+            },
+            "description": "**Check if user is currently authenticated**\n\n🔐 **Authentication:** Required (Bearer Token)\n\n✅ **Success Response (200):**\n```json\n{\n  \"success\": true,\n  \"message\": \"User is authenticated\",\n  \"data\": {\n    \"user\": {\n      \"id\": 1,\n      \"name\": \"John Doe\",\n      \"email\": \"john@example.com\",\n      \"status\": \"active\",\n      \"mess_user\": {\n        \"id\": 1,\n        \"mess_id\": 1,\n        \"status\": \"active\"\n      }\n    }\n  }\n}\n```\n\n❌ **Error Response (401):**\n```json\n{\n  \"success\": false,\n  \"message\": \"Unauthenticated\"\n}\n```"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-add Month-ID header for endpoints that need it",
+          "if (pm.request.url.path && pm.request.url.path.includes('meal')) {",
+          "    pm.request.headers.add({key: 'Month-ID', value: pm.environment.get('month_id') || '1'});",
+          "}",
+          "",
+          "// Log request for debugging",
+          "console.log('🚀 Making request to:', pm.request.url.toString());"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test to check response time",
+          "pm.test('Response time is less than 5000ms', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});",
+          "",
+          "// Global test to check content type",
+          "pm.test('Content-Type is JSON', function () {",
+          "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+          "});",
+          "",
+          "// Log response for debugging",
+          "console.log('📥 Response status:', pm.response.status);",
+          "console.log('📥 Response time:', pm.response.responseTime + 'ms');"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string",
+      "description": "Base URL for the API"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string",
+      "description": "Authentication token for regular users"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string",
+      "description": "Authentication token for admin users"
+    },
+    {
+      "key": "user_email",
+      "value": "admin@example.com",
+      "type": "string",
+      "description": "Default user email for testing"
+    },
+    {
+      "key": "user_password",
+      "value": "password123",
+      "type": "string",
+      "description": "Default user password for testing"
+    },
+    {
+      "key": "user_id",
+      "value": "1",
+      "type": "string",
+      "description": "Current user ID"
+    },
+    {
+      "key": "mess_id",
+      "value": "1",
+      "type": "string",
+      "description": "Current mess ID"
+    },
+    {
+      "key": "month_id",
+      "value": "1",
+      "type": "string",
+      "description": "Current month ID"
+    },
+    {
+      "key": "meal_request_id",
+      "value": "1",
+      "type": "string",
+      "description": "Sample meal request ID for testing"
+    },
+    {
+      "key": "purchase_request_id",
+      "value": "1",
+      "type": "string",
+      "description": "Sample purchase request ID for testing"
+    }
+  ]
+}

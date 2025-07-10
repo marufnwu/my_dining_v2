@@ -5,6 +5,7 @@ use App\Constants\MessUserRole;
 use App\Http\Controllers\Api\DepositController;
 use App\Http\Controllers\Api\FundController;
 use App\Http\Controllers\Api\MealController;
+use App\Http\Controllers\Api\MealRequestController;
 use App\Http\Controllers\Api\MessController;
 use App\Http\Controllers\Api\MessManagementController;
 use App\Http\Controllers\Api\MessMemberController;
@@ -89,6 +90,22 @@ Route:: as('api.')->group(function () {
                 Route::get("list", "list");
                 Route::get("/user/{messUser}/by-date", action: "getUserMealByDate");
             });
+
+            Route::prefix("meal-request")
+                ->middleware(["MonthChecker:false", "mess.user:true"])
+                ->controller(MealRequestController::class)
+                ->group(function () {
+                    Route::post("add", "create");
+                    Route::put("{mealRequest}/update", "update");
+                    Route::delete("{mealRequest}/delete", "delete");
+                    Route::post("{mealRequest}/cancel", "cancel");
+                    Route::post("{mealRequest}/approve", "approve");
+                    Route::post("{mealRequest}/reject", "reject");
+                    Route::get("/", "list");
+                    Route::get("my-requests", "myRequests");
+                    Route::get("pending", "pending");
+                    Route::get("{mealRequest}", "show");
+                });
 
             Route::prefix("deposit")->middleware("MonthChecker:false")->controller(DepositController::class)->group(function () {
                 Route::post("add", "add");

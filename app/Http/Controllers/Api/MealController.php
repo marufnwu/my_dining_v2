@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Constants\MessPermission;
 use App\DTOs\MealDto;
+use App\Enums\ErrorCode;
+use App\Facades\Permission;
+use App\Helpers\Pipeline;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\MealRequest;
 use App\Models\Meal;
@@ -25,10 +29,15 @@ class MealController extends Controller
 
     public function add(MealRequest $request)
     {
+        // Check if user has permission to add meals directly
+        if (!Permission::canAny([MessPermission::MEAL_ADD, MessPermission::MEAL_MANAGEMENT])) {
+            return Pipeline::error(
+                message: "You don't have permission to add meals directly. Please create a meal request instead.",
+                errorCode: ErrorCode::PERMISSION_DENIED->value
+            )->toApiResponse();
+        }
 
         $data = $request->validated();
-
-
 
         $data['month_id'] = app()->getMonth()->id;
         $data['mess_id'] = app()->getMess()->id;

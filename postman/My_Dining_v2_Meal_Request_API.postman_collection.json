@@ -1,0 +1,425 @@
+{
+  "info": {
+    "name": "My Dining v2 - Meal Request API",
+    "description": "API collection for the Laravel Mess Management System with Meal Request functionality",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.environment.set('auth_token', response.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Meal Requests",
+      "item": [
+        {
+          "name": "Create Meal Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mess_user_id\": 1,\n  \"date\": \"{{$isoTimestamp}}\",\n  \"breakfast\": 1,\n  \"lunch\": 1,\n  \"dinner\": 0,\n  \"comment\": \"Regular meal request\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/meal-request/add",
+              "host": ["{{base_url}}"],
+              "path": ["api", "meal-request", "add"]
+            }
+          }
+        },
+        {
+          "name": "Get My Meal Requests",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/meal-request/my-requests",
+              "host": ["{{base_url}}"],
+              "path": ["api", "meal-request", "my-requests"]
+            }
+          }
+        },
+        {
+          "name": "Update Meal Request",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"breakfast\": 1,\n  \"lunch\": 1,\n  \"dinner\": 1,\n  \"comment\": \"Updated meal request\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/meal-request/{{meal_request_id}}/update",
+              "host": ["{{base_url}}"],
+              "path": ["api", "meal-request", "{{meal_request_id}}", "update"]
+            }
+          }
+        },
+        {
+          "name": "Cancel Meal Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/meal-request/{{meal_request_id}}/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "meal-request", "{{meal_request_id}}", "cancel"]
+            }
+          }
+        },
+        {
+          "name": "Delete Meal Request",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/meal-request/{{meal_request_id}}/delete",
+              "host": ["{{base_url}}"],
+              "path": ["api", "meal-request", "{{meal_request_id}}", "delete"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Meal Request Management",
+      "item": [
+        {
+          "name": "Get Pending Meal Requests",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/meal-request/pending",
+              "host": ["{{base_url}}"],
+              "path": ["api", "meal-request", "pending"]
+            }
+          }
+        },
+        {
+          "name": "Get All Meal Requests",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/meal-request/?status=0&date_from=2025-07-01&date_to=2025-07-31",
+              "host": ["{{base_url}}"],
+              "path": ["api", "meal-request", ""],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "0"
+                },
+                {
+                  "key": "date_from",
+                  "value": "2025-07-01"
+                },
+                {
+                  "key": "date_to",
+                  "value": "2025-07-31"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Approve Meal Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comment\": \"Approved by admin - looks good!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/meal-request/{{meal_request_id}}/approve",
+              "host": ["{{base_url}}"],
+              "path": ["api", "meal-request", "{{meal_request_id}}", "approve"]
+            }
+          }
+        },
+        {
+          "name": "Reject Meal Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rejected_reason\": \"Insufficient budget for this month\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/meal-request/{{meal_request_id}}/reject",
+              "host": ["{{base_url}}"],
+              "path": ["api", "meal-request", "{{meal_request_id}}", "reject"]
+            }
+          }
+        },
+        {
+          "name": "Get Specific Meal Request",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/meal-request/{{meal_request_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "meal-request", "{{meal_request_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Traditional Meals (Admin Only)",
+      "item": [
+        {
+          "name": "Add Meal Directly",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mess_user_id\": 1,\n  \"date\": \"{{$isoTimestamp}}\",\n  \"breakfast\": 1,\n  \"lunch\": 1,\n  \"dinner\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/meal/add",
+              "host": ["{{base_url}}"],
+              "path": ["api", "meal", "add"]
+            }
+          }
+        },
+        {
+          "name": "Get Meals List",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/meal/list",
+              "host": ["{{base_url}}"],
+              "path": ["api", "meal", "list"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_email",
+      "value": "user@example.com",
+      "type": "string"
+    },
+    {
+      "key": "user_password",
+      "value": "password123",
+      "type": "string"
+    },
+    {
+      "key": "meal_request_id",
+      "value": "1",
+      "type": "string"
+    }
+  ]
+}

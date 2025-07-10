@@ -9,6 +9,7 @@ return [
             'role' => MessUserRole::MANAGER,
             'permissions' => [
                 MessPermission::MEAL_MANAGEMENT,
+                MessPermission::MEAL_REQUEST_MANAGEMENT,
                 MessPermission::REPORT_MANAGEMENT,
                 MessPermission::USER_MANAGEMENT,
                 MessPermission::PURCHASE_MANAGEMENT,

@@ -47,4 +47,13 @@ class MessPermission
     const MESS_CLOSE = 'mess_close';
     const MESS_SETTINGS = 'mess_settings';
 
+    // Meal Request Permissions
+    const MEAL_REQUEST_CREATE = 'meal_request_create';
+    const MEAL_REQUEST_UPDATE = 'meal_request_update';
+    const MEAL_REQUEST_DELETE = 'meal_request_delete';
+    const MEAL_REQUEST_APPROVE = 'meal_request_approve';
+    const MEAL_REQUEST_REJECT = 'meal_request_reject';
+    const MEAL_REQUEST_VIEW = 'meal_request_view';
+    const MEAL_REQUEST_MANAGEMENT = 'meal_request_management';
+
 }

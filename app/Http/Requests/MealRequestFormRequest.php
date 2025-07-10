@@ -2,10 +2,12 @@
 
 namespace App\Http\Requests;
 
-use App\Services\MessService;
+use App\Rules\MessUserExistsInCurrentMess;
+use App\Rules\UserInitiatedInCurrentMonth;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
-class MealRequest extends FormRequest
+class MealRequestFormRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,13 +25,20 @@ class MealRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "mess_user_id" => "required|numeric|active_mess_user|user_initiated_in_current_month",
+            "mess_user_id" => [
+                "required",
+                "numeric",
+                new MessUserExistsInCurrentMess(),
+                new UserInitiatedInCurrentMonth(),
+            ],
             "date" => "required|date",
             "breakfast" => "nullable|numeric|min:0",
             "lunch" => "nullable|numeric|min:0",
             "dinner" => "nullable|numeric|min:0",
+            "comment" => "sometimes|string|nullable",
         ];
     }
+
     protected function prepareForValidation()
     {
         $this->merge([
@@ -38,6 +47,7 @@ class MealRequest extends FormRequest
             'dinner' => $this->dinner ?? 0,
         ]);
     }
+
     protected function withValidator($validator)
     {
         $validator->sometimes(['breakfast', 'lunch', 'dinner'], 'required_without_all:breakfast,lunch,dinner', function ($input) {
