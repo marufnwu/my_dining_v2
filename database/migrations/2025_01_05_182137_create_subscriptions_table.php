@@ -16,30 +16,44 @@ return new class extends Migration
     {
         Schema::create('subscriptions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('mess_id')->constrained()->onDelete('cascade');
-            $table->foreignId('plan_id')->constrained();
-            $table->foreignId('plan_package_id')->constrained('plan_packages');
-            $table->timestamp('starts_at');
-            $table->timestamp('expires_at');
+            $table->foreignIdFor(Mess::class);
+            $table->foreignIdFor(Plan::class);
+            $table->foreignIdFor(PlanPackage::class);
+
+            // Timing fields
+            $table->timestamp('starts_at')->nullable();
+            $table->timestamp('expires_at')->nullable();
             $table->timestamp('trial_ends_at')->nullable();
-            $table->timestamp('grace_period_ends_at')->nullable()->comment('When grace period ends');
-            $table->integer('admin_grace_period_days')->default(0)->comment('Additional grace period set by admin');
-            $table->string('status');
-            $table->string('payment_method')->nullable();
-            $table->string('payment_id')->nullable();
+            $table->timestamp('grace_period_ends_at')->nullable();
+            $table->integer('admin_grace_period_days')->default(0);
+
+            // Status fields
+            $table->string('status')->default('pending');
             $table->boolean('is_canceled')->default(false);
             $table->timestamp('canceled_at')->nullable();
 
-            $table->unsignedBigInteger('last_order_id')->nullable();
-            $table->unsignedBigInteger('last_transaction_id')->nullable();
-            $table->string('payment_status')->default('pending');
-            $table->string('billing_cycle')->default('monthly');
+            // Payment fields
+            $table->string('payment_method')->nullable();
+            $table->string('payment_provider')->nullable();
+            $table->string('payment_status')->nullable();
+            $table->string('billing_cycle')->nullable();
             $table->timestamp('next_billing_date')->nullable();
             $table->decimal('total_spent', 10, 2)->default(0);
+
+            // Transaction tracking
+            $table->string('last_order_id')->nullable();
+            $table->string('last_transaction_id')->nullable();
             $table->string('invoice_reference')->nullable();
 
+            // Google Play specific fields
+            $table->string('google_play_token')->nullable();
+            $table->string('google_play_subscription_id')->nullable();
 
             $table->timestamps();
+
+            // Indexes
+            $table->index(['mess_id', 'status']);
+            $table->index('google_play_token');
         });
     }
 

@@ -17,25 +17,22 @@ class Transaction extends Model
     const STATUS_REFUNDED = 'refunded';
 
     protected $fillable = [
-        'subscription_id',
         'mess_id',
+        'subscription_id',
         'order_id',
-        'transaction_reference',
-        'payment_method',
-        'payment_provider',
-        'payment_provider_reference',
         'amount',
         'currency',
+        'payment_method',
+        'payment_provider',
+        'provider_transaction_id',
         'status',
-        'notes',
-        'metadata',
-        'processed_at',
+        'error_message',
+        'metadata'
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
-        'metadata' => 'array',
-        'processed_at' => 'datetime',
+        'metadata' => 'json'
     ];
 
     /**
@@ -47,14 +44,6 @@ class Transaction extends Model
     }
 
     /**
-     * Get the mess that owns the transaction.
-     */
-    public function mess(): BelongsTo
-    {
-        return $this->belongsTo(Mess::class);
-    }
-
-    /**
      * Get the order that owns the transaction.
      */
     public function order(): BelongsTo
@@ -63,54 +52,10 @@ class Transaction extends Model
     }
 
     /**
-     * Generate a unique transaction reference.
+     * Get the mess that owns the transaction.
      */
-    public static function generateTransactionReference(): string
+    public function mess(): BelongsTo
     {
-        return 'TXN-' . date('Ymd') . '-' . substr(uniqid(), -7);
-    }
-
-    /**
-     * Boot the model.
-     */
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($transaction) {
-            if (empty($transaction->transaction_reference)) {
-                $transaction->transaction_reference = self::generateTransactionReference();
-            }
-        });
-    }
-
-    /**
-     * Mark the transaction as complete.
-     */
-    public function markAsComplete($providerReference = null): bool
-    {
-        $this->status = self::STATUS_COMPLETED;
-        $this->processed_at = now();
-
-        if ($providerReference) {
-            $this->payment_provider_reference = $providerReference;
-        }
-
-        return $this->save();
-    }
-
-    /**
-     * Mark the transaction as failed.
-     */
-    public function markAsFailed(string $notes = null): bool
-    {
-        $this->status = self::STATUS_FAILED;
-        $this->processed_at = now();
-
-        if ($notes) {
-            $this->notes = $notes;
-        }
-
-        return $this->save();
+        return $this->belongsTo(Mess::class);
     }
 }

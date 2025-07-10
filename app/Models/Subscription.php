@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Subscription extends Model
 {
@@ -31,6 +32,10 @@ class Subscription extends Model
         'next_billing_date',
         'total_spent',
         'invoice_reference',
+        // Google Play related fields
+        'google_play_token',
+        'google_play_subscription_id',
+        'payment_provider',
     ];
 
     protected $dates = [
@@ -58,7 +63,7 @@ class Subscription extends Model
     /**
      * Get the mess that owns the subscription.
      */
-    public function mess()
+    public function mess(): BelongsTo
     {
         return $this->belongsTo(Mess::class);
     }
@@ -66,7 +71,7 @@ class Subscription extends Model
     /**
      * Get the plan that owns the subscription.
      */
-    public function plan()
+    public function plan(): BelongsTo
     {
         return $this->belongsTo(Plan::class);
     }
@@ -74,7 +79,7 @@ class Subscription extends Model
     /**
      * Get the package that owns the subscription.
      */
-    public function package()
+    public function package(): BelongsTo
     {
         return $this->belongsTo(PlanPackage::class, 'plan_package_id');
     }
@@ -125,6 +130,14 @@ class Subscription extends Model
     public function featureUsages(): HasMany
     {
         return $this->hasMany(FeatureUsage::class);
+    }
+
+    /**
+     * Get manual payments associated with this subscription.
+     */
+    public function manualPayments(): HasMany
+    {
+        return $this->hasMany(ManualPayment::class);
     }
 
     /**

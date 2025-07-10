@@ -9,10 +9,12 @@ use App\Http\Controllers\Api\MessController;
 use App\Http\Controllers\Api\MessMemberController;
 use App\Http\Controllers\Api\MonthController;
 use App\Http\Controllers\Api\OtherCostController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PurchaseController;
 use App\Http\Controllers\Api\PurchaseRequestController;
 use App\Http\Controllers\Api\SummaryController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\OrderController;
 use App\Http\Middleware\CheckActiveMonth;
 use App\Http\Middleware\MustNotMessJoinChecker;
 use App\Models\PurchaseRequest;
@@ -133,6 +135,31 @@ Route:: as('api.')->group(function () {
                     Route::get('months/{type}', 'monthSummary')
                         ->where('type', 'minimal|details');
                     Route::get("months/user/{type}", "userSummary");
+                });
+
+            Route::prefix('payments')
+                ->middleware(['auth:sanctum'])
+                ->controller(PaymentController::class)
+                ->group(function () {
+                    Route::get('methods', 'getPaymentMethods');
+                    Route::post('manual/submit', 'submitManualPayment');
+                    Route::post('manual/{payment}/review', 'reviewManualPayment')->middleware('can:review-payments');
+                    Route::get('manual/list', 'listManualPayments');
+                    Route::put('methods/{paymentMethod}', 'updatePaymentMethod')->middleware('can:manage-payment-methods');
+
+                    // Google Play routes
+                    Route::post('google-play/verify', 'verifyGooglePlayPurchase');
+                    Route::post('google-play/webhook', 'handleGooglePlayWebhook')->withoutMiddleware(['auth:sanctum']);
+                });
+
+            Route::prefix('orders')
+                ->middleware(['auth:sanctum'])
+                ->controller(OrderController::class)
+                ->group(function () {
+                    Route::get('/', 'listOrders');
+                    Route::get('{order}', 'getOrder')->can('view', 'order');
+                    Route::put('{order}/status', 'updateOrderStatus')->can('update', 'order');
+                    Route::get('invoice/{invoice}', 'getInvoice')->can('view', 'invoice');
                 });
 
         });

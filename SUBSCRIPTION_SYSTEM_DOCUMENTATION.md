@@ -1,565 +1,391 @@
-# Laravel Dining Subscription System - Comprehensive Documentation
+# My Dining Subscription System Documentation
 
 ## Overview
-This Laravel application implements a sophisticated subscription management system for dining/mess management platforms. The system provides multi-tier subscription plans with granular feature-based access control, comprehensive billing and invoicing, payment processing integration, and advanced grace period management for improved customer retention.
+The My Dining subscription system provides a flexible and feature-rich way to manage mess subscriptions, handle payments, and control feature access based on subscription plans.
 
-## System Architecture
+## Table of Contents
+1. [Plans and Features](#plans-and-features)
+2. [Subscription Management](#subscription-management)
+3. [Payment Integration](#payment-integration)
+4. [Feature Access Control](#feature-access-control)
+5. [Code Examples](#code-examples)
 
-### Core Components
-The subscription ecosystem consists of interconnected modules:
+## Plans and Features
 
-1. **Plan Management**: Hierarchical plan structure with packages and features
-2. **Subscription Lifecycle**: Complete subscription state management
-3. **Billing Engine**: Automated billing, invoicing, and payment processing
-4. **Grace Period System**: Flexible grace period management for payment recovery
-5. **Feature Access Control**: Granular feature usage tracking and limits
-6. **Audit Trail**: Comprehensive tracking of all subscription activities
+### Available Plans
+- **Basic Plan**
+  - Free plan with limited features
+  - Member limit: 10 members
+  - Report generation: 5 per month
+  - Basic notifications
+  
+- **Premium Plan**
+  - Enhanced features for growing messes
+  - Member limit: 20 members
+  - Report generation: 10 per month
+  - Advanced notifications
+  - Purchase request system
+  
+- **Enterprise Plan**
+  - Full feature access for large messes
+  - Member limit: 50 members
+  - Unlimited report generation
+  - All notification types
+  - Advanced role management
+  - Fund management
 
-### Database Schema Architecture
-```
-┌─────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│    plans    │───▶│  plan_packages   │    │ plan_features   │
-│             │    │                  │    │                 │
-│ - keyword   │    │ - duration       │    │ - name          │
-│ - name      │    │ - price          │    │ - is_countable  │
-│ - is_free   │    │ - grace_period   │    │ - usage_limit   │
-└─────────────┘    └──────────────────┘    └─────────────────┘
-       │                     │                       │
-       └─────────────────────┼───────────────────────┘
-                             ▼
-                    ┌─────────────────┐
-                    │  subscriptions  │
-                    │                 │
-                    │ - status        │
-                    │ - expires_at    │
-                    │ - grace_ends_at │
-                    └─────────────────┘
-                             │
-            ┌────────────────┼────────────────┐
-            ▼                ▼                ▼
-   ┌─────────────────┐ ┌─────────────┐ ┌─────────────┐
-   │     orders      │ │transactions │ │  invoices   │
-   │                 │ │             │ │             │
-   │ - order_number  │ │ - tx_ref    │ │ - inv_number│
-   │ - amount        │ │ - status    │ │ - due_date  │
-   └─────────────────┘ └─────────────┘ └─────────────┘
-```
-
-## Database Tables - Detailed Specifications
-
-### 1. Plans Table (`plans`)
-**Purpose**: Define subscription tiers and plan categories
-
-| Field | Type | Constraints | Description |
-|-------|------|-------------|-------------|
-| `id` | bigint | PRIMARY KEY, AUTO_INCREMENT | Unique plan identifier |
-| `keyword` | varchar(255) | UNIQUE, NOT NULL | Plan identifier (basic, premium, enterprise) |
-| `name` | varchar(255) | NOT NULL | Human-readable plan name |
-| `is_free` | boolean | DEFAULT false | Indicates if plan is free tier |
-| `is_active` | boolean | DEFAULT true | Plan availability status |
-| `created_at` | timestamp | | Plan creation timestamp |
-| `updated_at` | timestamp | | Plan modification timestamp |
-
-**Predefined Plans**:
-- **Basic Plan**: Free tier with limited features
-- **Premium Plan**: Mid-tier with enhanced capabilities
-- **Enterprise Plan**: Full-featured tier with maximum limits
-
-### 2. Plan Packages Table (`plan_packages`)
-**Purpose**: Define pricing and duration options for each plan
-
-| Field | Type | Constraints | Description |
-|-------|------|-------------|-------------|
-| `id` | bigint | PRIMARY KEY, AUTO_INCREMENT | Package identifier |
-| `plan_id` | bigint | FOREIGN KEY → plans.id | Parent plan reference |
-| `is_trial` | boolean | DEFAULT false | Trial package indicator |
-| `is_free` | boolean | DEFAULT false | Free package indicator |
-| `duration` | integer | NOT NULL | Package duration in days |
-| `price` | decimal(10,2) | DEFAULT 0.00 | Package pricing |
-| `default_grace_period_days` | integer | DEFAULT 3 | Default grace period |
-| `is_active` | boolean | DEFAULT true | Package availability |
-| `created_at` | timestamp | | Creation timestamp |
-| `updated_at` | timestamp | | Modification timestamp |
-
-**Standard Package Durations**:
-- **Trial**: 3 days (free trial period)
-- **6 Months**: 180 days (semi-annual billing)
-- **12 Months**: 365 days (annual billing with discount)
-
-**Pricing Structure** (based on PlanSeeder):
-```
-Basic Plan:
-├── Trial (3 days): $0.00
-├── 6 Months: $49.99
-└── 12 Months: $99.99
-
-Premium Plan:
-├── Trial (3 days): $0.00
-├── 6 Months: $79.99
-└── 12 Months: $149.99
-
-Enterprise Plan:
-├── Trial (3 days): $0.00
-├── 6 Months: $129.99
-└── 12 Months: $199.99
-```
-
-### 3. Plan Features Table (`plan_features`)
-**Purpose**: Define capabilities and limits for each plan
-
-| Field | Type | Constraints | Description |
-|-------|------|-------------|-------------|
-| `id` | bigint | PRIMARY KEY, AUTO_INCREMENT | Feature identifier |
-| `plan_id` | bigint | FOREIGN KEY → plans.id | Parent plan reference |
-| `name` | varchar(255) | NOT NULL | Feature name/identifier |
-| `description` | text | NULLABLE | Feature description |
-| `is_countable` | boolean | DEFAULT false | Has usage limits |
-| `usage_limit` | integer | NULLABLE | Maximum usage count |
-| `is_active` | boolean | DEFAULT true | Feature availability |
-| `created_at` | timestamp | | Creation timestamp |
-| `updated_at` | timestamp | | Modification timestamp |
-
-**Available Features Matrix**:
-
-| Feature | Basic | Premium | Enterprise | Type | Limit |
-|---------|-------|---------|------------|------|-------|
-| Member Limit | ✓ (10) | ✓ (20) | ✓ (50) | Countable | User count |
-| Report Generate | ✓ (5) | ✓ (10) | ✓ (25) | Countable | Monthly reports |
-| Meal Add Notification | ✓ | ✓ (5) | ✓ (15) | Boolean/Countable | Notifications |
-| Balance Add Notification | ✗ | ✓ | ✓ (10) | Boolean/Countable | Notifications |
-| Purchase Notification | ✗ | ✓ | ✓ (15) | Boolean/Countable | Notifications |
-| Fund Add | ✗ | ✓ | ✓ | Boolean | Feature toggle |
-| Role Management | ✗ | ✗ | ✓ | Boolean | Advanced roles |
-| Purchase Request | ✗ | ✗ | ✓ | Boolean | Purchase workflow |
-
-### 4. Subscriptions Table (`subscriptions`)
-**Purpose**: Core subscription records with lifecycle management
-
-| Field | Type | Constraints | Description |
-|-------|------|-------------|-------------|
-| `id` | bigint | PRIMARY KEY, AUTO_INCREMENT | Subscription identifier |
-| `mess_id` | bigint | FOREIGN KEY → mess.id, CASCADE | Associated mess |
-| `plan_id` | bigint | FOREIGN KEY → plans.id | Current plan |
-| `plan_package_id` | bigint | FOREIGN KEY → plan_packages.id | Current package |
-| `starts_at` | timestamp | NOT NULL | Subscription start date |
-| `expires_at` | timestamp | NOT NULL | Subscription end date |
-| `trial_ends_at` | timestamp | NULLABLE | Trial period end |
-| `grace_period_ends_at` | timestamp | NULLABLE | Grace period end |
-| `admin_grace_period_days` | integer | DEFAULT 0 | Admin-added grace days |
-| `status` | varchar(255) | NOT NULL | Current status |
-| `payment_method` | varchar(255) | NULLABLE | Payment method used |
-| `payment_id` | varchar(255) | NULLABLE | External payment ID |
-| `is_canceled` | boolean | DEFAULT false | Cancellation flag |
-| `canceled_at` | timestamp | NULLABLE | Cancellation timestamp |
-| `last_order_id` | bigint | NULLABLE | Latest order reference |
-| `last_transaction_id` | bigint | NULLABLE | Latest transaction reference |
-| `payment_status` | varchar(255) | DEFAULT 'pending' | Payment state |
-| `billing_cycle` | varchar(255) | DEFAULT 'monthly' | Billing frequency |
-| `next_billing_date` | timestamp | NULLABLE | Next payment due |
-| `total_spent` | decimal(10,2) | DEFAULT 0.00 | Cumulative spending |
-| `invoice_reference` | varchar(255) | NULLABLE | Latest invoice number |
-| `created_at` | timestamp | | Creation timestamp |
-| `updated_at` | timestamp | | Modification timestamp |
-
-**Subscription Status States**:
-- `active`: Subscription is active and paid
-- `canceled`: Subscription has been canceled
-- `expired`: Subscription has expired without payment
-- `trial`: Subscription is in trial period
-- `unpaid`: Subscription payment is pending
-- `grace_period`: Subscription is in grace period
-
-### 5. Subscription Orders Table (`subscription_orders`)
-**Purpose**: Track individual purchase orders and billing events
-
-| Field | Type | Constraints | Description |
-|-------|------|-------------|-------------|
-| `id` | bigint | PRIMARY KEY, AUTO_INCREMENT | Order identifier |
-| `subscription_id` | bigint | FOREIGN KEY → subscriptions.id, CASCADE | Parent subscription |
-| `mess_id` | bigint | FOREIGN KEY → mess.id, CASCADE | Associated mess |
-| `plan_id` | bigint | FOREIGN KEY → plans.id | Plan at time of order |
-| `plan_package_id` | bigint | FOREIGN KEY → plan_packages.id | Package purchased |
-| `order_number` | varchar(255) | UNIQUE, NOT NULL | Generated order number |
-| `amount` | decimal(10,2) | NOT NULL | Base amount |
-| `tax_amount` | decimal(10,2) | DEFAULT 0.00 | Tax portion |
-| `discount_amount` | decimal(10,2) | DEFAULT 0.00 | Discount applied |
-| `total_amount` | decimal(10,2) | NOT NULL | Final amount |
-| `currency` | varchar(255) | DEFAULT 'USD' | Currency code |
-| `status` | varchar(255) | NOT NULL | Order status |
-| `payment_status` | varchar(255) | NULLABLE | Payment state |
-| `billing_address` | text | NULLABLE | Billing address |
-| `billing_email` | varchar(255) | NULLABLE | Billing email |
-| `notes` | text | NULLABLE | Order notes |
-| `metadata` | json | NULLABLE | Additional data |
-| `created_at` | timestamp | | Creation timestamp |
-| `updated_at` | timestamp | | Modification timestamp |
-
-**Order Number Format**: `ORD-YYYYMMDD-XXXXX`
-Example: `ORD-20241215-A1B2C`
-
-### 6. Transactions Table (`transactions`)
-**Purpose**: Record payment transactions and payment provider interactions
-
-| Field | Type | Constraints | Description |
-|-------|------|-------------|-------------|
-| `id` | bigint | PRIMARY KEY, AUTO_INCREMENT | Transaction identifier |
-| `subscription_id` | bigint | FOREIGN KEY → subscriptions.id, CASCADE | Parent subscription |
-| `mess_id` | bigint | FOREIGN KEY → mess.id, CASCADE | Associated mess |
-| `order_id` | bigint | FOREIGN KEY → subscription_orders.id, SET NULL | Associated order |
-| `transaction_reference` | varchar(255) | UNIQUE, NOT NULL | Generated reference |
-| `payment_method` | varchar(255) | NOT NULL | Payment method |
-| `payment_provider` | varchar(255) | NULLABLE | Provider name |
-| `payment_provider_reference` | varchar(255) | NULLABLE | Provider transaction ID |
-| `amount` | decimal(10,2) | NOT NULL | Transaction amount |
-| `currency` | varchar(255) | DEFAULT 'USD' | Currency code |
-| `status` | varchar(255) | NOT NULL | Transaction status |
-| `notes` | text | NULLABLE | Transaction notes |
-| `metadata` | json | NULLABLE | Provider-specific data |
-| `processed_at` | timestamp | NULLABLE | Processing timestamp |
-| `created_at` | timestamp | | Creation timestamp |
-| `updated_at` | timestamp | | Modification timestamp |
-
-**Transaction Reference Format**: `TXN-YYYYMMDD-XXXXXXX`
-Example: `TXN-20241215-A1B2C3D`
-
-**Payment Methods Supported**:
-- Credit/Debit Cards (Stripe, PayPal)
-- Bank Transfers
-- Digital Wallets
-- Cryptocurrency (future)
-
-### 7. Invoices Table (`invoices`)
-**Purpose**: Generate and manage billing invoices
-
-| Field | Type | Constraints | Description |
-|-------|------|-------------|-------------|
-| `id` | bigint | PRIMARY KEY, AUTO_INCREMENT | Invoice identifier |
-| `subscription_id` | bigint | FOREIGN KEY → subscriptions.id, CASCADE | Parent subscription |
-| `mess_id` | bigint | FOREIGN KEY → mess.id, CASCADE | Associated mess |
-| `order_id` | bigint | FOREIGN KEY → subscription_orders.id, SET NULL | Associated order |
-| `transaction_id` | bigint | FOREIGN KEY → transactions.id, SET NULL | Payment transaction |
-| `invoice_number` | varchar(255) | UNIQUE, NOT NULL | Generated invoice number |
-| `amount` | decimal(10,2) | NOT NULL | Base amount |
-| `tax_amount` | decimal(10,2) | DEFAULT 0.00 | Tax portion |
-| `discount_amount` | decimal(10,2) | DEFAULT 0.00 | Discount applied |
-| `total_amount` | decimal(10,2) | NOT NULL | Final amount |
-| `currency` | varchar(255) | DEFAULT 'USD' | Currency code |
-| `billing_address` | text | NULLABLE | Billing address |
-| `billing_email` | varchar(255) | NULLABLE | Billing email |
-| `due_date` | date | NOT NULL | Payment due date |
-| `issued_date` | date | NOT NULL | Invoice issue date |
-| `paid_date` | date | NULLABLE | Payment completion date |
-| `status` | varchar(255) | NOT NULL | Invoice status |
-| `notes` | text | NULLABLE | Invoice notes |
-| `created_at` | timestamp | | Creation timestamp |
-| `updated_at` | timestamp | | Modification timestamp |
-
-**Invoice Number Format**: `INV-YYYYMMDD-XXXXX`
-Example: `INV-20241215-00001`
-
-### 8. Feature Usages Table (`feature_usages`)
-**Purpose**: Track feature usage against plan limits
-
-| Field | Type | Constraints | Description |
-|-------|------|-------------|-------------|
-| `id` | bigint | PRIMARY KEY, AUTO_INCREMENT | Usage record identifier |
-| `subscription_id` | bigint | FOREIGN KEY → subscriptions.id | Parent subscription |
-| `plan_feature_id` | bigint | FOREIGN KEY → plan_features.id | Feature being tracked |
-| `used_count` | integer | DEFAULT 0 | Current usage count |
-| `reset_at` | timestamp | NULLABLE | When usage resets |
-| `created_at` | timestamp | | Creation timestamp |
-| `updated_at` | timestamp | | Modification timestamp |
-
-## Grace Period System - Advanced Features
-
-### Multi-Tier Grace Period Architecture
-The grace period system implements a sophisticated approach with multiple layers:
-
-#### 1. Package-Level Default Grace Period
+### Feature List
 ```php
-// Default grace periods by plan tier
-Basic Plan: 3 days
-Premium Plan: 3 days  
-Enterprise Plan: 3 days (configurable per package)
+// Available features (App\Constants\Feature)
+const MEMBER_LIMIT = 'Member Limit';
+const MESS_REPORT_GENERATE = 'Report Generate';
+const MEAL_ADD_NOTIFICATION = 'Meal Add Notification';
+const BALANCE_ADD_NOTIFICATION = 'Balance Add Notification';
+const PURCHASE_NOTIFICATION = 'Purchase Notification';
+const FUND_ADD = 'Fund Add';
+const ROLE_MANAGEMENT = 'Role Management';
+const PURCHASE_REQUEST = 'Purchase Request';
 ```
 
-#### 2. Admin-Configurable Extensions
-Administrators can extend grace periods through multiple methods:
+## Subscription Management
 
+### Checking Subscription Status
 ```php
-// Extend existing grace period
-$subscriptionService->extendAdminGracePeriod($subscription, 7); // Add 7 days
+use App\Facades\Feature;
 
-// Set total admin grace period
-$subscriptionService->setAdminGracePeriod($subscription, 14); // Set 14 total admin days
+// Check if mess has active subscription
+$hasActiveSubscription = Feature::hasActiveSubscription($mess);
 
-// Calculate total grace period
-$totalGraceDays = $subscription->getTotalGracePeriodDays(); 
-// Returns: default_grace_period_days + admin_grace_period_days
+// Check specific feature access
+$canUseFeature = Feature::canUseFeature($mess, Feature::MEMBER_LIMIT);
+if ($canUseFeature->isSuccess()) {
+    // Feature is available
+    $remainingUsage = $canUseFeature->getData()['remaining'];
+    $usageLimit = $canUseFeature->getData()['limit'];
+}
+
+// Get all available features
+$features = Feature::getAvailableFeatures($mess);
 ```
 
-#### 3. Grace Period Lifecycle Management
-
-**Entry Conditions**:
-- Subscription has expired (`expires_at <= now()`)
-- Payment status is not 'paid'
-- Subscription is not canceled
-- Grace period hasn't been exhausted
-
-**During Grace Period**:
-- All plan features remain accessible
-- Payment reminders can be sent
-- Service continues uninterrupted
-- Admin can extend period if needed
-
-**Recovery Process**:
-- Payment received → Immediate reactivation
-- Subscription status changes to 'active'
-- Grace period cleared
-- Normal billing cycle resumes
-
-**Expiration Process**:
-- Grace period ends without payment
-- Subscription status changes to 'expired'
-- All features revoked
-- Service access terminated
-
-### Grace Period Audit Trail
-Every grace period action is recorded:
-
+### Route Protection
 ```php
-// Order records created for:
-- Grace period entry
-- Admin extensions
-- Grace period expiration
-- Payment recovery
+// In routes/api.php
+Route::middleware(['feature:Member Limit'])->group(function () {
+    Route::post('/members/add', [MemberController::class, 'store']);
+});
 
-// Example order notes:
-"Subscription entered grace period - payment overdue"
-"Admin extended grace period by 7 days"
-"Subscription expired after grace period ended"
-"Grace period recovery - payment received"
+// Multiple features
+Route::middleware(['feature:Role Management,Purchase Request'])->group(function () {
+    Route::post('/roles', [RoleController::class, 'store']);
+});
 ```
 
-## Business Logic Flows - Detailed Implementation
-
-### 1. Subscription Creation Flow
-```mermaid
-graph TD
-    A[Start Subscription] --> B[Validate Plan & Package]
-    B --> C[Calculate Dates]
-    C --> D[Calculate Grace Period End]
-    D --> E[Create Subscription Record]
-    E --> F[Initialize Feature Usages]
-    F --> G[Create Initial Order]
-    G --> H{Payment Provided?}
-    H -->|Yes| I[Create Transaction]
-    H -->|No| J[Mark as Pending]
-    I --> K[Generate Invoice]
-    J --> K
-    K --> L[Apply Features to Mess]
-    L --> M[Return Subscription]
-```
-
-### 2. Grace Period Management Flow
-```mermaid
-graph TD
-    A[Subscription Expires] --> B{Payment Status?}
-    B -->|Paid| C[Continue Normal Cycle]
-    B -->|Unpaid| D[Enter Grace Period]
-    D --> E[Set grace_period Status]
-    E --> F[Calculate Grace End Date]
-    F --> G[Create Grace Order Record]
-    G --> H[Features Remain Active]
-    H --> I{Payment Received?}
-    I -->|Yes| J[Reactivate Subscription]
-    I -->|No| K{Grace Expired?}
-    K -->|No| L[Continue Grace Period]
-    K -->|Yes| M[Expire Subscription]
-    J --> N[Clear Grace Period]
-    M --> O[Revoke Features]
-    L --> I
-```
-
-### 3. Feature Access Control Flow
-```mermaid
-graph TD
-    A[Feature Access Request] --> B[Get Active Subscription]
-    B --> C{Has Subscription?}
-    C -->|No| D[Deny Access]
-    C -->|Yes| E{Is Active or In Grace?}
-    E -->|No| D
-    E -->|Yes| F[Get Plan Feature]
-    F --> G{Feature Exists?}
-    G -->|No| D
-    G -->|Yes| H{Is Countable?}
-    H -->|No| I[Grant Access]
-    H -->|Yes| J[Check Usage Limits]
-    J --> K{Within Limits?}
-    K -->|Yes| I
-    K -->|No| D
-```
-
-## Advanced Features and Customizations
-
-### 1. Proration Engine
-The system includes sophisticated proration calculations:
-
+### Controller Usage
 ```php
-// Plan change proration example
-$daysLeft = $subscription->expires_at->diffInDays(now());
-$oldDailyRate = $oldPackage->price / $oldPackage->duration;
-$refundAmount = $daysLeft * $oldDailyRate;
-$proratedAmount = $newPackage->price - $refundAmount;
+use App\Facades\Feature;
+use App\Constants\Feature as FeatureList;
 
-// Handle negative proration (credit)
-if ($proratedAmount < 0) {
-    $proratedAmount = 0; // Or apply as credit
+class MessController extends Controller
+{
+    public function addMember(Request $request)
+    {
+        // Check and increment feature usage
+        $featureCheck = Feature::canUseFeature($mess, FeatureList::MEMBER_LIMIT);
+        if (!$featureCheck->isSuccess()) {
+            return response()->json([
+                'error' => $featureCheck->getMessage()
+            ], 403);
+        }
+
+        // Add member logic here...
+
+        // Increment usage after successful operation
+        Feature::incrementFeatureUsage($mess, FeatureList::MEMBER_LIMIT);
+    }
 }
 ```
 
-### 2. Automated Subscription Management
-Console command for automated processing:
+## Payment Integration
 
-```php
-// Daily scheduled command
-php artisan subscriptions:process-grace-periods
-
-// Functions performed:
-- Move expired subscriptions to grace period
-- Expire subscriptions past grace period
-- Send payment reminders
-- Update subscription statuses
+### Google Play Integration
+1. Setup Google Play credentials:
+```bash
+php artisan setup:google-play --credentials-file=/path/to/google-play-credentials.json --package-name=com.example.mydining
 ```
 
-### 3. Payment Provider Integration
-Extensible payment provider system:
-
+2. Handle subscription purchase:
 ```php
-// Supported providers
-'stripe' => [
-    'webhook_url' => '/webhooks/stripe',
-    'supported_methods' => ['card', 'bank_transfer']
-],
-'paypal' => [
-    'webhook_url' => '/webhooks/paypal', 
-    'supported_methods' => ['paypal', 'card']
-]
+class PaymentController extends Controller
+{
+    public function verifyGooglePlayPurchase(GooglePlayPurchaseRequest $request)
+    {
+        $data = $request->validated();
+        $paymentMethod = PaymentMethod::findOrFail($data['payment_method_id']);
 
-// Metadata storage for provider-specific data
-$transaction->metadata = [
-    'stripe_charge_id' => 'ch_1234567890',
-    'stripe_customer_id' => 'cus_1234567890',
-    'payment_intent_id' => 'pi_1234567890'
-];
+        $pipeline = $this->googlePlayService->verifySubscription(
+            $paymentMethod,
+            $data['purchase_token'],
+            $data['subscription_id']
+        );
+
+        if ($pipeline->isSuccess()) {
+            // Subscription verified and activated
+        }
+    }
+}
 ```
 
-### 4. Feature Usage Analytics
-Track and analyze feature usage:
-
+### Manual Payment Integration
+1. Submit manual payment:
 ```php
-// Usage analytics methods
-$subscription->getFeatureUsageHistory();
-$subscription->getPeakUsagePeriods();
-$subscription->getUnusedFeatures();
-$subscription->getFeatureEfficiency();
-
-// Reporting capabilities
-$mess->generateUsageReport($startDate, $endDate);
-$mess->getFeatureAdoptionMetrics();
+$payment = $paymentService->submitManualPayment([
+    'subscription_id' => $subscription->id,
+    'payment_method_id' => $paymentMethod->id,
+    'amount' => 99.99,
+    'transaction_id' => 'manual_trans_123',
+    'proof_url' => 'https://example.com/proof.jpg'
+]);
 ```
 
-### 5. Billing Cycle Intelligence
-Automatic billing cycle detection:
-
+2. Review manual payment:
 ```php
-// Based on package duration
-duration <= 30 days: 'onetime'
-30 < duration <= 180 days: 'monthly' 
-duration > 180 days: 'yearly'
-
-// Custom billing logic
-$subscription->calculateNextBillingDate();
-$subscription->getProrationAmount($newPackage);
-$subscription->getBillingHistory();
+$review = $paymentService->reviewManualPayment(
+    payment: $manualPayment,
+    status: PaymentStatus::APPROVED,
+    reviewer: $adminUser,
+    notes: 'Payment verified'
+);
 ```
 
-## Security and Compliance
+## Feature Access Control
 
-### 1. Data Protection
-- Sensitive payment data encrypted at rest
-- PCI DSS compliance for payment processing
-- GDPR-compliant data handling
-- Audit trail for all financial transactions
-
-### 2. Access Controls
-- Role-based permissions for admin functions
-- Secure API endpoints with authentication
-- Rate limiting on payment operations
-- Fraud detection mechanisms
-
-### 3. Financial Compliance
-- Detailed transaction logging
-- Tax calculation readiness
-- Multi-currency support framework
-- Regulatory reporting capabilities
-
-## Performance Optimizations
-
-### 1. Database Optimizations
-```sql
--- Critical indexes for performance
-CREATE INDEX idx_subscriptions_status ON subscriptions(status);
-CREATE INDEX idx_subscriptions_expires_at ON subscriptions(expires_at);
-CREATE INDEX idx_subscriptions_grace_period ON subscriptions(grace_period_ends_at);
-CREATE INDEX idx_feature_usages_subscription ON feature_usages(subscription_id);
-CREATE INDEX idx_transactions_reference ON transactions(transaction_reference);
-```
-
-### 2. Caching Strategy
+### Middleware Usage
 ```php
-// Cache frequently accessed data
-Cache::remember("subscription_{$messId}", 3600, function() {
-    return $mess->activeSubscription;
-});
-
-Cache::remember("plan_features_{$planId}", 86400, function() {
-    return $plan->features;
+// Protect routes with feature access middleware
+Route::middleware('feature:Report Generate')->group(function () {
+    Route::get('/reports/generate', [ReportController::class, 'generate']);
 });
 ```
 
-### 3. Queue Processing
+### Service Layer Usage
 ```php
-// Background processing for heavy operations
-ProcessSubscriptionRenewal::dispatch($subscription);
-SendPaymentReminder::dispatch($subscription);
-GenerateInvoicePDF::dispatch($invoice);
+class ReportService
+{
+    protected $featureService;
+
+    public function __construct(FeatureService $featureService)
+    {
+        $this->featureService = $featureService;
+    }
+
+    public function generateReport(Mess $mess)
+    {
+        $featureCheck = $this->featureService->canUseFeature(
+            $mess,
+            Feature::MESS_REPORT_GENERATE
+        );
+
+        if (!$featureCheck->isSuccess()) {
+            return Pipeline::error($featureCheck->getMessage());
+        }
+
+        // Generate report logic...
+
+        // Increment usage
+        $this->featureService->incrementFeatureUsage(
+            $mess,
+            Feature::MESS_REPORT_GENERATE
+        );
+
+        return Pipeline::success($report);
+    }
+}
 ```
 
-## Monitoring and Analytics
+## Subscription Lifecycle
 
-### 1. Key Metrics
-- Monthly Recurring Revenue (MRR)
-- Customer Lifetime Value (CLV)  
-- Churn Rate and Grace Period Recovery Rate
-- Feature Adoption Rates
-- Payment Success Rates
-
-### 2. Alerting System
+### Creating a New Subscription
 ```php
-// Critical alerts
-- Payment failures
-- Grace period entries
-- Subscription expirations
-- Feature limit breaches
-- System errors
+// Create subscription for a mess
+$subscription = $mess->subscription()->create([
+    'plan_id' => $plan->id,
+    'plan_package_id' => $package->id,
+    'starts_at' => now(),
+    'expires_at' => now()->addDays($package->duration),
+    'status' => Subscription::STATUS_ACTIVE
+]);
+
+// Create initial order
+$order = $subscription->createOrder([
+    'payment_method' => 'google_play',
+    'payment_provider' => 'google_play'
+]);
 ```
 
-### 3. Reporting Dashboard
-- Real-time subscription metrics
-- Revenue analytics
-- Feature usage patterns
-- Customer behavior insights
-- Financial reporting
+### Handling Subscription Events
+```php
+// In GooglePlayPaymentService
+public function handleSubscriptionNotification(array $notification)
+{
+    switch ($notification['notificationType']) {
+        case 2: // Renewed
+            // Handle renewal
+            break;
+        case 3: // Cancelled
+            // Handle cancellation
+            break;
+        case 13: // Grace period
+            // Handle grace period
+            break;
+        case 4: // Refunded
+            // Handle refund
+            break;
+    }
+}
+```
 
-This comprehensive documentation provides a complete understanding of the Laravel Dining Subscription System, enabling developers and AI assistants to effectively work with, maintain, and extend the platform's subscription management capabilities.
+### Grace Period Management
+```php
+// Check grace period status
+if ($subscription->inGracePeriod()) {
+    $daysRemaining = $subscription->grace_period_ends_at->diffInDays(now());
+}
+
+// Extend grace period (admin only)
+$subscription->admin_grace_period_days = 7;
+$subscription->grace_period_ends_at = $subscription->calculateGracePeriodEndDate();
+$subscription->save();
+```
+
+## Best Practices
+
+1. **Feature Checking**
+   - Always check feature availability before performing restricted actions
+   - Use the Feature facade for consistent access control
+   - Handle feature usage limits appropriately
+
+2. **Payment Processing**
+   - Validate payments before activating subscriptions
+   - Handle webhook notifications reliably
+   - Maintain proper transaction records
+
+3. **Error Handling**
+   - Use Pipeline responses for consistent error handling
+   - Provide clear error messages to users
+   - Log payment and subscription errors for debugging
+
+4. **Security**
+   - Validate webhook signatures
+   - Protect admin routes and actions
+   - Maintain proper audit trails for payments
+
+## Common Use Cases
+
+### Setting Up a New Mess
+```php
+// 1. Create mess
+$mess = Mess::create([...]);
+
+// 2. Set up free trial subscription
+$plan = Plan::where('keyword', SubPlan::BASIC)->first();
+$trialPackage = $plan->packages()->where('is_trial', true)->first();
+
+$subscription = $mess->subscription()->create([
+    'plan_id' => $plan->id,
+    'plan_package_id' => $trialPackage->id,
+    'starts_at' => now(),
+    'expires_at' => now()->addDays($trialPackage->duration),
+    'status' => Subscription::STATUS_TRIAL
+]);
+```
+
+### Upgrading a Subscription
+```php
+// 1. Create new order for upgrade
+$newOrder = $subscription->createOrder([
+    'plan_id' => $newPlan->id,
+    'plan_package_id' => $newPackage->id,
+    'amount' => $newPackage->price
+]);
+
+// 2. Process payment
+$paymentResult = $paymentService->processPayment($newOrder);
+
+// 3. Update subscription if payment successful
+if ($paymentResult->isSuccess()) {
+    $subscription->update([
+        'plan_id' => $newPlan->id,
+        'plan_package_id' => $newPackage->id,
+        'expires_at' => now()->addDays($newPackage->duration)
+    ]);
+}
+```
+
+### Monitoring Usage
+```php
+// Get feature usage statistics
+$usageStats = $mess->subscription->featureUsages()
+    ->with('feature')
+    ->get()
+    ->map(function ($usage) {
+        return [
+            'feature' => $usage->feature->name,
+            'used' => $usage->used,
+            'limit' => $usage->feature->usage_limit,
+            'remaining' => $usage->feature->usage_limit - $usage->used
+        ];
+    });
+```
+
+## API Endpoints
+
+### Subscription Management
+- `GET /api/v1/subscriptions/status` - Get current subscription status
+- `GET /api/v1/subscriptions/features` - List available features
+- `POST /api/v1/subscriptions/upgrade` - Upgrade subscription
+- `POST /api/v1/payments/google-play/verify` - Verify Google Play purchase
+- `POST /api/v1/payments/manual` - Submit manual payment
+- `PUT /api/v1/payments/manual/{id}/review` - Review manual payment
+- `GET /api/v1/subscriptions/usage` - Get feature usage statistics
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Feature Access Denied**
+   - Check if subscription is active
+   - Verify feature is included in current plan
+   - Check usage limits haven't been exceeded
+
+2. **Payment Verification Failed**
+   - Validate payment credentials
+   - Check webhook signatures
+   - Verify subscription IDs and tokens
+
+3. **Grace Period Issues**
+   - Verify grace period calculation
+   - Check subscription status
+   - Validate payment status
+
+### Debug Tools
+```php
+// Check subscription status details
+$subscription->refresh();
+echo "Status: " . $subscription->status;
+echo "Active: " . $subscription->isActive();
+echo "In Grace: " . $subscription->inGracePeriod();
+echo "Expired: " . $subscription->hasExpired();
+
+// Verify feature configuration
+$feature = PlanFeature::where('name', Feature::MEMBER_LIMIT)
+    ->where('plan_id', $subscription->plan_id)
+    ->first();
+echo "Limit: " . $feature->usage_limit;
+
+// Check current usage
+$usage = FeatureUsage::where('subscription_id', $subscription->id)
+    ->where('plan_feature_id', $feature->id)
+    ->first();
+echo "Used: " . $usage->used;
+```

@@ -19,30 +19,22 @@ class SubscriptionOrder extends Model
     const STATUS_CANCELLED = 'cancelled';
 
     protected $fillable = [
-        'subscription_id',
         'mess_id',
+        'subscription_id',
         'plan_id',
         'plan_package_id',
-        'order_number',
         'amount',
-        'tax_amount',
-        'discount_amount',
-        'total_amount',
         'currency',
         'status',
-        'payment_status',
-        'billing_address',
-        'billing_email',
-        'notes',
-        'metadata',
+        'payment_method',
+        'payment_provider',
+        'provider_order_id',
+        'metadata'
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
-        'tax_amount' => 'decimal:2',
-        'discount_amount' => 'decimal:2',
-        'total_amount' => 'decimal:2',
-        'metadata' => 'array',
+        'metadata' => 'json'
     ];
 
     /**
@@ -75,72 +67,5 @@ class SubscriptionOrder extends Model
     public function package(): BelongsTo
     {
         return $this->belongsTo(PlanPackage::class, 'plan_package_id');
-    }
-
-    /**
-     * Get the transaction associated with the order.
-     */
-    public function transaction(): HasOne
-    {
-        return $this->hasOne(Transaction::class, 'order_id');
-    }
-
-    /**
-     * Get the invoice associated with the order.
-     */
-    public function invoice(): HasOne
-    {
-        return $this->hasOne(Invoice::class, 'order_id');
-    }
-
-    /**
-     * Generate a unique order number.
-     */
-    public static function generateOrderNumber(): string
-    {
-        return 'ORD-' . date('Ymd') . '-' . substr(uniqid(), -5);
-    }
-
-    /**
-     * Boot the model.
-     */
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($order) {
-            if (empty($order->order_number)) {
-                $order->order_number = self::generateOrderNumber();
-            }
-
-            if (empty($order->total_amount)) {
-                $order->total_amount = $order->amount - $order->discount_amount + $order->tax_amount;
-            }
-        });
-    }
-
-    /**
-     * Mark the order as complete.
-     */
-    public function markAsComplete(): bool
-    {
-        $this->status = self::STATUS_COMPLETED;
-        $this->payment_status = 'paid';
-        return $this->save();
-    }
-
-    /**
-     * Mark the order as failed.
-     */
-    public function markAsFailed(string $notes = null): bool
-    {
-        $this->status = self::STATUS_FAILED;
-        $this->payment_status = 'failed';
-
-        if ($notes) {
-            $this->notes = $notes;
-        }
-
-        return $this->save();
     }
 }
