@@ -9,6 +9,7 @@ use App\Exceptions\PermissionDeniedException;
 use App\Helpers\Pipeline;
 use App\Http\Middleware\CheckMaintenanceMode;
 use App\Http\Middleware\ForceJson;
+use App\Http\Middleware\RoleMiddleware;
 use Bootstrap\MyApplication;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
@@ -44,6 +45,7 @@ return MyApplication::configure(basePath: dirname(__DIR__))
             "MonthChecker" => \App\Http\Middleware\CheckActiveMonth::class,
             "mess.user" => \App\Http\Middleware\MessUserChecker::class,
             "force.json" => \App\Http\Middleware\ForceJson::class,
+            "role" => \App\Http\Middleware\RoleMiddleware::class,
         ]);
 
         // Configure authentication redirects
