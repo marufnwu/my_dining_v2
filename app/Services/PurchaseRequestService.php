@@ -5,262 +5,224 @@ namespace App\Services;
 use App\Enums\PurchaseRequestStatus;
 use App\Helpers\Pipeline;
 use App\Models\PurchaseRequest;
-use App\Models\Month;
-use App\Models\Purchase;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class PurchaseRequestService
 {
-    /**
-     * Create a new purchase request.
-     *
-     * @param array $data
-     * @return Pipeline
-     */
+    protected NotificationService $notificationService;
+    protected PurchaseService $purchaseService;
+    protected DepositService $depositService;
+
+    public function __construct(
+        NotificationService $notificationService,
+        PurchaseService $purchaseService,
+        DepositService $depositService
+    ) {
+        $this->notificationService = $notificationService;
+        $this->purchaseService = $purchaseService;
+        $this->depositService = $depositService;
+    }
+
     public function createPurchaseRequest(array $data): Pipeline
     {
-        $purchaseRequest = PurchaseRequest::create($data);
-        return Pipeline::success(data: $purchaseRequest);
+        try {
+            $purchaseRequest = PurchaseRequest::create($data);
+
+            // Notify admins about new purchase request
+            $this->notificationService->sendNotification([
+                'title' => 'New Purchase Request',
+                'body' => "{$purchaseRequest->messUser->user->name} requested to purchase {$purchaseRequest->product} for ৳{$purchaseRequest->price}",
+                'type' => 'new_purchase_request',
+                'is_broadcast' => true,
+                'extra_data' => [
+                    'purchase_request_id' => $purchaseRequest->id,
+                    'product' => $purchaseRequest->product,
+                    'price' => $purchaseRequest->price,
+                    'user_id' => $purchaseRequest->messUser->user_id,
+                    'user_name' => $purchaseRequest->messUser->user->name
+                ]
+            ]);
+
+            return Pipeline::success($purchaseRequest);
+        } catch (\Exception $e) {
+            return Pipeline::error(message: $e->getMessage());
+        }
     }
 
-    /**
-     * Update a purchase request and handle approval and deposit requests.
-     *
-     * @param PurchaseRequest $purchaseRequest
-     * @param array $data
-     * @return Pipeline
-     */
     public function updatePurchaseRequest(PurchaseRequest $purchaseRequest, array $data): Pipeline
     {
-        $originalStatus = $purchaseRequest->status;
-        $wasApproved = false;
-
-
-        // Check if the status was changed to approved
-        if (
-            $originalStatus != PurchaseRequestStatus::APPROVED->value &&
-            $purchaseRequest->status == PurchaseRequestStatus::APPROVED->value
-        ) {
-            $wasApproved = true;
+        if ($purchaseRequest->status != PurchaseRequestStatus::PENDING) {
+            return Pipeline::error(message: "Cannot update non-pending purchase request");
         }
 
-        // If the purchase request was approved, create a purchase
-        if ($wasApproved) {
+        try {
+            $oldPrice = $purchaseRequest->price;
+            $oldProduct = $purchaseRequest->product;
 
+            $purchaseRequest->update($data);
 
-            $purchaseService = new PurchaseService();
-            $depositService = new DepositService();
+            // Notify about update
+            $this->notificationService->sendNotification([
+                'title' => 'Purchase Request Updated',
+                'body' => "{$purchaseRequest->messUser->user->name} updated their purchase request for {$purchaseRequest->product}",
+                'type' => 'purchase_request_updated',
+                'is_broadcast' => true,
+                'extra_data' => [
+                    'purchase_request_id' => $purchaseRequest->id,
+                    'old_product' => $oldProduct,
+                    'new_product' => $purchaseRequest->product,
+                    'old_price' => $oldPrice,
+                    'new_price' => $purchaseRequest->price
+                ]
+            ]);
 
-            // Create a purchase record
-            $purchaseData = [
-                'date' => $purchaseRequest->date,
-                'mess_user_id' => $purchaseRequest->mess_user_id,
-                'mess_id' => $purchaseRequest->mess_id,
-                'month_id' => $purchaseRequest->month_id,
-                'price' => $purchaseRequest->price,
-                'product' => $purchaseRequest->product,
-            ];
-
-            $purchaseService->addPurchase($purchaseData);
-
-            // If deposit request is enabled, create a deposit
-            if ($purchaseRequest->deposit_request) {
-                $depositData = [
-                    'month_id' => $purchaseRequest->month_id,
-                    'mess_user_id' => $purchaseRequest->mess_user_id,
-                    'amount' => $purchaseRequest->price,
-                    'date' => now(),
-                    'type' => 1, // Assuming 1 is for regular deposits, adjust as needed
-                    'mess_id' => $purchaseRequest->mess_id,
-                ];
-
-                $depositService->addDeposit($depositData);
-            }
+            return Pipeline::success($purchaseRequest);
+        } catch (\Exception $e) {
+            return Pipeline::error(message: $e->getMessage());
         }
-
-        // Update the purchase request with the provided data
-        $purchaseRequest->update($data);
-
-
-        return Pipeline::success(data: $purchaseRequest->fresh());
     }
 
-    /**
-     * Update the status of a purchase request.
-     *
-     * @param PurchaseRequest $purchaseRequest
-     * @param array $data
-     * @return Pipeline
-     */
     public function updateStatus(PurchaseRequest $purchaseRequest, array $data): Pipeline
     {
+        if ($purchaseRequest->status != PurchaseRequestStatus::PENDING) {
+            return Pipeline::error(message: "Cannot update non-pending purchase request");
+        }
 
-        // If approved (status code 1 is for approval), create actual purchase
-        if ($data['status'] == PurchaseRequestStatus::APPROVED->value && $purchaseRequest->status != PurchaseRequestStatus::APPROVED->value) {
+        DB::beginTransaction();
+        try {
+            $purchaseRequest->update([
+                'status' => $data['status'],
+                'admin_note' => $data['admin_note'] ?? null,
+                'processed_by' => app()->getMessUser()->id,
+                'processed_at' => Carbon::now()
+            ]);
 
-            $pr = $this->createPurchaseFromRequest($purchaseRequest);
-
-            if (!$pr->isSuccess()) {
-                return $pr;
+            $wasApproved = false;
+            if ($data['status'] == PurchaseRequestStatus::APPROVED->value) {
+                $wasApproved = true;
             }
 
-            // Process deposit if requested
-            if ($data['is_deposit'] ?? false) {
-                $dr = $this->createDepositFromRequest($purchaseRequest);
+            if ($wasApproved) {
+                // Create purchase record
+                $purchaseData = [
+                    'date' => $purchaseRequest->date,
+                    'mess_user_id' => $purchaseRequest->mess_user_id,
+                    'mess_id' => $purchaseRequest->mess_id,
+                    'month_id' => $purchaseRequest->month_id,
+                    'price' => $purchaseRequest->price,
+                    'product' => $purchaseRequest->product,
+                ];
 
-                if (!$pr->isSuccess()) {
-                    return $dr;
+                $this->purchaseService->addPurchase($purchaseData);
+
+                // If deposit request is enabled, create a deposit
+                if ($purchaseRequest->deposit_request) {
+                    $depositData = [
+                        'month_id' => $purchaseRequest->month_id,
+                        'mess_user_id' => $purchaseRequest->mess_user_id,
+                        'mess_id' => $purchaseRequest->mess_id,
+                        'amount' => $purchaseRequest->price,
+                        'date' => $purchaseRequest->date,
+                    ];
+
+                    $this->depositService->addDeposit($depositData);
                 }
+
+                // Notify user about approval
+                $this->notificationService->sendNotification([
+                    'user_id' => $purchaseRequest->messUser->user_id,
+                    'title' => 'Purchase Request Approved',
+                    'body' => "Your purchase request for {$purchaseRequest->product} has been approved" .
+                             ($data['admin_note'] ? ": {$data['admin_note']}" : ""),
+                    'type' => 'purchase_request_approved',
+                    'extra_data' => [
+                        'purchase_request_id' => $purchaseRequest->id,
+                        'product' => $purchaseRequest->product,
+                        'price' => $purchaseRequest->price,
+                        'deposit_created' => $purchaseRequest->deposit_request
+                    ]
+                ]);
+            } else {
+                // Notify user about rejection
+                $this->notificationService->sendNotification([
+                    'user_id' => $purchaseRequest->messUser->user_id,
+                    'title' => 'Purchase Request Rejected',
+                    'body' => "Your purchase request for {$purchaseRequest->product} has been rejected" .
+                             ($data['admin_note'] ? ": {$data['admin_note']}" : ""),
+                    'type' => 'purchase_request_rejected',
+                    'extra_data' => [
+                        'purchase_request_id' => $purchaseRequest->id,
+                        'product' => $purchaseRequest->product,
+                        'price' => $purchaseRequest->price
+                    ]
+                ]);
             }
 
-
+            DB::commit();
+            return Pipeline::success($purchaseRequest);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return Pipeline::error(message: $e->getMessage());
         }
-
-        if($data['status'] == PurchaseRequestStatus::REJECTED->value && $purchaseRequest->status == PurchaseRequestStatus::APPROVED->value){
-            return Pipeline::error("Request has already marked as approve");
-        }
-
-        $purchaseRequest->update([
-            'status' => $data['status'],
-            'comment' => $data['comment'] ?? $purchaseRequest->comment,
-        ]);
-
-        return Pipeline::success(data: $purchaseRequest->fresh());
     }
 
-    /**
-     * Create a purchase record from an approved purchase request.
-     *
-     * @param PurchaseRequest $purchaseRequest
-     * @return void
-     */
-    protected function createPurchaseFromRequest(PurchaseRequest $purchaseRequest): Pipeline
-    {
-        $purchaseData = [
-            'date' => $purchaseRequest->date,
-            'mess_user_id' => $purchaseRequest->mess_user_id,
-            'mess_id' => $purchaseRequest->mess_id,
-            'month_id' => $purchaseRequest->month_id,
-            'price' => $purchaseRequest->price,
-            'product' => $purchaseRequest->product,
-        ];
-
-        $service = new PurchaseService();
-
-        return $service->addPurchase($purchaseData);
-    }
-
-    /**
-     * Create a deposit record from an approved purchase request.
-     *
-     * @param PurchaseRequest $purchaseRequest
-     * @return void
-     */
-    protected function createDepositFromRequest(PurchaseRequest $purchaseRequest): Pipeline
-    {
-        $depositData = [
-            'month_id' => $purchaseRequest->month_id,
-            'mess_user_id' => $purchaseRequest->mess_user_id,
-            'amount' => $purchaseRequest->price,
-            'date' => now(),
-            'type' => 1, // Assuming 1 is for regular deposits
-            'mess_id' => $purchaseRequest->mess_id,
-        ];
-
-        return (new DepositService())->addDeposit($depositData);
-    }
-
-    /**
-     * Delete a purchase request.
-     *
-     * @param PurchaseRequest $purchaseRequest
-     * @return Pipeline
-     */
     public function deletePurchaseRequest(PurchaseRequest $purchaseRequest): Pipeline
     {
-        $purchaseRequest->delete();
-        return Pipeline::success(message: 'Purchase request deleted successfully');
+        if ($purchaseRequest->status != PurchaseRequestStatus::PENDING) {
+            return Pipeline::error(message: "Cannot delete non-pending purchase request");
+        }
+
+        try {
+            $purchaseRequest->delete();
+
+            // Notify admins about deletion
+            $this->notificationService->sendNotification([
+                'title' => 'Purchase Request Deleted',
+                'body' => "{$purchaseRequest->messUser->user->name} deleted their purchase request for {$purchaseRequest->product}",
+                'type' => 'purchase_request_deleted',
+                'is_broadcast' => true,
+                'extra_data' => [
+                    'product' => $purchaseRequest->product,
+                    'price' => $purchaseRequest->price,
+                    'user_id' => $purchaseRequest->messUser->user_id,
+                    'user_name' => $purchaseRequest->messUser->user->name
+                ]
+            ]);
+
+            return Pipeline::success(message: "Purchase request deleted successfully");
+        } catch (\Exception $e) {
+            return Pipeline::error(message: $e->getMessage());
+        }
     }
 
-    /**
-     * Get a list of purchase requests with optional filters.
-     *
-     * @param Month $month
-     * @param array $filters
-     * @return Pipeline
-     */
-    public function listPurchaseRequests(Month $month, array $filters = []): Pipeline
+    public function listPurchaseRequests(array $filters = []): Pipeline
     {
-        $query = PurchaseRequest::where('month_id', $month->id)
-            ->with("messUser.user")
-            ->orderBy('date', 'desc');
+        try {
+            $query = PurchaseRequest::query()
+                ->with(['messUser.user', 'processedBy.user']);
 
-        // Apply filters if provided
-        if (isset($filters['status'])) {
-            $query->where('status', $filters['status']);
+            if (isset($filters['status'])) {
+                $query->where('status', $filters['status']);
+            }
+
+            if (isset($filters['mess_user_id'])) {
+                $query->where('mess_user_id', $filters['mess_user_id']);
+            }
+
+            if (isset($filters['date_from'])) {
+                $query->where('date', '>=', $filters['date_from']);
+            }
+
+            if (isset($filters['date_to'])) {
+                $query->where('date', '<=', $filters['date_to']);
+            }
+
+            $purchaseRequests = $query->orderBy('created_at', 'desc')->get();
+
+            return Pipeline::success($purchaseRequests);
+        } catch (\Exception $e) {
+            return Pipeline::error(message: $e->getMessage());
         }
-
-        if (isset($filters['purchase_type'])) {
-            $query->where('purchase_type', $filters['purchase_type']);
-        }
-
-        if (isset($filters['deposit_request'])) {
-            $query->where('deposit_request', $filters['deposit_request']);
-        }
-
-        // Filter by mess_user_id if provided (for regular users viewing their own requests)
-        if (isset($filters['mess_user_id'])) {
-            $query->where('mess_user_id', $filters['mess_user_id']);
-        }
-
-        $purchaseRequests = $query->get();
-
-        $totalPrice = $purchaseRequests->sum('price');
-
-        $data = [
-            'purchases' => $purchaseRequests,
-            'total_price' => $totalPrice,
-        ];
-
-        return Pipeline::success(data: $data);
     }
-
-    /**
-     * Get a specific purchase request.
-     *
-     * @param PurchaseRequest $purchaseRequest
-     * @return Pipeline
-     */
-    public function getPurchaseRequest(PurchaseRequest $purchaseRequest): Pipeline
-    {
-        $purchaseRequest->load('messUser.user');
-        return Pipeline::success(data: $purchaseRequest);
-    }
-
-    /**
-     * Get total pending purchase request amount for a month.
-     *
-     * @param Month $month
-     * @return Pipeline
-     */
-    public function getTotalPendingRequests(Month $month): Pipeline
-    {
-        $pendingRequests = PurchaseRequest::where('month_id', $month->id)
-            ->where('status', 0) // Assuming 0 is pending status
-            ->count();
-
-        $pendingAmount = PurchaseRequest::where('month_id', $month->id)
-            ->where('status', 0)
-            ->sum('price');
-
-        $data = [
-            'pending_count' => $pendingRequests,
-            'pending_amount' => $pendingAmount,
-        ];
-
-        return Pipeline::success(data: $data);
-    }
-
-
-
-
 }

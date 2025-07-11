@@ -21,11 +21,17 @@ use Illuminate\Support\Facades\DB;
 
 class MessUserService
 {
+    protected ?Mess $mess;
+    protected NotificationService $notificationService;
 
+    public function __construct(?Mess $mess = null, ?NotificationService $notificationService = null)
+    {
+        $this->mess = $mess;
+        $this->notificationService = $notificationService ?? app(NotificationService::class);
+    }
 
-    public function __construct(protected ?Mess $mess = null) {}
-
-    public function setMess(Mess $mess) : self {
+    public function setMess(Mess $mess): self
+    {
         $this->mess = $mess;
         return $this;
     }
@@ -33,28 +39,24 @@ class MessUserService
     static function isUserInSameMess(MessUser $messUser, ?Mess $mess = null): bool
     {
         $mess = $mess ?? app()->getMess();
-        return  $mess?->id == $messUser->user->activeMess->id;
+        return $mess?->id == $messUser->user->activeMess->id;
     }
+
     static function isUserInitiated(MessUser $messUser, ?Month $month = null): bool
     {
         $month = $month ?? app()->getMonth();
-        return  $month->initiatedUser()->where("mess_user_id", $messUser->id)->exists();
+        return $month->initiatedUser()->where("mess_user_id", $messUser->id)->exists();
     }
-
-    // Add your service methods here
 
     function addUser($user, ?MessRole $role = null): Pipeline
     {
-
         if ($this->mess->status != MessStatus::ACTIVE) {
             return Pipeline::error(message: "Mess is not active");
         }
 
-
         if ($user->status != AccountStatus::ACTIVE->value) {
             return Pipeline::error(message: "User account is not active");
         }
-
 
         if ($user->activeMess) {
             throw new MustNotMessJoinException();
@@ -67,6 +69,18 @@ class MessUserService
             "status" => MessUserStatus::Active->value,
         ]);
 
+        // Notify about new member
+        $this->notificationService->sendNotification([
+            'title' => 'New Member Joined',
+            'body' => "{$user->name} has joined the mess",
+            'type' => 'member_joined',
+            'is_broadcast' => true,
+            'extra_data' => [
+                'user_id' => $user->id,
+                'user_name' => $user->name,
+                'role' => $role?->role
+            ]
+        ]);
 
         return Pipeline::success($messUser);
     }
@@ -84,10 +98,8 @@ class MessUserService
 
         $user = $pipeline->data;
 
-
         $mess = MessService::currentMess();
-        $pipeline = $this->addUser( $user, $mess->memberRole()->first());
-
+        $pipeline = $this->addUser($user, $mess->memberRole()->first());
 
         if ($pipeline->isSuccess()) {
             DB::commit();
@@ -203,7 +215,8 @@ class MessUserService
         ], message: "Bulk initiation completed. Initiated: {$initiatedCount}, Failed: {$failedCount}");
     }
 
-    public function getMessUser(User $user) : Pipeline {
+    public function getMessUser(User $user): Pipeline
+    {
         $messUser = MessUser::with("mess", "user", "role.permissions")->where("mess_id", $this->mess?->id)->where("user_id", $user->id)->first();
 
         return Pipeline::success($messUser);
@@ -223,8 +236,6 @@ class MessUserService
         if (!$messUser) {
             return Pipeline::error(message: "User is not part of any mess");
         }
-
-
 
         return Pipeline::success($messUser);
     }
@@ -264,10 +275,25 @@ class MessUserService
             ->where('status', MessJoinRequestStatus::PENDING)
             ->update(['status' => MessJoinRequestStatus::CANCELLED]);
 
+        $messId = $messUser->mess_id;
+        $userName = $user->name;
+
         // Mark user as left
         $messUser->update([
             'left_at' => Carbon::now(),
             'status' => MessUserStatus::LEFT
+        ]);
+
+        // Notify about member leaving
+        $this->notificationService->sendNotification([
+            'title' => 'Member Left',
+            'body' => "{$userName} has left the mess",
+            'type' => 'member_left',
+            'is_broadcast' => true,
+            'extra_data' => [
+                'user_id' => $user->id,
+                'user_name' => $userName
+            ]
         ]);
 
         return Pipeline::success(message: "Successfully left the mess");
@@ -297,7 +323,6 @@ class MessUserService
             return Pipeline::error(message: "You have a pending join request. Please cancel it first.");
         }
 
-
         // Check if target mess is active
         if ($targetMess->status !== MessStatus::ACTIVE) {
             return Pipeline::error(message: "Cannot join deactivated mess");
@@ -312,6 +337,19 @@ class MessUserService
             'new_mess_id' => $targetMess->id,
             'request_date' => Carbon::now(),
             'status' => MessJoinRequestStatus::PENDING
+        ]);
+
+        // Notify mess admins about join request
+        $this->notificationService->sendNotification([
+            'title' => 'New Join Request',
+            'body' => "{$user->name} has requested to join the mess",
+            'type' => 'join_request',
+            'is_broadcast' => true,
+            'extra_data' => [
+                'request_id' => $request->id,
+                'user_id' => $user->id,
+                'user_name' => $user->name
+            ]
         ]);
 
         return Pipeline::success($request, message: "Join request sent successfully");
@@ -387,6 +425,19 @@ class MessUserService
             'status' => MessJoinRequestStatus::PENDING
         ]);
 
+        // Notify mess admins about join request
+        $this->notificationService->sendNotification([
+            'title' => 'New Join Request',
+            'body' => "{$user->name} has requested to join the mess",
+            'type' => 'join_request',
+            'is_broadcast' => true,
+            'extra_data' => [
+                'request_id' => $request->id,
+                'user_id' => $user->id,
+                'user_name' => $user->name
+            ]
+        ]);
+
         return Pipeline::success($request, message: "Join request sent successfully");
     }
 
@@ -451,10 +502,7 @@ class MessUserService
         $messUser = $user->messUser;
         if (!$messUser || !$messUser->role?->is_admin) {
             return Pipeline::error(message: "You don't have permission to view join requests");
-
-
         }
-
 
         $requests = MessRequest::where('new_mess_id', $mess->id)
             ->where('status', MessJoinRequestStatus::PENDING)
@@ -465,7 +513,7 @@ class MessUserService
         return Pipeline::success($requests);
     }
 
-        /**
+    /**
      * Accept join request (requires permission)
      */
     public function acceptJoinRequest(MessRequest $request): Pipeline
@@ -496,15 +544,15 @@ class MessUserService
             return Pipeline::error(message: "Request is not pending");
         }
 
-        $request->load(['newMess', 'user']);
-        /** @var Mess $targetMess */
-        $targetMess = $request->newMess;
-        if (!$targetMess || $targetMess->status !== MessStatus::ACTIVE) {
-            return Pipeline::error(message: "Target mess is not active");
-        }
-
         DB::beginTransaction();
         try {
+            $request->load(['newMess', 'user']);
+            /** @var Mess $targetMess */
+            $targetMess = $request->newMess;
+            if (!$targetMess || $targetMess->status !== MessStatus::ACTIVE) {
+                return Pipeline::error(message: "Target mess is not active");
+            }
+
             // If user is currently in a mess, leave it
             /** @var User $requestingUser */
             $requestingUser = $request->user;
@@ -530,6 +578,18 @@ class MessUserService
                 'accept_date' => Carbon::now(),
                 'accept_by' => $user->id,
                 'new_mess_user_id' => $addResult->data->id
+            ]);
+
+            // Notify user about accepted request
+            $this->notificationService->sendNotification([
+                'user_id' => $requestingUser->id,
+                'title' => 'Join Request Accepted',
+                'body' => "Your request to join {$targetMess->name} has been accepted",
+                'type' => 'join_request_accepted',
+                'extra_data' => [
+                    'mess_id' => $targetMess->id,
+                    'mess_name' => $targetMess->name
+                ]
             ]);
 
             DB::commit();
@@ -574,8 +634,22 @@ class MessUserService
 
         $request->update([
             'status' => MessJoinRequestStatus::REJECTED,
-            'accept_date' => Carbon::now(),
-            'accept_by' => $user->id
+            'reject_reason' => $reason,
+            'reject_by' => $user->id,
+            'reject_date' => Carbon::now()
+        ]);
+
+        // Notify user about rejected request
+        $this->notificationService->sendNotification([
+            'user_id' => $request->user_id,
+            'title' => 'Join Request Rejected',
+            'body' => "Your request to join has been rejected" . ($reason ? ": $reason" : ""),
+            'type' => 'join_request_rejected',
+            'extra_data' => [
+                'reason' => $reason,
+                'mess_id' => $currentMess->id,
+                'mess_name' => $currentMess->name
+            ]
         ]);
 
         return Pipeline::success(message: "Join request rejected successfully");
@@ -771,6 +845,18 @@ class MessUserService
 
             // Close the mess
             $mess->update(['status' => MessStatus::DEACTIVATED]);
+
+            // Notify about mess closure
+            $this->notificationService->sendNotification([
+                'title' => 'Mess Closed',
+                'body' => "The mess {$mess->name} has been closed",
+                'type' => 'mess_closed',
+                'is_broadcast' => true,
+                'extra_data' => [
+                    'mess_id' => $mess->id,
+                    'mess_name' => $mess->name
+                ]
+            ]);
 
             DB::commit();
             return Pipeline::success(message: "Mess closed successfully");

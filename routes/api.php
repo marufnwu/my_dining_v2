@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\MessController;
 use App\Http\Controllers\Api\MessManagementController;
 use App\Http\Controllers\Api\MessMemberController;
 use App\Http\Controllers\Api\MonthController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OtherCostController;
 use App\Http\Controllers\Api\PurchaseController;
 use App\Http\Controllers\Api\PurchaseRequestController;
@@ -212,6 +213,14 @@ Route:: as('api.')->group(function () {
             Route::put('/', 'updateProfile')->name('profile.update');
             Route::post('avatar', 'uploadAvatar')->name('profile.avatar.upload');
             Route::delete('avatar', 'removeAvatar')->name('profile.avatar.remove');
+        });
+
+        // Notification Routes
+        Route::prefix('notifications')->group(function () {
+            Route::get('/', [NotificationController::class, 'index']);
+            Route::post('/{notification}/read', [NotificationController::class, 'markAsRead']);
+            Route::post('/read-all', [NotificationController::class, 'markAllAsRead']);
+            Route::post('/fcm-token', [NotificationController::class, 'updateFcmToken']);
         });
     });
 });

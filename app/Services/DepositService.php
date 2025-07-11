@@ -8,9 +8,17 @@ use App\Models\Mess;
 use App\Models\MessUser;
 use App\Models\Month;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
 
 class DepositService
 {
+    protected NotificationService $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     /**
      * Add a new deposit.
      *
@@ -19,8 +27,42 @@ class DepositService
      */
     public function addDeposit(array $data): Pipeline
     {
-        $deposit = Deposit::create($data);
-        return Pipeline::success(data: $deposit);
+        try {
+            $deposit = Deposit::create($data);
+
+            // Notify about new deposit
+            $this->notificationService->sendNotification([
+                'user_id' => $deposit->messUser->user_id,
+                'title' => 'New Deposit Added',
+                'body' => "A deposit of ৳{$deposit->amount} has been added to your account",
+                'type' => 'deposit_added',
+                'extra_data' => [
+                    'deposit_id' => $deposit->id,
+                    'amount' => $deposit->amount,
+                    'date' => $deposit->date
+                ]
+            ]);
+
+            // Broadcast to admins
+            $this->notificationService->sendNotification([
+                'title' => 'New Deposit',
+                'body' => "{$deposit->messUser->user->name} added a deposit of ৳{$deposit->amount}",
+                'type' => 'deposit_added_admin',
+                'is_broadcast' => true,
+                'extra_data' => [
+                    'deposit_id' => $deposit->id,
+                    'amount' => $deposit->amount,
+                    'date' => $deposit->date,
+                    'user_id' => $deposit->messUser->user_id,
+                    'user_name' => $deposit->messUser->user->name
+                ]
+            ]);
+
+            return Pipeline::success(data: $deposit);
+        } catch (\Exception $e) {
+            Log::error('Failed to add deposit: ' . $e->getMessage());
+            return Pipeline::error(message: "Failed to add deposit");
+        }
     }
 
     /**
@@ -32,8 +74,29 @@ class DepositService
      */
     public function updateDeposit(Deposit $deposit, array $data): Pipeline
     {
-        $deposit->update($data);
-        return Pipeline::success(data: $deposit->fresh());
+        try {
+            $oldAmount = $deposit->amount;
+            $deposit->update($data);
+
+            // Notify about deposit update
+            $this->notificationService->sendNotification([
+                'user_id' => $deposit->messUser->user_id,
+                'title' => 'Deposit Updated',
+                'body' => "Your deposit amount has been updated from ৳{$oldAmount} to ৳{$deposit->amount}",
+                'type' => 'deposit_updated',
+                'extra_data' => [
+                    'deposit_id' => $deposit->id,
+                    'old_amount' => $oldAmount,
+                    'new_amount' => $deposit->amount,
+                    'date' => $deposit->date
+                ]
+            ]);
+
+            return Pipeline::success(message: 'Deposit updated successfully');
+        } catch (\Exception $e) {
+            Log::error('Failed to update deposit: ' . $e->getMessage());
+            return Pipeline::error(message: "Failed to update deposit");
+        }
     }
 
     /**
@@ -44,8 +107,30 @@ class DepositService
      */
     public function deleteDeposit(Deposit $deposit): Pipeline
     {
-        $deposit->delete();
-        return Pipeline::success(message: 'Deposit deleted successfully');
+        try {
+            $amount = $deposit->amount;
+            $userId = $deposit->messUser->user_id;
+            $userName = $deposit->messUser->user->name;
+
+            $deposit->delete();
+
+            // Notify about deposit deletion
+            $this->notificationService->sendNotification([
+                'user_id' => $userId,
+                'title' => 'Deposit Deleted',
+                'body' => "A deposit of ৳{$amount} has been deleted from your account",
+                'type' => 'deposit_deleted',
+                'extra_data' => [
+                    'amount' => $amount,
+                    'date' => $deposit->date
+                ]
+            ]);
+
+            return Pipeline::success(message: 'Deposit deleted successfully');
+        } catch (\Exception $e) {
+            Log::error('Failed to delete deposit: ' . $e->getMessage());
+            return Pipeline::error(message: "Failed to delete deposit");
+        }
     }
 
     /**

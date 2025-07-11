@@ -22,6 +22,7 @@ This is the comprehensive API documentation for the My Dining application - a me
 - [💸 Other Cost Management](#other-cost-management)
 - [💵 Fund Management](#fund-management)
 - [📊 Summary and Reports](#summary-and-reports)
+- [🔔 Notifications](#notifications)
 - [📋 Enumerations](#enumerations)
 - [🔢 Status Codes](#status-codes)
 - [❌ Error Handling](#error-handling)
@@ -117,6 +118,12 @@ This is the comprehensive API documentation for the My Dining application - a me
 - [Get Month Summary](#get-month-summary-1) - `GET /api/summary/months/{type}`
 - [Get User Summary](#get-user-summary) - `GET /api/summary/months/user/{type}`
 
+#### 🔔 Notifications
+- [List Notifications](#list-notifications) - `GET /api/notifications`
+- [Mark Notification as Read](#mark-notification-as-read) - `POST /api/notifications/{notification}/read`
+- [Mark All Notifications as Read](#mark-all-notifications-as-read) - `POST /api/notifications/read-all`
+- [Update FCM Token](#update-fcm-token) - `POST /api/notifications/fcm-token`
+
 ## Documentation Index
 
 ### Core Documentation
@@ -165,6 +172,106 @@ All API responses follow a consistent structure:
     "errors": {
         "field_name": ["validation error messages"]
     }
+}
+```
+
+## Notifications
+
+### List Notifications
+List notifications for the authenticated user
+
+```http
+GET /api/notifications
+```
+
+**Query Parameters**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| type | string | (Optional) Filter by notification type |
+| unread_only | boolean | (Optional) Show only unread notifications |
+| per_page | integer | (Optional) Number of notifications per page (default: 15) |
+
+**Response**
+```json
+{
+    "status": "success",
+    "data": {
+        "notifications": [
+            {
+                "id": 1,
+                "user_id": 1,
+                "title": "Notification Title",
+                "body": "Notification message",
+                "type": "notification_type",
+                "data": {},
+                "read_at": null,
+                "created_at": "2024-01-16T12:00:00Z",
+                "updated_at": "2024-01-16T12:00:00Z"
+            }
+        ],
+        "pagination": {
+            "current_page": 1,
+            "total_pages": 1,
+            "total_items": 1
+        }
+    }
+}
+```
+
+### Mark Notification as Read
+Mark a specific notification as read
+
+```http
+POST /api/notifications/{notification}/read
+```
+
+**URL Parameters**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| notification | integer | The ID of the notification |
+
+**Response**
+```json
+{
+    "status": "success",
+    "message": "Notification marked as read"
+}
+```
+
+### Mark All Notifications as Read
+Mark all notifications for the authenticated user as read
+
+```http
+POST /api/notifications/read-all
+```
+
+**Response**
+```json
+{
+    "status": "success",
+    "message": "All notifications marked as read"
+}
+```
+
+### Update FCM Token
+Update the FCM token for the authenticated user
+
+```http
+POST /api/notifications/fcm-token
+```
+
+**Request Body**
+```json
+{
+    "token": "your_fcm_token"
+}
+```
+
+**Response**
+```json
+{
+    "status": "success",
+    "message": "FCM token updated successfully"
 }
 ```
 
@@ -1721,113 +1828,6 @@ Same as sign-up endpoint
             "product": "Vegetables and Rice",
             "purchase_type": "grocery",
             "status": 0,
-            "deposit_request": false
-        }
-    ]
-}
-```
-
-### Get Purchase Request Details
-**Endpoint**: `GET /api/purchase-request/{request_id}`
-**Access**: Protected (requires active month and mess user status)
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Purchase request retrieved successfully",
-    "data": {
-        "purchase_request": {
-            "id": 1,
-            "mess_user": {
-                "id": 1,
-                "user": {
-                    "name": "John Doe"
-                }
-            },
-            "date": "2025-01-15",
-            "price": 250.75,
-            "product": "Vegetables and Rice",
-            "product_json": [
-                {"item": "Rice", "quantity": "5kg"},
-                {"item": "Vegetables", "quantity": "2kg"}
-            ],
-            "purchase_type": "grocery",
-            "status": 0,
-            "deposit_request": false,
-            "comment": "Weekly grocery shopping"
-        }
-    }
-}
-```
-
-## Other Cost Management
-
-### Add Other Cost
-**Endpoint**: `POST /api/other-cost/add`
-**Access**: Protected (requires active month)
-
-#### Request Body
-```json
-{
-    "mess_user_id": 1,
-    "date": "2025-01-15",
-    "price": 150.00,
-    "product": "Gas bill"
-}
-```
-
-#### Validation Rules
-- `mess_user_id`: required, numeric, must exist in current mess and be initiated
-- `date`: required, date
-- `price`: required, numeric, min 0
-- `product`: required, string, max 255 characters
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Other cost added successfully",
-    "data": {
-        "other_cost": {
-            "id": 1,
-            "mess_user_id": 1,
-            "date": "2025-01-15",
-            "price": 150.00,
-            "product": "Gas bill"
-        }
-    }
-}
-```
-
-### Update Other Cost
-**Endpoint**: `PUT /api/other-cost/{cost_id}/update`
-**Access**: Protected (requires active month)
-
-#### Request Body
-```json
-{
-    "date": "2025-01-16",
-    "price": 175.00,
-    "product": "Gas and electricity bill"
-}
-```
-
-#### Validation Rules
-- `date`: sometimes, date
-- `price`: sometimes, numeric, min 0
-- `product`: sometimes, string
-
-#### Response
-```json
-{
-    "success": true,
-    "message": "Other cost updated successfully",
-    "data": {
-        "other_cost": {
-            "id": 1,
-            "date": "2025-01-16",
-            "price": 175.00,
             "product": "Gas and electricity bill"
         }
     }

@@ -12,6 +12,13 @@ use Illuminate\Support\Facades\DB;
 
 class MealRequestService
 {
+    protected NotificationService $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     /**
      * Create a new meal request.
      *
@@ -21,6 +28,10 @@ class MealRequestService
     public function createMealRequest(array $data): Pipeline
     {
         $mealRequest = MealRequest::updateOrCreate(["date"=> $data["date"]], $data);
+
+        // Notify admins about new meal request
+        $this->notifyAdmins($mealRequest, 'new_meal_request');
+
         return Pipeline::success(data: $mealRequest, message: "Meal request created successfully");
     }
 
@@ -45,6 +56,10 @@ class MealRequestService
         }
 
         $mealRequest->update($data);
+
+        // Notify admins about updated meal request
+        $this->notifyAdmins($mealRequest, 'meal_request_updated');
+
         return Pipeline::success(data: $mealRequest->fresh(), message: "Meal request updated successfully");
     }
 
@@ -91,6 +106,10 @@ class MealRequestService
         }
 
         $mealRequest->update(['status' => MealRequestStatus::CANCELLED]);
+
+        // Notify admins about cancelled meal request
+        $this->notifyAdmins($mealRequest, 'meal_request_cancelled');
+
         return Pipeline::success(data: $mealRequest->fresh(), message: "Meal request cancelled successfully");
     }
 
@@ -129,6 +148,19 @@ class MealRequestService
                 'approved_at' => Carbon::now(),
             ]);
 
+            // Notify user about approved meal request
+            $this->notificationService->sendNotification([
+                'user_id' => $mealRequest->messUser->user_id,
+                'title' => 'Meal Request Approved',
+                'body' => "Your meal request for {$mealRequest->date} has been approved" . ($comment ? ": $comment" : ""),
+                'type' => 'meal_request_approved',
+                'extra_data' => [
+                    'meal_request_id' => $mealRequest->id,
+                    'meal_id' => $meal->id,
+                    'date' => $mealRequest->date
+                ]
+            ]);
+
             DB::commit();
             return Pipeline::success(
                 data: ['meal' => $meal, 'meal_request' => $mealRequest->fresh()],
@@ -145,10 +177,10 @@ class MealRequestService
      * Reject a meal request.
      *
      * @param MealRequest $mealRequest
-     * @param string|null $reason
+     * @param string $reason
      * @return Pipeline
      */
-    public function rejectMealRequest(MealRequest $mealRequest, ?string $reason = null): Pipeline
+    public function rejectMealRequest(MealRequest $mealRequest, string $reason): Pipeline
     {
         // Check if the meal request is still pending
         if ($mealRequest->status !== MealRequestStatus::PENDING) {
@@ -160,6 +192,19 @@ class MealRequestService
             'rejected_reason' => $reason,
             'approved_by' => app()->getMessUser()->id,
             'approved_at' => Carbon::now(),
+        ]);
+
+        // Notify user about rejected meal request
+        $this->notificationService->sendNotification([
+            'user_id' => $mealRequest->messUser->user_id,
+            'title' => 'Meal Request Rejected',
+            'body' => "Your meal request for {$mealRequest->date} has been rejected: $reason",
+            'type' => 'meal_request_rejected',
+            'extra_data' => [
+                'meal_request_id' => $mealRequest->id,
+                'date' => $mealRequest->date,
+                'reason' => $reason
+            ]
         ]);
 
         return Pipeline::success(data: $mealRequest->fresh(), message: "Meal request rejected successfully");
@@ -239,5 +284,43 @@ class MealRequestService
     public function getPendingMealRequests(Month $month): Pipeline
     {
         return $this->listMealRequests($month, ['status' => MealRequestStatus::PENDING]);
+    }
+
+    /**
+     * Notify admins about meal request updates.
+     *
+     * @param MealRequest $mealRequest
+     * @param string $type
+     * @return void
+     */
+    protected function notifyAdmins(MealRequest $mealRequest, string $type): void
+    {
+        $messUser = $mealRequest->messUser;
+        $title = match($type) {
+            'new_meal_request' => 'New Meal Request',
+            'meal_request_updated' => 'Meal Request Updated',
+            'meal_request_cancelled' => 'Meal Request Cancelled',
+            default => 'Meal Request Update'
+        };
+
+        $body = match($type) {
+            'new_meal_request' => "{$messUser->user->name} requested meals for {$mealRequest->date}",
+            'meal_request_updated' => "{$messUser->user->name} updated their meal request for {$mealRequest->date}",
+            'meal_request_cancelled' => "{$messUser->user->name} cancelled their meal request for {$mealRequest->date}",
+            default => "Meal request update from {$messUser->user->name}"
+        };
+
+        $this->notificationService->sendNotification([
+            'title' => $title,
+            'body' => $body,
+            'type' => $type,
+            'is_broadcast' => true,
+            'extra_data' => [
+                'meal_request_id' => $mealRequest->id,
+                'date' => $mealRequest->date,
+                'user_id' => $messUser->user_id,
+                'user_name' => $messUser->user->name
+            ]
+        ]);
     }
 }

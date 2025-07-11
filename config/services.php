@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'firebase' => [
+        'server_key' => env('FIREBASE_SERVER_KEY'),
+        'api_key' => env('FIREBASE_API_KEY'),
+        'project_id' => env('FIREBASE_PROJECT_ID'),
+        'messaging_sender_id' => env('FIREBASE_MESSAGING_SENDER_ID'),
+        'app_id' => env('FIREBASE_APP_ID'),
+    ],
+
 ];
