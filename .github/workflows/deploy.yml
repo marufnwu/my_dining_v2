@@ -23,7 +23,7 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
-      # - name: Run Laravel Tests
+      # - name: Run Laravel Tests.
         # run: php artisan test
 
       - name: Deploy to Server via SSH
