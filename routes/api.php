@@ -5,7 +5,9 @@ use App\Constants\MessUserRole;
 use App\Http\Controllers\Api\DepositController;
 use App\Http\Controllers\Api\FundController;
 use App\Http\Controllers\Api\MealController;
+use App\Http\Controllers\Api\MealRequestController;
 use App\Http\Controllers\Api\MessController;
+use App\Http\Controllers\Api\MessManagementController;
 use App\Http\Controllers\Api\MessMemberController;
 use App\Http\Controllers\Api\MonthController;
 use App\Http\Controllers\Api\OtherCostController;
@@ -62,6 +64,25 @@ Route:: as('api.')->group(function () {
                 Route::post("create", "createMonth");
                 Route::get("list", "list");
                 Route::put("change-status", "changeStatus");
+
+                // Month details and information
+                Route::get("show/{monthId?}", "show");
+                Route::get("summary/{monthId?}", "summary");
+
+                // Month management actions
+                Route::post("close", "closeMonth");
+                Route::post("{monthId}/duplicate", "duplicate");
+
+                // Analytics and reporting
+                Route::get("compare", "compare");
+                Route::get("statistics", "statistics");
+                Route::get("export/{monthId?}", "export");
+                Route::get("timeline/{monthId?}", "timeline");
+
+                // Analysis features
+                Route::get("budget-analysis/{monthId?}", "budgetAnalysis");
+                Route::get("validate/{monthId?}", "validate");
+                Route::get("performance/{monthId?}", "performance");
             });
 
             Route::prefix("meal")->middleware("MonthChecker:false")->controller(MealController::class)->group(function () {
@@ -71,6 +92,22 @@ Route:: as('api.')->group(function () {
                 Route::get("list", "list");
                 Route::get("/user/{messUser}/by-date", action: "getUserMealByDate");
             });
+
+            Route::prefix("meal-request")
+                ->middleware(["MonthChecker:false", "mess.user:true"])
+                ->controller(MealRequestController::class)
+                ->group(function () {
+                    Route::post("add", "create");
+                    Route::put("{mealRequest}/update", "update");
+                    Route::delete("{mealRequest}/delete", "delete");
+                    Route::post("{mealRequest}/cancel", "cancel");
+                    Route::post("{mealRequest}/approve", "approve");
+                    Route::post("{mealRequest}/reject", "reject");
+                    Route::get("/", "list");
+                    Route::get("my-requests", "myRequests");
+                    Route::get("pending", "pending");
+                    Route::get("{mealRequest}", "show");
+                });
 
             Route::prefix("deposit")->middleware("MonthChecker:false")->controller(DepositController::class)->group(function () {
                 Route::post("add", "add");
@@ -115,21 +152,30 @@ Route:: as('api.')->group(function () {
                 Route::get("list", "list");
             });
 
-
             Route::prefix('mess')
                 ->controller(MessController::class)
                 ->group(function () {
                     Route::get('mess-user/{user?}', 'messUser')->name('mess.user');
                 });
 
-
+            // Mess Management routes (for users currently in a mess)
+            Route::prefix('mess-management')
+                ->controller(MessManagementController::class)
+                ->group(function () {
+                    Route::get('info', 'getCurrentMess');
+                    Route::post('leave', 'leaveMess');
+                    Route::get('incoming-requests', 'getMessJoinRequests');
+                    Route::post('incoming-requests/{messRequest}/accept', 'acceptJoinRequest');
+                    Route::post('incoming-requests/{messRequest}/reject', 'rejectJoinRequest');
+                    Route::post('close', 'closeMess');
+                });
 
             Route::prefix("role")->group(function () {
                 //Route::get("list", "list");
             });
 
             Route::prefix("summary")
-                ->middleware("MonthChecker:true")
+                ->middleware("MonthChecker:false")
                 ->controller(SummaryController::class)
                 ->group(function () {
                     Route::get('months/{type}', 'monthSummary')
@@ -172,9 +218,27 @@ Route:: as('api.')->group(function () {
                 Route::post('create', 'createMess')->name('mess.create');
             });
 
+        // Mess Management routes (for all authenticated users)
+        Route::prefix('mess-management')
+            ->controller(MessManagementController::class)
+            ->group(function () {
+                Route::get('available', 'getAvailableMesses');
+                Route::post('join-request', 'sendJoinRequest');
+                Route::get('join-requests', 'getUserJoinRequests');
+                Route::delete('join-requests/{messRequest}', 'cancelJoinRequest');
+            });
+
         // Authentication check route
         Route::prefix('auth')->group(function () {
             Route::get('check-login', [UserController::class, 'checkLogin'])->name('auth.check-login');
+        });
+
+        // Profile management routes
+        Route::prefix('profile')->controller(UserController::class)->group(function () {
+            Route::get('/', 'getProfile')->name('profile.show');
+            Route::put('/', 'updateProfile')->name('profile.update');
+            Route::post('avatar', 'uploadAvatar')->name('profile.avatar.upload');
+            Route::delete('avatar', 'removeAvatar')->name('profile.avatar.remove');
         });
     });
 });

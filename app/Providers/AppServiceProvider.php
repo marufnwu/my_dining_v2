@@ -3,10 +3,13 @@
 namespace App\Providers;
 
 use App\Console\Commands\FreshMigrateAndSeed;
+use App\Rules\ActiveMessUser;
+use App\Rules\UserInitiatedInCurrentMonth;
 use App\Services\FeatureService;
 use Illuminate\Support\ServiceProvider;
 use App\Models\Setting;
 use App\Observers\SettingObserver;
+use Illuminate\Support\Facades\Validator;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -27,5 +30,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Setting::observe(SettingObserver::class);
+
     }
 }

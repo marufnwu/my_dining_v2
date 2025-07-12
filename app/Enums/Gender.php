@@ -8,8 +8,8 @@ enum Gender : string
 {
     use EnumToArray;
 
-    case MALE = "Male";
-    case FEMALE = "Female";
-    case UNDEFINED = "Other";
+    case MALE = "male";
+    case FEMALE = "female";
+    case UNDEFINED = "other";
 
 }

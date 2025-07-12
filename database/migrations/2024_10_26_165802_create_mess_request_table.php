@@ -14,11 +14,12 @@ return new class extends Migration
         Schema::create('mess_requests', function (Blueprint $table) {
             $table->id();
             $table->string('user_name');
-            $table->integer('old_user_id');
-            $table->integer('new_user_id')->nullable();
+            $table->integer('user_id');
+            $table->integer('old_mess_user_id')->nullable();
+            $table->integer('new_mess_user_id')->nullable();
             $table->timestamp('request_date');
             $table->timestamp('accept_date')->nullable();
-            $table->integer('old_mess_id');
+            $table->integer('old_mess_id')->nullable();
             $table->integer('new_mess_id');
             $table->integer('accept_by')->nullable();
             $table->integer('status');

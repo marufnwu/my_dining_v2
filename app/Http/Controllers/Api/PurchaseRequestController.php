@@ -103,6 +103,7 @@ class PurchaseRequestController extends Controller
             "product" => "sometimes|string|max:255",
             "product_json" => "sometimes|json|nullable",
             "purchase_type" => ["required", new \Illuminate\Validation\Rules\Enum(PurchaseType::class)],
+            "status" => ["required", new \Illuminate\Validation\Rules\Enum(PurchaseRequestStatus::class)],
             "deposit_request" => "sometimes|boolean",
             "comment" => "sometimes|string|nullable",
         ]);
@@ -127,6 +128,7 @@ class PurchaseRequestController extends Controller
         $data = $request->validate([
             "status" => "required|integer",
             "comment" => "sometimes|string|nullable",
+            "is_deposit" => "sometimes|boolean|nullable",
         ]);
 
         $pipeline = $this->purchaseRequestService->updateStatus($purchaseRequest, $data);

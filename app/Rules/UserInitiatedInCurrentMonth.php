@@ -21,7 +21,7 @@ class UserInitiatedInCurrentMonth implements ValidationRule
 
         // If the user is not initiated, call the $fail callback with an error message
         if (!$isInitiated) {
-            $fail('The :attribute must be a user initiated in the current month.');
+            $fail('The mess user must be initiated in the current month.');
         }
     }
 }

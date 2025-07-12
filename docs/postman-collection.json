@@ -1,0 +1,1504 @@
+{
+	"info": {
+		"_postman_id": "my-dining-api-collection",
+		"name": "My Dining API",
+		"description": "Complete API collection for My Dining application - a mess management system",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{auth_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://md.local/api",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Sign Up",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"country_id\": 1,\n    \"phone\": \"1234567890\",\n    \"city\": \"New York\",\n    \"gender\": \"Male\",\n    \"password\": \"password123\",\n    \"password_confirmation\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/sign-up",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "sign-up"]
+						}
+					}
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data.token) {",
+									"        pm.collectionVariables.set('auth_token', response.data.token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "Check Login",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/check-login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "check-login"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Country",
+			"item": [
+				{
+					"name": "Get Countries List",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/country/list",
+							"host": ["{{base_url}}"],
+							"path": ["country", "list"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Profile Management",
+			"item": [
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/profile",
+							"host": ["{{base_url}}"],
+							"path": ["profile"]
+						}
+					}
+				},
+				{
+					"name": "Update Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"John Smith\",\n    \"city\": \"Los Angeles\",\n    \"gender\": \"male\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/profile",
+							"host": ["{{base_url}}"],
+							"path": ["profile"]
+						}
+					}
+				},
+				{
+					"name": "Upload Avatar",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "avatar",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/profile/avatar",
+							"host": ["{{base_url}}"],
+							"path": ["profile", "avatar"]
+						}
+					}
+				},
+				{
+					"name": "Remove Avatar",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/profile/avatar",
+							"host": ["{{base_url}}"],
+							"path": ["profile", "avatar"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Mess Management",
+			"item": [
+				{
+					"name": "Create Mess",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"mess_name\": \"My Dining Mess\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/mess/create",
+							"host": ["{{base_url}}"],
+							"path": ["mess", "create"]
+						}
+					}
+				},
+				{
+					"name": "Get Mess User Info",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/mess/mess-user",
+							"host": ["{{base_url}}"],
+							"path": ["mess", "mess-user"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Mess Members",
+			"item": [
+				{
+					"name": "List Mess Members",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/member/list",
+							"host": ["{{base_url}}"],
+							"path": ["member", "list"]
+						}
+					}
+				},
+				{
+					"name": "Create User and Add to Mess",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Jane Doe\",\n    \"email\": \"jane@example.com\",\n    \"country_id\": 1,\n    \"phone\": \"1234567891\",\n    \"city\": \"New York\",\n    \"gender\": \"Female\",\n    \"password\": \"password123\",\n    \"password_confirmation\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/member/create-and-add",
+							"host": ["{{base_url}}"],
+							"path": ["member", "create-and-add"]
+						}
+					}
+				},
+				{
+					"name": "Initiate User for Month",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/member/inititate/add/1",
+							"host": ["{{base_url}}"],
+							"path": ["member", "inititate", "add", "1"]
+						}
+					}
+				},
+				{
+					"name": "Initiate All Users",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/member/inititate/add/all",
+							"host": ["{{base_url}}"],
+							"path": ["member", "inititate", "add", "all"]
+						}
+					}
+				},
+				{
+					"name": "Get Initiated Users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/member/initiated/true",
+							"host": ["{{base_url}}"],
+							"path": ["member", "initiated", "true"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Month Management",
+			"item": [
+				{
+					"name": "Create Automatic Month",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"January 2025\",\n    \"type\": \"automatic\",\n    \"month\": 1,\n    \"year\": 2025,\n    \"force_close_other\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/month/create",
+							"host": ["{{base_url}}"],
+							"path": ["month", "create"]
+						}
+					}
+				},
+				{
+					"name": "Create Manual Month",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Custom Period\",\n    \"type\": \"manual\",\n    \"start_at\": \"2025-01-15\",\n    \"force_close_other\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/month/create",
+							"host": ["{{base_url}}"],
+							"path": ["month", "create"]
+						}
+					}
+				},
+				{
+					"name": "List Months",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/month/list",
+							"host": ["{{base_url}}"],
+							"path": ["month", "list"]
+						}
+					}
+				},
+				{
+					"name": "Change Month Status",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/month/change-status",
+							"host": ["{{base_url}}"],
+							"path": ["month", "change-status"]
+						}
+					}
+				},
+				{
+					"name": "Get Month Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/month/show/1",
+							"host": ["{{base_url}}"],
+							"path": ["month", "show", "1"]
+						}
+					}
+				},
+				{
+					"name": "Get Current Month Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/month/show",
+							"host": ["{{base_url}}"],
+							"path": ["month", "show"]
+						}
+					}
+				},
+				{
+					"name": "Get Month Summary",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/month/summary/1?include_user_details=true&include_daily_breakdown=true",
+							"host": ["{{base_url}}"],
+							"path": ["month", "summary", "1"],
+							"query": [
+								{
+									"key": "include_user_details",
+									"value": "true"
+								},
+								{
+									"key": "include_daily_breakdown",
+									"value": "true"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Close Month",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"create_next_month\": true,\n    \"next_month_type\": \"automatic\",\n    \"next_month_name\": \"February 2025\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/month/close",
+							"host": ["{{base_url}}"],
+							"path": ["month", "close"]
+						}
+					}
+				},
+				{
+					"name": "Duplicate Month",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"March 2025\",\n    \"type\": \"automatic\",\n    \"month\": 3,\n    \"year\": 2025,\n    \"copy_initiated_users\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/month/1/duplicate",
+							"host": ["{{base_url}}"],
+							"path": ["month", "1", "duplicate"]
+						}
+					}
+				},
+				{
+					"name": "Compare Months",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/month/compare?month1_id=1&month2_id=2&comparison_type=all",
+							"host": ["{{base_url}}"],
+							"path": ["month", "compare"],
+							"query": [
+								{
+									"key": "month1_id",
+									"value": "1"
+								},
+								{
+									"key": "month2_id",
+									"value": "2"
+								},
+								{
+									"key": "comparison_type",
+									"value": "all"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Month Statistics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/month/statistics?period=last_6_months&metrics[]=total_deposits&metrics[]=total_expenses&metrics[]=total_meals",
+							"host": ["{{base_url}}"],
+							"path": ["month", "statistics"],
+							"query": [
+								{
+									"key": "period",
+									"value": "last_6_months"
+								},
+								{
+									"key": "metrics[]",
+									"value": "total_deposits"
+								},
+								{
+									"key": "metrics[]",
+									"value": "total_expenses"
+								},
+								{
+									"key": "metrics[]",
+									"value": "total_meals"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Export Month Data",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/month/export/1?format=json&include_details=true&sections[]=meals&sections[]=deposits&sections[]=summary",
+							"host": ["{{base_url}}"],
+							"path": ["month", "export", "1"],
+							"query": [
+								{
+									"key": "format",
+									"value": "json"
+								},
+								{
+									"key": "include_details",
+									"value": "true"
+								},
+								{
+									"key": "sections[]",
+									"value": "meals"
+								},
+								{
+									"key": "sections[]",
+									"value": "deposits"
+								},
+								{
+									"key": "sections[]",
+									"value": "summary"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Month Timeline",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/month/timeline/1?start_date=2025-01-01&end_date=2025-01-31&activity_types[]=meals&activity_types[]=deposits",
+							"host": ["{{base_url}}"],
+							"path": ["month", "timeline", "1"],
+							"query": [
+								{
+									"key": "start_date",
+									"value": "2025-01-01"
+								},
+								{
+									"key": "end_date",
+									"value": "2025-01-31"
+								},
+								{
+									"key": "activity_types[]",
+									"value": "meals"
+								},
+								{
+									"key": "activity_types[]",
+									"value": "deposits"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Budget Analysis",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/month/budget-analysis/1?budget_amount=50000&category_budgets[groceries]=30000&category_budgets[utilities]=10000",
+							"host": ["{{base_url}}"],
+							"path": ["month", "budget-analysis", "1"],
+							"query": [
+								{
+									"key": "budget_amount",
+									"value": "50000"
+								},
+								{
+									"key": "category_budgets[groceries]",
+									"value": "30000"
+								},
+								{
+									"key": "category_budgets[utilities]",
+									"value": "10000"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Validate Month Data",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/month/validate/1",
+							"host": ["{{base_url}}"],
+							"path": ["month", "validate", "1"]
+						}
+					}
+				},
+				{
+					"name": "Get Performance Metrics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/month/performance/1?compare_with_previous=true&include_trends=true",
+							"host": ["{{base_url}}"],
+							"path": ["month", "performance", "1"],
+							"query": [
+								{
+									"key": "compare_with_previous",
+									"value": "true"
+								},
+								{
+									"key": "include_trends",
+									"value": "true"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Meal Management",
+			"item": [
+				{
+					"name": "Add Meal",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"mess_user_id\": 1,\n    \"date\": \"2025-01-15\",\n    \"breakfast\": 1,\n    \"lunch\": 1,\n    \"dinner\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/meal/add",
+							"host": ["{{base_url}}"],
+							"path": ["meal", "add"]
+						}
+					}
+				},
+				{
+					"name": "Update Meal",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"breakfast\": 0,\n    \"lunch\": 1,\n    \"dinner\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/meal/1/update",
+							"host": ["{{base_url}}"],
+							"path": ["meal", "1", "update"]
+						}
+					}
+				},
+				{
+					"name": "Delete Meal",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/meal/1/delete",
+							"host": ["{{base_url}}"],
+							"path": ["meal", "1", "delete"]
+						}
+					}
+				},
+				{
+					"name": "List Meals",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/meal/list",
+							"host": ["{{base_url}}"],
+							"path": ["meal", "list"]
+						}
+					}
+				},
+				{
+					"name": "Get User Meal by Date",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/meal/user/1/by-date?date=2025-01-15",
+							"host": ["{{base_url}}"],
+							"path": ["meal", "user", "1", "by-date"],
+							"query": [
+								{
+									"key": "date",
+									"value": "2025-01-15"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Deposit Management",
+			"item": [
+				{
+					"name": "Add Deposit",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"mess_user_id\": 1,\n    \"date\": \"2025-01-15\",\n    \"amount\": 1000.50\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/deposit/add",
+							"host": ["{{base_url}}"],
+							"path": ["deposit", "add"]
+						}
+					}
+				},
+				{
+					"name": "Update Deposit",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"date\": \"2025-01-16\",\n    \"amount\": 1200.00\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/deposit/1/update",
+							"host": ["{{base_url}}"],
+							"path": ["deposit", "1", "update"]
+						}
+					}
+				},
+				{
+					"name": "Delete Deposit",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/deposit/1/delete",
+							"host": ["{{base_url}}"],
+							"path": ["deposit", "1", "delete"]
+						}
+					}
+				},
+				{
+					"name": "List Deposits",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/deposit/list",
+							"host": ["{{base_url}}"],
+							"path": ["deposit", "list"]
+						}
+					}
+				},
+				{
+					"name": "Get Deposit History",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/deposit/history/1",
+							"host": ["{{base_url}}"],
+							"path": ["deposit", "history", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Purchase Management",
+			"item": [
+				{
+					"name": "Add Purchase",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"mess_user_id\": 1,\n    \"date\": \"2025-01-15\",\n    \"price\": 250.75,\n    \"product\": \"Vegetables and Rice\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/purchase/add",
+							"host": ["{{base_url}}"],
+							"path": ["purchase", "add"]
+						}
+					}
+				},
+				{
+					"name": "Update Purchase",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"date\": \"2025-01-16\",\n    \"price\": 300.00,\n    \"product\": \"Vegetables, Rice and Fish\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/purchase/1/update",
+							"host": ["{{base_url}}"],
+							"path": ["purchase", "1", "update"]
+						}
+					}
+				},
+				{
+					"name": "Delete Purchase",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/purchase/1/delete",
+							"host": ["{{base_url}}"],
+							"path": ["purchase", "1", "delete"]
+						}
+					}
+				},
+				{
+					"name": "List Purchases",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/purchase/list",
+							"host": ["{{base_url}}"],
+							"path": ["purchase", "list"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Purchase Request Management",
+			"item": [
+				{
+					"name": "Create Purchase Request",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"date\": \"2025-01-15\",\n    \"price\": 250.75,\n    \"product\": \"Vegetables and Rice\",\n    \"product_json\": \"[{\\\"item\\\": \\\"Rice\\\", \\\"quantity\\\": \\\"5kg\\\"}, {\\\"item\\\": \\\"Vegetables\\\", \\\"quantity\\\": \\\"2kg\\\"}]\",\n    \"purchase_type\": \"meal\",\n    \"deposit_request\": false,\n    \"comment\": \"Weekly grocery shopping\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/purchase-request/add",
+							"host": ["{{base_url}}"],
+							"path": ["purchase-request", "add"]
+						}
+					}
+				},
+				{
+					"name": "Update Purchase Request",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"date\": \"2025-01-16\",\n    \"price\": 300.00,\n    \"product\": \"Vegetables, Rice and Fish\",\n    \"purchase_type\": \"meal\",\n    \"status\": 1,\n    \"comment\": \"Updated grocery shopping list\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/purchase-request/1/update",
+							"host": ["{{base_url}}"],
+							"path": ["purchase-request", "1", "update"]
+						}
+					}
+				},
+				{
+					"name": "Update Purchase Request Status",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": 1,\n    \"comment\": \"Approved for purchase\",\n    \"is_deposit\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/purchase-request/1/update/status",
+							"host": ["{{base_url}}"],
+							"path": ["purchase-request", "1", "update", "status"]
+						}
+					}
+				},
+				{
+					"name": "Delete Purchase Request",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/purchase-request/1/delete",
+							"host": ["{{base_url}}"],
+							"path": ["purchase-request", "1", "delete"]
+						}
+					}
+				},
+				{
+					"name": "List Purchase Requests",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/purchase-request/?status=0&purchase_type=meal",
+							"host": ["{{base_url}}"],
+							"path": ["purchase-request", ""],
+							"query": [
+								{
+									"key": "status",
+									"value": "0"
+								},
+								{
+									"key": "purchase_type",
+									"value": "meal"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Other Cost Management",
+			"item": [
+				{
+					"name": "Add Other Cost",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"mess_user_id\": 1,\n    \"date\": \"2025-01-15\",\n    \"price\": 150.00,\n    \"product\": \"Gas bill\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/other-cost/add",
+							"host": ["{{base_url}}"],
+							"path": ["other-cost", "add"]
+						}
+					}
+				},
+				{
+					"name": "Update Other Cost",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"date\": \"2025-01-16\",\n    \"price\": 175.00,\n    \"product\": \"Gas and electricity bill\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/other-cost/1/update",
+							"host": ["{{base_url}}"],
+							"path": ["other-cost", "1", "update"]
+						}
+					}
+				},
+				{
+					"name": "Delete Other Cost",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/other-cost/1/delete",
+							"host": ["{{base_url}}"],
+							"path": ["other-cost", "1", "delete"]
+						}
+					}
+				},
+				{
+					"name": "List Other Costs",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/other-cost/list",
+							"host": ["{{base_url}}"],
+							"path": ["other-cost", "list"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Fund Management",
+			"item": [
+				{
+					"name": "Add Fund",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"date\": \"2025-01-15\",\n    \"amount\": 500.00,\n    \"comment\": \"Emergency fund from external source\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/fund/add",
+							"host": ["{{base_url}}"],
+							"path": ["fund", "add"]
+						}
+					}
+				},
+				{
+					"name": "Update Fund",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"date\": \"2025-01-16\",\n    \"amount\": 600.00,\n    \"comment\": \"Updated emergency fund amount\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/fund/1/update",
+							"host": ["{{base_url}}"],
+							"path": ["fund", "1", "update"]
+						}
+					}
+				},
+				{
+					"name": "Delete Fund",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/fund/1/delete",
+							"host": ["{{base_url}}"],
+							"path": ["fund", "1", "delete"]
+						}
+					}
+				},
+				{
+					"name": "List Funds",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/fund/list",
+							"host": ["{{base_url}}"],
+							"path": ["fund", "list"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Summary and Reports",
+			"item": [
+				{
+					"name": "Get Month Summary (Minimal)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/summary/months/minimal",
+							"host": ["{{base_url}}"],
+							"path": ["summary", "months", "minimal"]
+						}
+					}
+				},
+				{
+					"name": "Get Month Summary (Details)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/summary/months/details",
+							"host": ["{{base_url}}"],
+							"path": ["summary", "months", "details"]
+						}
+					}
+				},
+				{
+					"name": "Get User Summary (Minimal)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/summary/months/user/minimal?mess_user_id=1",
+							"host": ["{{base_url}}"],
+							"path": ["summary", "months", "user", "minimal"],
+							"query": [
+								{
+									"key": "mess_user_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get User Summary (Details)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/summary/months/user/details?mess_user_id=1",
+							"host": ["{{base_url}}"],
+							"path": ["summary", "months", "user", "details"],
+							"query": [
+								{
+									"key": "mess_user_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				}
+			]
+		}
+	]
+}

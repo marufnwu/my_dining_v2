@@ -95,6 +95,15 @@ class Mess extends Model
     }
 
     /**
+     * Determine if the mess is accepting new members
+     *
+     * @return bool
+     */
+    public function getIsAcceptingMembersAttribute(): bool
+    {
+        return $this->status === MessStatus::ACTIVE;
+    }
+    /**
      * Get the subscriptions for the mess.
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
