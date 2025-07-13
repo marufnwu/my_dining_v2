@@ -229,4 +229,29 @@ class Mess extends Model
             ->where('status', Transaction::STATUS_COMPLETED)
             ->sum('amount');
     }
+
+    public function getFeatureLimit(string $featureName): int
+    {
+        $limits = [
+            FeatureList::MEMBER_LIMIT => $this->free_member_limit ?? 5,
+            FeatureList::MESS_REPORT_GENERATE => $this->free_report_limit ?? 2,
+            FeatureList::MEAL_ADD_NOTIFICATION => $this->free_notification_limit ?? 10,
+        ];
+
+        return $limits[$featureName] ?? 0;
+    }
+
+    public function getFeatureUsage(string $featureName): int
+    {
+        switch ($featureName) {
+            case FeatureList::MEMBER_LIMIT:
+                return $this->messUsers()->count();
+            case FeatureList::MESS_REPORT_GENERATE:
+                return $this->reports()->count(); // Assuming you have a reports relationship
+            case FeatureList::MEAL_ADD_NOTIFICATION:
+                return $this->notifications()->count(); // Assuming you have a notifications relationship
+            default:
+                return 0;
+        }
+    }
 }

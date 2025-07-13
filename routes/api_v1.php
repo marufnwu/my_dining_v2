@@ -51,3 +51,15 @@ Route::prefix('subscriptions')->group(function () {
     Route::post('resume', [SubscriptionController::class, 'resume']);
 });
 
+// Feature management routes
+Route::prefix('features')->group(function () {
+    Route::get('/', [FeatureController::class, 'index']);
+    Route::get('/{id}', [FeatureController::class, 'show']);
+    Route::post('/', [FeatureController::class, 'store']);
+    Route::put('/{feature}', [FeatureController::class, 'update']);
+    Route::delete('/{feature}', [FeatureController::class, 'destroy']);
+    Route::get('/category/{category}', [FeatureController::class, 'byCategory']);
+    Route::get('/reset-periods', [FeatureController::class, 'resetPeriods']);
+    Route::get('/categories', [FeatureController::class, 'categories']);
+});
+

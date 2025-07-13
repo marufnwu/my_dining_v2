@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 
+Route:: as('test.')->prefix('test')->group(base_path('routes/test.php'));
+
+
 Route::get('/', function () {
     return view('welcome');
 });
