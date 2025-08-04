@@ -35,9 +35,9 @@ class FeatureService
     {
         $subscription = $mess->subscription;
 
-        // If no subscription, use free tier limits
+        // If no subscription, use default plan
         if (!$subscription) {
-            return $this->checkFreeFeatureAccess($mess, $featureName);
+            return $this->checkDefaultPlanFeatureAccess($mess, $featureName);
         }
 
         // Check with subscription
@@ -45,37 +45,44 @@ class FeatureService
     }
 
     /**
-     * Check free tier feature access
+     * Check default plan feature access
      */
-    private function checkFreeFeatureAccess(Mess $mess, string $featureName): Pipeline
+    private function checkDefaultPlanFeatureAccess(Mess $mess, string $featureName): Pipeline
     {
-        $freeLimits = FeatureConfig::getFreeLimits();
+        $defaultPlan = Plan::getDefaultPlan();
 
-        if (!isset($freeLimits[$featureName])) {
-            return Pipeline::error("Feature not available in free tier", 403);
+        if (!$defaultPlan) {
+            return Pipeline::error("Default plan not found", 500);
         }
 
-        $limit = $freeLimits[$featureName]['limit'];
-        $resetPeriod = $freeLimits[$featureName]['reset_period'];
-        $used = $this->getFreeFeatureUsage($mess, $featureName, $resetPeriod);
+        $feature = $defaultPlan->features()->where('name', $featureName)->first();
 
-        if ($used >= $limit) {
-            $resetMessage = $this->getResetMessage($resetPeriod);
-            return Pipeline::error("Free tier limit reached. {$resetMessage}", 403);
+        if (!$feature) {
+            return Pipeline::error("Feature not available in default plan", 403);
+        }
+
+        if (!$feature->is_countable) {
+            return Pipeline::success([], "Feature available in default plan");
+        }
+
+        $used = $this->getDefaultPlanFeatureUsage($mess, $featureName);
+
+        if ($used >= $feature->usage_limit) {
+            return Pipeline::error("Default plan limit reached. Upgrade for more features.", 403);
         }
 
         return Pipeline::success([
             'used' => $used,
-            'limit' => $limit,
-            'remaining' => $limit - $used,
-            'reset_period' => $resetPeriod
-        ], "Feature available in free tier");
+            'limit' => $feature->usage_limit,
+            'remaining' => $feature->usage_limit - $used,
+            'reset_period' => $feature->reset_period ?? 'monthly'
+        ], "Feature available in default plan");
     }
 
     /**
-     * Get free tier feature usage with reset logic
+     * Get default plan feature usage
      */
-    private function getFreeFeatureUsage(Mess $mess, string $featureName, string $resetPeriod): int
+    private function getDefaultPlanFeatureUsage(Mess $mess, string $featureName): int
     {
         switch ($featureName) {
             case FeatureList::MEMBER_LIMIT:
@@ -207,9 +214,9 @@ class FeatureService
     {
         $subscription = $mess->subscription;
 
-        // If no subscription, handle free tier increment
+        // If no subscription, handle default plan increment
         if (!$subscription) {
-            return $this->incrementFreeFeatureUsage($mess, $featureName);
+            return $this->incrementDefaultPlanFeatureUsage($mess, $featureName);
         }
 
         if (!$subscription->isActiveOrInGrace()) {
@@ -261,35 +268,42 @@ class FeatureService
     }
 
     /**
-     * Increment free tier feature usage
+     * Increment default plan feature usage
      */
-    private function incrementFreeFeatureUsage(Mess $mess, string $featureName): Pipeline
+    private function incrementDefaultPlanFeatureUsage(Mess $mess, string $featureName): Pipeline
     {
-        // For free tier features, we don't actually increment anything
+        // For default plan features, we don't actually increment anything
         // The usage is calculated dynamically (like member count)
         // This method exists for consistency with the subscription flow
 
-        $freeLimits = FeatureConfig::getFreeLimits();
+        $defaultPlan = Plan::getDefaultPlan();
 
-        if (!isset($freeLimits[$featureName])) {
-            return Pipeline::error("Feature not available in free tier", 403);
+        if (!$defaultPlan) {
+            return Pipeline::error("Default plan not found", 500);
         }
 
-        $limit = $freeLimits[$featureName]['limit'];
-        $resetPeriod = $freeLimits[$featureName]['reset_period'];
-        $used = $this->getFreeFeatureUsage($mess, $featureName, $resetPeriod);
+        $feature = $defaultPlan->features()->where('name', $featureName)->first();
 
-        if ($used >= $limit) {
-            $resetMessage = $this->getResetMessage($resetPeriod);
-            return Pipeline::error("Free tier limit reached. {$resetMessage}", 403);
+        if (!$feature) {
+            return Pipeline::error("Feature not available in default plan", 403);
+        }
+
+        if (!$feature->is_countable) {
+            return Pipeline::success([], "Feature usage recorded for default plan");
+        }
+
+        $used = $this->getDefaultPlanFeatureUsage($mess, $featureName);
+
+        if ($used >= $feature->usage_limit) {
+            return Pipeline::error("Default plan limit reached. Upgrade for more features.", 403);
         }
 
         return Pipeline::success([
             'used' => $used,
-            'limit' => $limit,
-            'remaining' => $limit - $used,
-            'reset_period' => $resetPeriod
-        ], "Feature usage recorded for free tier");
+            'limit' => $feature->usage_limit,
+            'remaining' => $feature->usage_limit - $used,
+            'reset_period' => $feature->reset_period ?? 'monthly'
+        ], "Feature usage recorded for default plan");
     }
 
     /**
@@ -299,9 +313,9 @@ class FeatureService
     {
         $subscription = $mess->subscription;
 
-        // If no subscription, return free tier features
+        // If no subscription, return default plan features
         if (!$subscription || !$subscription->isActiveOrInGrace()) {
-            return $this->getFreeFeatures($mess);
+            return $this->getDefaultPlanFeatures($mess);
         }
 
         $features = $subscription->plan->features()
@@ -341,27 +355,31 @@ class FeatureService
     }
 
     /**
-     * Get free tier features using configuration
+     * Get default plan features
      */
-    private function getFreeFeatures(Mess $mess): Pipeline
+    private function getDefaultPlanFeatures(Mess $mess): Pipeline
     {
-        $freeLimits = FeatureConfig::getFreeLimits();
-        $freeFeatures = [];
+        $defaultPlan = Plan::getDefaultPlan();
 
-        foreach ($freeLimits as $featureName => $limitConfig) {
-            $featureDefinition = FeatureConfig::getFeatureDefinition($featureName);
-
-            $freeFeatures[] = [
-                'name' => $featureName,
-                'description' => $featureDefinition['description'],
-                'is_countable' => $featureDefinition['is_countable'],
-                'usage_limit' => $limitConfig['limit'],
-                'reset_period' => $limitConfig['reset_period'],
-                'used' => $this->getFreeFeatureUsage($mess, $featureName, $limitConfig['reset_period']),
-                'remaining' => $limitConfig['limit'] - $this->getFreeFeatureUsage($mess, $featureName, $limitConfig['reset_period'])
-            ];
+        if (!$defaultPlan) {
+            return Pipeline::error("Default plan not found", 500);
         }
 
-        return Pipeline::success(data: collect($freeFeatures));
+        $features = $defaultPlan->features->map(function ($feature) use ($mess) {
+            $used = $feature->is_countable ? $this->getDefaultPlanFeatureUsage($mess, $feature->name) : null;
+
+            return [
+                'name' => $feature->name,
+                'description' => $feature->description ?? "Default plan {$feature->name}",
+                'is_countable' => $feature->is_countable,
+                'usage_limit' => $feature->usage_limit,
+                'used' => $used,
+                'remaining' => $feature->is_countable ? ($feature->usage_limit - $used) : null,
+                'reset_period' => $feature->reset_period ?? 'monthly',
+                'next_reset' => null
+            ];
+        });
+
+        return Pipeline::success(data: $features);
     }
 }

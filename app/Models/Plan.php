@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Constants\SubPlan;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Plan extends Model
 {
@@ -30,5 +32,26 @@ class Plan extends Model
     public function subscriptions()
     {
         return $this->hasMany(Subscription::class);
+    }
+
+    /**
+     * Get the default plan for free tier users.
+     */
+    public static function getDefaultPlan(): ?Plan
+    {
+        return Cache::remember('default_plan', 3600, function () {
+            return self::where('keyword', SubPlan::DEFAULT)
+                ->where('is_active', true)
+                ->with(['features', 'packages'])
+                ->first();
+        });
+    }
+
+    /**
+     * Clear default plan cache.
+     */
+    public static function clearDefaultPlanCache(): void
+    {
+        Cache::forget('default_plan');
     }
 }

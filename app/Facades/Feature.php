@@ -33,9 +33,9 @@ class Feature extends Facade
     {
         $subscription = $mess->subscription;
 
-        // If no subscription or subscription is not active, provide free tier access
+        // If no subscription or subscription is not active, use default plan
         if (!$subscription || !$subscription->isActiveOrInGrace()) {
-            return self::checkFreeFeatureAccess($mess, $featureName);
+            return self::checkDefaultPlanFeatureAccess($mess, $featureName);
         }
 
         // Check with subscription
@@ -46,9 +46,9 @@ class Feature extends Facade
     {
         $subscription = $mess->subscription;
 
-        // If no subscription or subscription is not active, handle free tier increment
+        // If no subscription or subscription is not active, handle default plan increment
         if (!$subscription || !$subscription->isActiveOrInGrace()) {
-            return self::incrementFreeFeatureUsage($mess, $featureName);
+            return self::incrementDefaultPlanFeatureUsage($mess, $featureName);
         }
 
         // Increment with subscription
@@ -59,85 +59,93 @@ class Feature extends Facade
     {
         $subscription = $mess->subscription;
 
-        // If no subscription or subscription is not active, return free tier features
+        // If no subscription or subscription is not active, return default plan features
         if (!$subscription || !$subscription->isActiveOrInGrace()) {
-            return self::getFreeFeatures($mess);
+            return self::getDefaultPlanFeatures($mess);
         }
 
         // Get features with subscription
         return app(FeatureService::class)->getAvailableFeatures($mess);
     }
 
-    private static function checkFreeFeatureAccess(Mess $mess, string $featureName): Pipeline
+    private static function checkDefaultPlanFeatureAccess(Mess $mess, string $featureName): Pipeline
     {
-        // Define free tier feature limits
-        $freeLimits = [
-            FeatureList::MEMBER_LIMIT => 5,
-            FeatureList::MESS_REPORT_GENERATE => 2,
-            FeatureList::MEAL_ADD_NOTIFICATION => 10,
-            FeatureList::BALANCE_ADD_NOTIFICATION => 5,
-            FeatureList::PURCHASE_NOTIFICATION => 5,
-        ];
+        $defaultPlan = \App\Models\Plan::getDefaultPlan();
 
-        if (!isset($freeLimits[$featureName])) {
-            return Pipeline::error("Feature not available in free tier", 403);
+        if (!$defaultPlan) {
+            return Pipeline::error("Default plan not found", 500);
         }
 
-        $limit = $freeLimits[$featureName];
-        $used = self::getFreeFeatureUsage($mess, $featureName);
+        $feature = $defaultPlan->features()->where('name', $featureName)->first();
 
-        if ($used >= $limit) {
-            return Pipeline::error("Free tier limit reached. Upgrade for more features.", 403);
+        if (!$feature) {
+            return Pipeline::error("Feature not available in default plan", 403);
+        }
+
+        if (!$feature->is_countable) {
+            return Pipeline::success(); // Feature is available without usage limits
+        }
+
+        $used = self::getDefaultPlanFeatureUsage($mess, $featureName);
+
+        if ($used >= $feature->usage_limit) {
+            return Pipeline::error("Default plan limit reached. Upgrade for more features.", 403);
         }
 
         return Pipeline::success([
             'used' => $used,
-            'limit' => $limit,
-            'remaining' => $limit - $used
+            'limit' => $feature->usage_limit,
+            'remaining' => $feature->usage_limit - $used
         ]);
     }
 
-    private static function getFreeFeatureUsage(Mess $mess, string $featureName): int
+    private static function getDefaultPlanFeatureUsage(Mess $mess, string $featureName): int
     {
         switch ($featureName) {
             case FeatureList::MEMBER_LIMIT:
                 return $mess->messUsers()->count();
+            case FeatureList::MESS_REPORT_GENERATE:
+                // You can implement monthly usage tracking here
+                return 0; // For now, return 0
+            case FeatureList::MEAL_ADD_NOTIFICATION:
+            case FeatureList::BALANCE_ADD_NOTIFICATION:
+            case FeatureList::PURCHASE_NOTIFICATION:
+                // You can implement monthly usage tracking here
+                return 0; // For now, return 0
             default:
-                return 0; // Track other features as needed
+                return 0;
         }
     }
 
-    private static function incrementFreeFeatureUsage(Mess $mess, string $featureName): Pipeline
+    private static function incrementDefaultPlanFeatureUsage(Mess $mess, string $featureName): Pipeline
     {
-        // For free tier features, we don't actually increment anything
+        // For default plan features, we don't actually increment anything
         // The usage is calculated dynamically (like member count)
-        return self::checkFreeFeatureAccess($mess, $featureName);
+        return self::checkDefaultPlanFeatureAccess($mess, $featureName);
     }
 
-    private static function getFreeFeatures(Mess $mess): Pipeline
+    private static function getDefaultPlanFeatures(Mess $mess): Pipeline
     {
-        $freeLimits = [
-            FeatureList::MEMBER_LIMIT => 5,
-            FeatureList::MESS_REPORT_GENERATE => 2,
-            FeatureList::MEAL_ADD_NOTIFICATION => 10,
-            FeatureList::BALANCE_ADD_NOTIFICATION => 5,
-            FeatureList::PURCHASE_NOTIFICATION => 5,
-        ];
+        $defaultPlan = \App\Models\Plan::getDefaultPlan();
 
-        $features = [];
-        foreach ($freeLimits as $featureName => $limit) {
-            $used = self::getFreeFeatureUsage($mess, $featureName);
-            $features[] = [
-                'name' => $featureName,
-                'description' => "Free tier {$featureName}",
-                'is_countable' => true,
-                'usage_limit' => $limit,
-                'used' => $used,
-                'remaining' => $limit - $used,
-                'reset_period' => $featureName === FeatureList::MEMBER_LIMIT ? 'lifetime' : 'monthly'
-            ];
+        if (!$defaultPlan) {
+            return Pipeline::error("Default plan not found", 500);
         }
 
-        return Pipeline::success(collect($features));
+        $features = $defaultPlan->features->map(function ($feature) use ($mess) {
+            $used = $feature->is_countable ? self::getDefaultPlanFeatureUsage($mess, $feature->name) : null;
+
+            return [
+                'name' => $feature->name,
+                'description' => $feature->description ?? "Default plan {$feature->name}",
+                'is_countable' => $feature->is_countable,
+                'usage_limit' => $feature->usage_limit,
+                'used' => $used,
+                'remaining' => $feature->is_countable ? ($feature->usage_limit - $used) : null,
+                'reset_period' => $feature->reset_period ?? 'monthly'
+            ];
+        });
+
+        return Pipeline::success($features);
     }
 }

@@ -19,6 +19,26 @@ class PlanSeeder extends Seeder
     private $data = [
         'plans' => [
             [
+                'name' => 'Default',
+                'keyword' => SubPlan::DEFAULT,
+                'is_free' => true,
+                'is_active' => true,
+                'features' => [
+                    Feature::MEMBER_LIMIT => ['is_countable' => true, 'usage_limit' => 5],
+                    Feature::MESS_REPORT_GENERATE => ['is_countable' => true, 'usage_limit' => 2],
+                    Feature::MEAL_ADD_NOTIFICATION => ['is_countable' => true, 'usage_limit' => 10],
+                    Feature::BALANCE_ADD_NOTIFICATION => ['is_countable' => true, 'usage_limit' => 5],
+                    Feature::PURCHASE_NOTIFICATION => ['is_countable' => true, 'usage_limit' => 5],
+                ],
+                'packages' => [
+                    [
+                        'duration' => 999999, // Lifetime
+                        'price' => 0,
+                        'is_trial' => false,
+                    ],
+                ],
+            ],
+            [
                 'name' => 'Basic',
                 'keyword' => SubPlan::BASIC,
                 'is_free' => true,
@@ -114,9 +134,15 @@ class PlanSeeder extends Seeder
 
     public function run(): void
     {
+        // Disable foreign key checks to allow truncation
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+
         Plan::truncate();
         PlanPackage::truncate();
         PlanFeature::truncate();
+
+        // Re-enable foreign key checks
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         DB::beginTransaction();
 
